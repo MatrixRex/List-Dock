@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Item, AppState } from '../types';
+import { toast } from 'sonner';
+import React from 'react';
+import UndoToast from '../components/UndoToast';
 
 interface StoreState extends AppState {
     items: Item[];
@@ -18,7 +21,7 @@ interface StoreState extends AppState {
     setView: (view: 'root' | 'folder', folderId?: string | null) => void;
     setSearchQuery: (query: string) => void;
     undo: () => void;
-    pushToUndoStack: () => void;
+    pushToUndoStack: (message?: string) => void;
     setIsMenuOpen: (isOpen: boolean) => void;
 }
 
@@ -76,7 +79,7 @@ export const useStore = create<StoreState>()(
 
             addItem: (item) => {
                 const { items } = get();
-                get().pushToUndoStack();
+                get().pushToUndoStack(`Added ${item.title}`);
                 set({ items: [...items, item] });
             },
 
@@ -89,16 +92,14 @@ export const useStore = create<StoreState>()(
 
             deleteItem: (id) => {
                 const { items } = get();
-                get().pushToUndoStack();
+                const itemToDelete = items.find((i) => i.id === id);
+                get().pushToUndoStack(`Deleted ${itemToDelete?.title || 'item'}`);
 
-                // When deleting a folder, also delete all items inside it or move them?
-                // Let's delete them for now.
-                const itemToDelete = items.find(i => i.id === id);
                 let newItems;
                 if (itemToDelete?.type === 'folder') {
-                    newItems = items.filter(i => i.id !== id && i.parent_id !== id);
+                    newItems = items.filter((i) => i.id !== id && i.parent_id !== id);
                 } else {
-                    newItems = items.filter(i => i.id !== id);
+                    newItems = items.filter((i) => i.id !== id);
                 }
 
                 set({ items: newItems });
@@ -108,9 +109,20 @@ export const useStore = create<StoreState>()(
 
             setSearchQuery: (query) => set({ searchQuery: query }),
 
-            pushToUndoStack: () => {
+            pushToUndoStack: (message = 'Action performed') => {
                 const { items, undoStack } = get();
                 set({ undoStack: [...undoStack.slice(-19), items] }); // Keep last 20 states
+
+                toast.custom(
+                    (id) =>
+                        React.createElement(UndoToast, {
+                            id,
+                            message,
+                            undo: () => get().undo(),
+                            duration: 5000,
+                        }),
+                    { duration: 5000 }
+                );
             },
 
             undo: () => {

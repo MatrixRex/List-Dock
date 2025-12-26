@@ -4,7 +4,7 @@ import Header from './components/Header';
 import RootView from './components/RootView';
 import FolderView from './components/FolderView';
 import SmartInput from './components/SmartInput';
-import ToastContainer from './components/ToastContainer';
+import { Toaster } from 'sonner';
 import { DnDProvider } from './store/DnDContext';
 
 const App: React.FC = () => {
@@ -20,7 +20,18 @@ const App: React.FC = () => {
         </main>
 
         <SmartInput />
-        <ToastContainer />
+        <Toaster
+          position="bottom-center"
+          toastOptions={{
+            style: {
+              background: 'transparent',
+              border: 'none',
+              boxShadow: 'none',
+              padding: 0,
+              marginBottom: '80px',
+            },
+          }}
+        />
       </div>
     </DnDProvider>
   );
