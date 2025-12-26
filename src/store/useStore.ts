@@ -17,6 +17,7 @@ interface StoreState extends AppState {
     setItems: (items: Item[]) => void;
     addItem: (item: Item) => void;
     updateItem: (id: string, updates: Partial<Item>) => void;
+    moveItem: (id: string, newParentId: string | null, newType: 'task' | 'subtask', orderIndex?: number) => void;
     deleteItem: (id: string) => void;
     setView: (view: 'root' | 'folder', folderId?: string | null) => void;
     setSearchQuery: (query: string) => void;
@@ -87,6 +88,39 @@ export const useStore = create<StoreState>()(
                 const { items } = get();
                 set({
                     items: items.map((item) => (item.id === id ? { ...item, ...updates } : item)),
+                });
+            },
+
+            moveItem: (id, newParentId, newType, orderIndex) => {
+                const { items, updateItem, pushToUndoStack } = get();
+                const item = items.find((i) => i.id === id);
+                if (!item) return;
+
+                const oldParentId = item.parent_id;
+                let message = `Moved "${item.title}"`;
+
+                if (newType === 'subtask') {
+                    const parentTask = items.find((t) => t.id === newParentId);
+                    message = `Moved "${item.title}" as subtask of "${parentTask?.title || 'task'}"`;
+                } else if (newParentId !== oldParentId) {
+                    if (newParentId) {
+                        const newFolder = items.find((f) => f.id === newParentId);
+                        message = `Moved "${item.title}" to "${newFolder?.title || 'folder'}" folder`;
+                    } else if (oldParentId) {
+                        const oldParent = items.find((p) => p.id === oldParentId);
+                        if (oldParent?.type === 'folder') {
+                            message = `Moved "${item.title}" out of "${oldParent.title}"`;
+                        } else {
+                            message = `Moved "${item.title}" to Default List`;
+                        }
+                    }
+                }
+
+                pushToUndoStack(message);
+                updateItem(id, {
+                    parent_id: newParentId,
+                    type: newType,
+                    order_index: orderIndex ?? Date.now(),
                 });
             },
 

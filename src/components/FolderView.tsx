@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
 import TaskCard from './TaskCard';
 import { Trash2, Edit2, Check } from 'lucide-react';
+import ConfirmDialog from './ui/ConfirmDialog';
 
 const FolderView: React.FC = () => {
     const { items, currentFolderId, searchQuery, updateItem, deleteItem, setView } = useStore();
     const folder = items.find(i => i.id === currentFolderId);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [titleValue, setTitleValue] = useState(folder?.title || '');
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     const tasks = items
         .filter(i => i.parent_id === currentFolderId && i.type === 'task')
@@ -22,7 +24,7 @@ const FolderView: React.FC = () => {
     };
 
     const handleDeleteFolder = () => {
-        if (folder && confirm('Delete this folder and all tasks inside?')) {
+        if (folder) {
             deleteItem(folder.id);
             setView('root');
         }
@@ -59,13 +61,23 @@ const FolderView: React.FC = () => {
                     </div>
                 )}
                 <button
-                    onClick={handleDeleteFolder}
+                    onClick={() => setShowDeleteConfirm(true)}
                     className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all ml-2"
                     title="Delete Folder"
                 >
                     <Trash2 size={20} />
                 </button>
             </div>
+
+            <ConfirmDialog
+                isOpen={showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(false)}
+                onConfirm={handleDeleteFolder}
+                title="Delete Folder?"
+                message={`Are you sure you want to delete "${folder.title}" and everything inside?`}
+                confirmText="Delete Folder"
+                variant="danger"
+            />
 
             <div className="space-y-2">
                 {tasks.length > 0 ? (

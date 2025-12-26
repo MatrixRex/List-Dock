@@ -1,11 +1,11 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import type { Item } from '../types';
 import { useStore } from '../store/useStore';
 import { GripVertical, CheckCircle2, Circle, ChevronDown, ChevronRight, MoreVertical, Trash2, FolderInput, Edit2 } from 'lucide-react';
 import { cn } from '../utils/utils';
 import { useDnDContext } from '../store/DnDContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { createPortal } from 'react-dom';
+import ContextMenu from './ui/ContextMenu';
 
 interface TaskCardProps {
     item: Item;
@@ -13,16 +13,14 @@ interface TaskCardProps {
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false }) => {
-    const { updateItem, items, deleteItem } = useStore();
+    const { updateItem, items, deleteItem, moveItem } = useStore();
     const { dragState, updateDragState, clearDragState, calculateZone } = useDnDContext();
     const cardRef = useRef<HTMLDivElement>(null);
     const [isRenaming, setIsRenaming] = useState(false);
     const [renameValue, setRenameValue] = useState(item.title);
     const [showMenu, setShowMenu] = useState(false);
-    const menuRef = useRef<HTMLDivElement>(null);
     const menuButtonRef = useRef<HTMLButtonElement>(null);
     const { isMenuOpen, setIsMenuOpen } = useStore();
-    const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
 
     const subtasks = items
         .filter(i => i.parent_id === item.id && i.type === 'subtask')
@@ -32,23 +30,6 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false }) => {
     const hasSubtasks = subtasks.length > 0;
 
     const folders = items.filter(i => i.type === 'folder');
-
-    // Close menu on click outside
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (showMenu &&
-                menuRef.current &&
-                !menuRef.current.contains(event.target as Node) &&
-                menuButtonRef.current &&
-                !menuButtonRef.current.contains(event.target as Node)
-            ) {
-                setShowMenu(false);
-                setIsMenuOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [showMenu, setIsMenuOpen]);
 
     const handleDragStart = (e: React.DragEvent) => {
         e.dataTransfer.setData('text/plain', item.id);
@@ -86,21 +67,22 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false }) => {
         if (!draggedItem) return;
 
         if (zone === 'right') {
-            updateItem(draggedId, {
-                type: 'subtask',
-                parent_id: targetId,
-                order_index: subtasks.length
-            });
+            moveItem(draggedId, targetId, 'subtask', subtasks.length);
             updateItem(targetId, { is_expanded: true });
         } else if (zone === 'top' || zone === 'bottom') {
             const newParentId = item.parent_id;
-            const newType = item.type;
+            const newType = item.type as 'task' | 'subtask';
+            const newOrder = zone === 'top' ? item.order_index - 0.5 : item.order_index + 0.5;
 
-            updateItem(draggedId, {
-                parent_id: newParentId,
-                type: newType,
-                order_index: zone === 'top' ? item.order_index - 0.5 : item.order_index + 0.5
-            });
+            if (newParentId !== draggedItem.parent_id) {
+                moveItem(draggedId, newParentId, newType, newOrder);
+            } else {
+                updateItem(draggedId, {
+                    parent_id: newParentId,
+                    type: newType,
+                    order_index: newOrder
+                });
+            }
         }
 
         clearDragState();
@@ -118,11 +100,6 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false }) => {
     const toggleMenu = (e: React.MouseEvent) => {
         e.stopPropagation();
         if (!showMenu && menuButtonRef.current) {
-            const rect = menuButtonRef.current.getBoundingClientRect();
-            setMenuPosition({
-                top: rect.bottom + 8,
-                right: window.innerWidth - rect.right
-            });
             setIsMenuOpen(true);
         } else {
             setIsMenuOpen(false);
@@ -131,11 +108,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false }) => {
     };
 
     const handleMoveToFolder = (folderId: string | null) => {
-        updateItem(item.id, {
-            parent_id: folderId,
-            type: 'task',
-            order_index: Date.now()
-        });
+        moveItem(item.id, folderId, 'task');
         setShowMenu(false);
         setIsMenuOpen(false);
     };
@@ -249,76 +222,48 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false }) => {
                     </div>
                 )}
 
-                {/* Floating Context Menu - Portaled to escape stacking context */}
-                {createPortal(
-                    <AnimatePresence>
-                        {showMenu && (
-                            <>
-                                {/* Full-screen backdrop with blur */}
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setShowMenu(false);
-                                        setIsMenuOpen(false);
-                                    }}
-                                    className="fixed inset-0 bg-gray-900/40 backdrop-blur-[1px] z-[9998]"
-                                />
-
-                                <motion.div
-                                    ref={menuRef}
-                                    initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                    draggable={false}
-                                    onDragStart={(e) => e.stopPropagation()}
-                                    className="fixed w-48 bg-gray-900/95 backdrop-blur-md border border-gray-700/50 rounded-xl shadow-2xl z-[9999] py-1.5 overflow-hidden"
-                                    style={{
-                                        top: menuPosition.top,
-                                        right: menuPosition.right
-                                    }}
-                                    onClick={e => e.stopPropagation()}
-                                >
-                                    <button
-                                        onClick={() => { setIsRenaming(true); setShowMenu(false); setIsMenuOpen(false); }}
-                                        className="w-full text-left px-3.5 py-2.5 text-xs text-gray-300 hover:bg-white/10 flex items-center gap-2.5 transition-colors"
-                                    >
-                                        <Edit2 size={14} /> Rename
-                                    </button>
-                                    <div className="h-px bg-gray-800/50 mx-2 my-1" />
-                                    <div className="px-3.5 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Move To</div>
-                                    <button
-                                        onClick={() => handleMoveToFolder(null)}
-                                        className="w-full text-left px-3.5 py-2.5 text-xs text-gray-300 hover:bg-white/10 flex items-center gap-2.5 transition-colors"
-                                    >
-                                        <FolderInput size={14} /> Default List
-                                    </button>
-                                    {folders.map(folder => (
-                                        folder.id !== item.parent_id && (
-                                            <button
-                                                key={folder.id}
-                                                onClick={() => handleMoveToFolder(folder.id)}
-                                                className="w-full text-left px-3.5 py-2.5 text-xs text-gray-300 hover:bg-white/10 flex items-center gap-2.5 transition-colors"
-                                            >
-                                                <FolderInput size={14} /> {folder.title}
-                                            </button>
-                                        )
-                                    ))}
-                                    <div className="h-px bg-gray-800/50 mx-2 my-1" />
-                                    <button
-                                        onClick={() => { deleteItem(item.id); setShowMenu(false); setIsMenuOpen(false); }}
-                                        className="w-full text-left px-3.5 py-2.5 text-xs text-red-400 hover:bg-red-500/10 flex items-center gap-2.5 transition-colors font-medium"
-                                    >
-                                        <Trash2 size={14} /> Delete
-                                    </button>
-                                </motion.div>
-                            </>
-                        )}
-                    </AnimatePresence>,
-                    document.body
-                )}
+                {/* Reusable Context Menu */}
+                <ContextMenu
+                    isOpen={showMenu}
+                    onClose={() => { setShowMenu(false); setIsMenuOpen(false); }}
+                    anchorRect={menuButtonRef.current?.getBoundingClientRect() || null}
+                >
+                    <button
+                        onClick={() => { setIsRenaming(true); setShowMenu(false); setIsMenuOpen(false); }}
+                        className="w-full text-left px-3.5 py-2.5 text-xs text-gray-300 hover:bg-white/10 flex items-center gap-2.5 transition-colors"
+                    >
+                        <Edit2 size={14} /> Rename
+                    </button>
+                    <div className="h-px bg-gray-800/50 mx-2 my-1" />
+                    <div className="px-3.5 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Move To</div>
+                    {item.parent_id !== null && (
+                        <button
+                            onClick={() => handleMoveToFolder(null)}
+                            className="w-full text-left px-3.5 py-2.5 text-xs text-gray-300 hover:bg-white/10 flex items-center gap-2.5 transition-colors"
+                        >
+                            <FolderInput size={14} /> Default List
+                        </button>
+                    )}
+                    {folders
+                        .filter(f => f.id !== item.parent_id)
+                        .map(folder => (
+                            <button
+                                key={folder.id}
+                                onClick={() => handleMoveToFolder(folder.id)}
+                                className="w-full text-left px-3.5 py-2.5 text-xs text-gray-300 hover:bg-white/10 flex items-center gap-2.5 transition-colors"
+                            >
+                                <FolderInput size={14} /> {folder.title}
+                            </button>
+                        ))
+                    }
+                    <div className="h-px bg-gray-800/50 mx-2 my-1" />
+                    <button
+                        onClick={() => { deleteItem(item.id); setShowMenu(false); setIsMenuOpen(false); }}
+                        className="w-full text-left px-3.5 py-2.5 text-xs text-red-400 hover:bg-red-500/10 flex items-center gap-2.5 transition-colors font-medium"
+                    >
+                        <Trash2 size={14} /> Delete
+                    </button>
+                </ContextMenu>
             </div>
 
             {/* Subtasks Accordion */}

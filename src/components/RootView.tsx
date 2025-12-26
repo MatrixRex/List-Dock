@@ -18,7 +18,7 @@ const RootView: React.FC = () => {
         .sort((a, b) => a.order_index - b.order_index);
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             {/* Top Section: Root Tasks */}
             <section className="flex flex-col max-h-[50vh]">
                 <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-1 flex-shrink-0">Tasks</h2>
@@ -35,9 +35,9 @@ const RootView: React.FC = () => {
 
             {/* Bottom Section: Folder Grid */}
             <section>
-                <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-1">Folders</h2>
+                <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 px-1">Folders</h2>
                 {folders.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-2">
                         {folders.map(folder => (
                             <FolderCard key={folder.id} item={folder} />
                         ))}
