@@ -3,9 +3,16 @@
   "name": "List Dock",
   "version": "1.0.0",
   "description": "A persistent To-Do Sidebar for Chrome",
-  "permissions": ["sidePanel", "storage"],
+  "permissions": [
+    "sidePanel",
+    "storage"
+  ],
   "action": {
     "default_title": "Open List Dock"
+  },
+  "background": {
+    "service_worker": "src/background.ts",
+    "type": "module"
   },
   "side_panel": {
     "default_path": "index.html"

@@ -10,6 +10,27 @@ import { DnDProvider } from './store/DnDContext';
 const App: React.FC = () => {
   const currentView = useStore((state) => state.currentView);
 
+  React.useEffect(() => {
+    // Establish connection with background script to track open state
+    const port = chrome.runtime.connect({ name: 'sidepanel' });
+
+    // Handle messages from background
+    port.onMessage.addListener((msg) => {
+      if (msg.type === 'CLOSE_SIDE_PANEL') {
+        window.close();
+      }
+    });
+
+    // Find the current window ID and notify background
+    chrome.windows.getCurrent().then((window) => {
+      if (window.id) {
+        port.postMessage({ type: 'INIT_SIDE_PANEL', windowId: window.id });
+      }
+    });
+
+    return () => port.disconnect();
+  }, []);
+
   return (
     <DnDProvider>
       <div className="flex flex-col h-screen bg-gray-900 overflow-hidden">
