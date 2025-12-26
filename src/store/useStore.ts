@@ -58,6 +58,8 @@ const chromeStorage = {
     },
 };
 
+const STORAGE_VERSION = 1;
+
 export const useStore = create<StoreState>()(
     persist(
         (set, get) => ({
@@ -121,7 +123,22 @@ export const useStore = create<StoreState>()(
         {
             name: 'list-dock-storage',
             storage: createJSONStorage(() => chromeStorage),
+            version: STORAGE_VERSION,
             partialize: (state) => ({ items: state.items }), // Only persist items
+            migrate: (persistedState: any, version: number) => {
+                if (version < STORAGE_VERSION) {
+                    console.log(`Migrating storage from version ${version} to ${STORAGE_VERSION}`);
+
+                    // Add version-specific migration steps here
+                    if (version === 0) {
+                        // Unversioned to v1: Ensure items array exists
+                        if (persistedState && typeof persistedState === 'object') {
+                            persistedState.items = persistedState.items || [];
+                        }
+                    }
+                }
+                return persistedState as StoreState;
+            },
         }
     )
 );

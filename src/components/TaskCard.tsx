@@ -18,6 +18,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false }) => {
     const [isRenaming, setIsRenaming] = useState(false);
     const [renameValue, setRenameValue] = useState(item.title);
     const [showMenu, setShowMenu] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
+    const menuButtonRef = useRef<HTMLButtonElement>(null);
 
     const subtasks = items
         .filter(i => i.parent_id === item.id && i.type === 'subtask')
@@ -30,8 +32,15 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false }) => {
 
     // Close menu on click outside
     useEffect(() => {
-        const handleClickOutside = () => {
-            if (showMenu) setShowMenu(false);
+        const handleClickOutside = (event: MouseEvent) => {
+            if (showMenu &&
+                menuRef.current &&
+                !menuRef.current.contains(event.target as Node) &&
+                menuButtonRef.current &&
+                !menuButtonRef.current.contains(event.target as Node)
+            ) {
+                setShowMenu(false);
+            }
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -196,6 +205,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false }) => {
                         )}
 
                         <button
+                            ref={menuButtonRef}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setShowMenu(!showMenu);
@@ -221,45 +231,66 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false }) => {
                 )}
 
                 {/* Floating Context Menu */}
-                {showMenu && (
-                    <div
-                        className="absolute right-0 top-10 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl z-[100] py-1 animate-in fade-in zoom-in duration-100"
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <button
-                            onClick={() => { setIsRenaming(true); setShowMenu(false); }}
-                            className="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-gray-700 flex items-center gap-2"
-                        >
-                            <Edit2 size={12} /> Rename
-                        </button>
-                        <div className="h-px bg-gray-700 my-1" />
-                        <div className="px-3 py-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Move To</div>
-                        <button
-                            onClick={() => handleMoveToFolder(null)}
-                            className="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-gray-700 flex items-center gap-2"
-                        >
-                            <FolderInput size={12} /> Default List
-                        </button>
-                        {folders.map(folder => (
-                            folder.id !== item.parent_id && (
+                <AnimatePresence>
+                    {showMenu && (
+                        <>
+                            {/* Full-screen backdrop with blur */}
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowMenu(false);
+                                }}
+                                className="fixed inset-0 bg-gray-900/40 backdrop-blur-[2px] z-[90]"
+                            />
+
+                            <motion.div
+                                ref={menuRef}
+                                initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                onMouseLeave={() => setShowMenu(false)}
+                                className="absolute right-0 top-10 w-48 bg-gray-900/95 backdrop-blur-md border border-700/50 rounded-xl shadow-2xl z-[100] py-1.5 overflow-hidden"
+                                onClick={e => e.stopPropagation()}
+                            >
                                 <button
-                                    key={folder.id}
-                                    onClick={() => handleMoveToFolder(folder.id)}
-                                    className="w-full text-left px-3 py-2 text-xs text-gray-300 hover:bg-gray-700 flex items-center gap-2"
+                                    onClick={() => { setIsRenaming(true); setShowMenu(false); }}
+                                    className="w-full text-left px-3.5 py-2.5 text-xs text-gray-300 hover:bg-white/10 flex items-center gap-2.5 transition-colors"
                                 >
-                                    <FolderInput size={12} /> {folder.title}
+                                    <Edit2 size={14} /> Rename
                                 </button>
-                            )
-                        ))}
-                        <div className="h-px bg-gray-700 my-1" />
-                        <button
-                            onClick={() => { deleteItem(item.id); setShowMenu(false); }}
-                            className="w-full text-left px-3 py-2 text-xs text-red-400 hover:bg-red-500/10 flex items-center gap-2"
-                        >
-                            <Trash2 size={12} /> Delete
-                        </button>
-                    </div>
-                )}
+                                <div className="h-px bg-gray-800/50 mx-2 my-1" />
+                                <div className="px-3.5 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Move To</div>
+                                <button
+                                    onClick={() => handleMoveToFolder(null)}
+                                    className="w-full text-left px-3.5 py-2.5 text-xs text-gray-300 hover:bg-white/10 flex items-center gap-2.5 transition-colors"
+                                >
+                                    <FolderInput size={14} /> Default List
+                                </button>
+                                {folders.map(folder => (
+                                    folder.id !== item.parent_id && (
+                                        <button
+                                            key={folder.id}
+                                            onClick={() => handleMoveToFolder(folder.id)}
+                                            className="w-full text-left px-3.5 py-2.5 text-xs text-gray-300 hover:bg-white/10 flex items-center gap-2.5 transition-colors"
+                                        >
+                                            <FolderInput size={14} /> {folder.title}
+                                        </button>
+                                    )
+                                ))}
+                                <div className="h-px bg-gray-800/50 mx-2 my-1" />
+                                <button
+                                    onClick={() => { deleteItem(item.id); setShowMenu(false); }}
+                                    className="w-full text-left px-3.5 py-2.5 text-xs text-red-400 hover:bg-red-500/10 flex items-center gap-2.5 transition-colors font-medium"
+                                >
+                                    <Trash2 size={14} /> Delete
+                                </button>
+                            </motion.div>
+                        </>
+                    )}
+                </AnimatePresence>
             </div>
 
             {/* Subtasks Accordion */}
