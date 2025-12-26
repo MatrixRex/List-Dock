@@ -11,7 +11,7 @@ interface FolderCardProps {
 
 const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
     const setView = useStore(state => state.setView);
-    const { items, updateItem, deleteItem } = useStore();
+    const { items, updateItem, deleteItem, isMenuOpen } = useStore();
     const { dragState, updateDragState, clearDragState } = useDnDContext();
 
     const folderItems = items.filter(i => i.parent_id === item.id);
@@ -19,7 +19,7 @@ const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
-        if (dragState.draggedItemId === item.id) return;
+        if (isMenuOpen || dragState.draggedItemId === item.id) return;
         updateDragState(dragState.draggedItemId, item.id, 'folder');
     };
 
@@ -39,13 +39,14 @@ const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
 
     return (
         <div
-            onClick={() => setView('folder', item.id)}
+            onClick={() => !isMenuOpen && setView('folder', item.id)}
             onDragOver={handleDragOver}
             onDragLeave={() => updateDragState(dragState.draggedItemId, null, null)}
             onDrop={handleDrop}
             className={cn(
                 "bg-gray-800 border border-gray-700/50 rounded-xl p-4 hover:border-blue-500/50 transition-all cursor-pointer group relative overflow-hidden",
-                dragState.targetItemId === item.id && "border-blue-500 bg-blue-500/10 shadow-[0_0_15px_-3px_rgba(59,130,246,0.3)]"
+                dragState.targetItemId === item.id && "border-blue-500 bg-blue-500/10 shadow-[0_0_15px_-3px_rgba(59,130,246,0.3)]",
+                isMenuOpen && "pointer-events-none"
             )}
         >
             <div className="flex flex-col gap-2 relative z-10">

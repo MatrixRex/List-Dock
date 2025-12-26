@@ -5,6 +5,7 @@ import { GripVertical, CheckCircle2, Circle, ChevronDown, ChevronRight, MoreVert
 import { cn } from '../utils/utils';
 import { useDnDContext } from '../store/DnDContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { createPortal } from 'react-dom';
 
 interface TaskCardProps {
     item: Item;
@@ -20,6 +21,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false }) => {
     const [showMenu, setShowMenu] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const menuButtonRef = useRef<HTMLButtonElement>(null);
+    const { isMenuOpen, setIsMenuOpen } = useStore();
+    const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
 
     const subtasks = items
         .filter(i => i.parent_id === item.id && i.type === 'subtask')
@@ -40,11 +43,12 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false }) => {
                 !menuButtonRef.current.contains(event.target as Node)
             ) {
                 setShowMenu(false);
+                setIsMenuOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [showMenu]);
+    }, [showMenu, setIsMenuOpen]);
 
     const handleDragStart = (e: React.DragEvent) => {
         e.dataTransfer.setData('text/plain', item.id);
@@ -111,6 +115,21 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false }) => {
         setIsRenaming(false);
     };
 
+    const toggleMenu = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!showMenu && menuButtonRef.current) {
+            const rect = menuButtonRef.current.getBoundingClientRect();
+            setMenuPosition({
+                top: rect.bottom + 8,
+                right: window.innerWidth - rect.right
+            });
+            setIsMenuOpen(true);
+        } else {
+            setIsMenuOpen(false);
+        }
+        setShowMenu(!showMenu);
+    };
+
     const handleMoveToFolder = (folderId: string | null) => {
         updateItem(item.id, {
             parent_id: folderId,
@@ -118,24 +137,26 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false }) => {
             order_index: Date.now()
         });
         setShowMenu(false);
+        setIsMenuOpen(false);
     };
 
     return (
         <div className="group/task space-y-1 relative">
             <div
                 ref={cardRef}
-                draggable
+                draggable={!isMenuOpen}
                 onDragStart={handleDragStart}
                 onDragOver={handleDragOver}
                 onDragLeave={() => updateDragState(dragState.draggedItemId, null, null)}
                 onDrop={handleDrop}
-                onDoubleClick={() => setIsRenaming(true)}
+                onDoubleClick={() => !isMenuOpen && setIsRenaming(true)}
                 className={cn(
                     "group relative bg-gray-800 border border-gray-700/50 rounded-lg p-3 transition-all cursor-pointer",
                     "hover:border-gray-600 active:scale-[0.98]",
                     dragState.targetItemId === item.id && dragState.dropZone === 'right' && "border-blue-500 bg-blue-500/10 shadow-[0_0_15px_-3px_rgba(59,130,246,0.3)]",
                     item.is_completed && "opacity-60",
-                    isSubtask && "ml-6 py-2 bg-gray-800/50"
+                    isSubtask && "ml-6 py-2 bg-gray-800/50",
+                    isMenuOpen && "pointer-events-none"
                 )}
             >
                 {/* Drop Indicators */}
@@ -154,6 +175,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false }) => {
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
+                            if (isMenuOpen) return;
                             updateItem(item.id, { is_completed: !item.is_completed });
                         }}
                         className={cn(
@@ -206,11 +228,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false }) => {
 
                         <button
                             ref={menuButtonRef}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setShowMenu(!showMenu);
-                            }}
-                            className="p-1 text-gray-500 hover:text-white transition-colors"
+                            onClick={toggleMenu}
+                            className="p-1 text-gray-500 hover:text-white transition-colors pointer-events-auto"
                         >
                             <MoreVertical size={16} />
                         </button>
@@ -230,67 +249,76 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false }) => {
                     </div>
                 )}
 
-                {/* Floating Context Menu */}
-                <AnimatePresence>
-                    {showMenu && (
-                        <>
-                            {/* Full-screen backdrop with blur */}
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShowMenu(false);
-                                }}
-                                className="fixed inset-0 bg-gray-900/40 backdrop-blur-[2px] z-[90]"
-                            />
+                {/* Floating Context Menu - Portaled to escape stacking context */}
+                {createPortal(
+                    <AnimatePresence>
+                        {showMenu && (
+                            <>
+                                {/* Full-screen backdrop with blur */}
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowMenu(false);
+                                        setIsMenuOpen(false);
+                                    }}
+                                    className="fixed inset-0 bg-gray-900/40 backdrop-blur-[1px] z-[9998]"
+                                />
 
-                            <motion.div
-                                ref={menuRef}
-                                initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                onMouseLeave={() => setShowMenu(false)}
-                                className="absolute right-0 top-10 w-48 bg-gray-900/95 backdrop-blur-md border border-700/50 rounded-xl shadow-2xl z-[100] py-1.5 overflow-hidden"
-                                onClick={e => e.stopPropagation()}
-                            >
-                                <button
-                                    onClick={() => { setIsRenaming(true); setShowMenu(false); }}
-                                    className="w-full text-left px-3.5 py-2.5 text-xs text-gray-300 hover:bg-white/10 flex items-center gap-2.5 transition-colors"
+                                <motion.div
+                                    ref={menuRef}
+                                    initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                    draggable={false}
+                                    onDragStart={(e) => e.stopPropagation()}
+                                    className="fixed w-48 bg-gray-900/95 backdrop-blur-md border border-gray-700/50 rounded-xl shadow-2xl z-[9999] py-1.5 overflow-hidden"
+                                    style={{
+                                        top: menuPosition.top,
+                                        right: menuPosition.right
+                                    }}
+                                    onClick={e => e.stopPropagation()}
                                 >
-                                    <Edit2 size={14} /> Rename
-                                </button>
-                                <div className="h-px bg-gray-800/50 mx-2 my-1" />
-                                <div className="px-3.5 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Move To</div>
-                                <button
-                                    onClick={() => handleMoveToFolder(null)}
-                                    className="w-full text-left px-3.5 py-2.5 text-xs text-gray-300 hover:bg-white/10 flex items-center gap-2.5 transition-colors"
-                                >
-                                    <FolderInput size={14} /> Default List
-                                </button>
-                                {folders.map(folder => (
-                                    folder.id !== item.parent_id && (
-                                        <button
-                                            key={folder.id}
-                                            onClick={() => handleMoveToFolder(folder.id)}
-                                            className="w-full text-left px-3.5 py-2.5 text-xs text-gray-300 hover:bg-white/10 flex items-center gap-2.5 transition-colors"
-                                        >
-                                            <FolderInput size={14} /> {folder.title}
-                                        </button>
-                                    )
-                                ))}
-                                <div className="h-px bg-gray-800/50 mx-2 my-1" />
-                                <button
-                                    onClick={() => { deleteItem(item.id); setShowMenu(false); }}
-                                    className="w-full text-left px-3.5 py-2.5 text-xs text-red-400 hover:bg-red-500/10 flex items-center gap-2.5 transition-colors font-medium"
-                                >
-                                    <Trash2 size={14} /> Delete
-                                </button>
-                            </motion.div>
-                        </>
-                    )}
-                </AnimatePresence>
+                                    <button
+                                        onClick={() => { setIsRenaming(true); setShowMenu(false); setIsMenuOpen(false); }}
+                                        className="w-full text-left px-3.5 py-2.5 text-xs text-gray-300 hover:bg-white/10 flex items-center gap-2.5 transition-colors"
+                                    >
+                                        <Edit2 size={14} /> Rename
+                                    </button>
+                                    <div className="h-px bg-gray-800/50 mx-2 my-1" />
+                                    <div className="px-3.5 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Move To</div>
+                                    <button
+                                        onClick={() => handleMoveToFolder(null)}
+                                        className="w-full text-left px-3.5 py-2.5 text-xs text-gray-300 hover:bg-white/10 flex items-center gap-2.5 transition-colors"
+                                    >
+                                        <FolderInput size={14} /> Default List
+                                    </button>
+                                    {folders.map(folder => (
+                                        folder.id !== item.parent_id && (
+                                            <button
+                                                key={folder.id}
+                                                onClick={() => handleMoveToFolder(folder.id)}
+                                                className="w-full text-left px-3.5 py-2.5 text-xs text-gray-300 hover:bg-white/10 flex items-center gap-2.5 transition-colors"
+                                            >
+                                                <FolderInput size={14} /> {folder.title}
+                                            </button>
+                                        )
+                                    ))}
+                                    <div className="h-px bg-gray-800/50 mx-2 my-1" />
+                                    <button
+                                        onClick={() => { deleteItem(item.id); setShowMenu(false); setIsMenuOpen(false); }}
+                                        className="w-full text-left px-3.5 py-2.5 text-xs text-red-400 hover:bg-red-500/10 flex items-center gap-2.5 transition-colors font-medium"
+                                    >
+                                        <Trash2 size={14} /> Delete
+                                    </button>
+                                </motion.div>
+                            </>
+                        )}
+                    </AnimatePresence>,
+                    document.body
+                )}
             </div>
 
             {/* Subtasks Accordion */}

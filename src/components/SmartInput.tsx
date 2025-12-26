@@ -7,7 +7,7 @@ import { cn } from '../utils/utils';
 const SmartInput: React.FC = () => {
     const [value, setValue] = useState('');
     const [mode, setMode] = useState<'task' | 'folder' | 'search'>('task');
-    const { addItem, currentView, currentFolderId, setSearchQuery } = useStore();
+    const { addItem, currentView, currentFolderId, setSearchQuery, isMenuOpen } = useStore();
 
     // Mode 2: Add Subtask (if task selected - let's simplify and use mode for UI)
     // Mode 3: Add Folder toggle (Root only)
@@ -35,7 +35,10 @@ const SmartInput: React.FC = () => {
 
     return (
         <div className="p-4 bg-gray-900 border-t border-gray-800 shrink-0 sticky bottom-0 z-[200]">
-            <div className="flex items-center gap-2 bg-gray-800/80 backdrop-blur-md rounded-xl border border-gray-700/50 p-1.5 focus-within:border-blue-500/50 focus-within:ring-4 focus-within:ring-blue-500/5 transition-all shadow-2xl">
+            <div className={cn(
+                "flex items-center gap-2 bg-gray-800/80 backdrop-blur-md rounded-xl border border-gray-700/50 p-1.5 focus-within:border-blue-500/50 focus-within:ring-4 focus-within:ring-blue-500/5 transition-all shadow-2xl",
+                isMenuOpen && "pointer-events-none opacity-50 shadow-none border-gray-800"
+            )}>
                 <div className="flex bg-gray-900/50 rounded-lg p-0.5">
                     <button
                         onClick={() => setMode('task')}

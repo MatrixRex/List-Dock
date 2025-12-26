@@ -8,6 +8,7 @@ interface StoreState extends AppState {
     currentFolderId: string | null;
     searchQuery: string;
     undoStack: Item[][];
+    isMenuOpen: boolean;
 
     // Actions
     setItems: (items: Item[]) => void;
@@ -18,6 +19,7 @@ interface StoreState extends AppState {
     setSearchQuery: (query: string) => void;
     undo: () => void;
     pushToUndoStack: () => void;
+    setIsMenuOpen: (isOpen: boolean) => void;
 }
 
 // Custom storage for chrome.storage.local
@@ -68,6 +70,7 @@ export const useStore = create<StoreState>()(
             currentFolderId: null,
             searchQuery: '',
             undoStack: [],
+            isMenuOpen: false,
 
             setItems: (items) => set({ items }),
 
@@ -119,6 +122,8 @@ export const useStore = create<StoreState>()(
                     undoStack: undoStack.slice(0, -1),
                 });
             },
+
+            setIsMenuOpen: (isOpen) => set({ isMenuOpen: isOpen }),
         }),
         {
             name: 'list-dock-storage',

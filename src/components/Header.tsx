@@ -3,7 +3,7 @@ import { useStore } from '../store/useStore';
 import { ChevronLeft, Settings } from 'lucide-react';
 
 const Header: React.FC = () => {
-    const { currentView, currentFolderId, items, setView } = useStore();
+    const { currentView, currentFolderId, items, setView, isMenuOpen } = useStore();
     const folder = items.find(i => i.id === currentFolderId);
 
     return (
@@ -11,7 +11,7 @@ const Header: React.FC = () => {
             <div className="flex items-center gap-2 overflow-hidden">
                 {currentView === 'folder' && (
                     <button
-                        onClick={() => setView('root')}
+                        onClick={() => !isMenuOpen && setView('root')}
                         className="p-1 hover:bg-gray-800 rounded transition-colors"
                     >
                         <ChevronLeft size={20} />
@@ -21,10 +21,12 @@ const Header: React.FC = () => {
                     {currentView === 'root' ? 'List Dock' : folder?.title || 'Folder'}
                 </h1>
             </div>
-            <div className="flex items-center gap-2">
-                <button className="p-1 hover:bg-gray-800 rounded transition-colors text-gray-400 hover:text-white">
-                    <Settings size={20} />
-                </button>
+            <div className={isMenuOpen ? "pointer-events-none opacity-50 transition-opacity" : "transition-opacity"}>
+                <div className="flex items-center gap-2">
+                    <button className="p-1 hover:bg-gray-800 rounded transition-colors text-gray-400 hover:text-white">
+                        <Settings size={20} />
+                    </button>
+                </div>
             </div>
         </header>
     );
