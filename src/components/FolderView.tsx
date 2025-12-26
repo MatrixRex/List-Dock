@@ -5,7 +5,7 @@ import { Trash2, Edit2, Check } from 'lucide-react';
 import ConfirmDialog from './ui/ConfirmDialog';
 
 const FolderView: React.FC = () => {
-    const { items, currentFolderId, searchQuery, updateItem, deleteItem, setView } = useStore();
+    const { items, currentFolderId, searchQuery, updateItem, deleteItem, setView, showCompleted } = useStore();
     const folder = items.find(i => i.id === currentFolderId);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [titleValue, setTitleValue] = useState(folder?.title || '');
@@ -13,6 +13,7 @@ const FolderView: React.FC = () => {
 
     const tasks = items
         .filter(i => i.parent_id === currentFolderId && i.type === 'task')
+        .filter(i => showCompleted || !i.is_completed)
         .filter(i => i.title.toLowerCase().includes(searchQuery.toLowerCase()))
         .sort((a, b) => a.order_index - b.order_index);
 

@@ -13,7 +13,7 @@ interface TaskCardProps {
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false }) => {
-    const { updateItem, items, deleteItem, moveItem } = useStore();
+    const { updateItem, items, deleteItem, moveItem, showCompleted, hideCompletedSubtasks } = useStore();
     const { dragState, updateDragState, clearDragState, calculateZone } = useDnDContext();
     const cardRef = useRef<HTMLDivElement>(null);
     const [isRenaming, setIsRenaming] = useState(false);
@@ -24,6 +24,11 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false }) => {
 
     const subtasks = items
         .filter(i => i.parent_id === item.id && i.type === 'subtask')
+        .filter(i => {
+            if (!i.is_completed) return true;
+            if (showCompleted) return true;
+            return !hideCompletedSubtasks;
+        })
         .sort((a, b) => a.order_index - b.order_index);
 
     const completedSubtasks = subtasks.filter(s => s.is_completed).length;

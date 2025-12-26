@@ -6,9 +6,11 @@ import FolderCard from './FolderCard';
 const RootView: React.FC = () => {
     const items = useStore((state) => state.items);
     const searchQuery = useStore((state) => state.searchQuery);
+    const showCompleted = useStore((state) => state.showCompleted);
 
     const rootTasks = items
         .filter(i => i.type === 'task' && i.parent_id === null)
+        .filter(i => showCompleted || !i.is_completed)
         .filter(i => i.title.toLowerCase().includes(searchQuery.toLowerCase()))
         .sort((a, b) => a.order_index - b.order_index);
 

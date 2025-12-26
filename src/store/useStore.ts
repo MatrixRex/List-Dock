@@ -12,6 +12,8 @@ interface StoreState extends AppState {
     searchQuery: string;
     undoStack: Item[][];
     isMenuOpen: boolean;
+    showCompleted: boolean;
+    hideCompletedSubtasks: boolean;
 
     // Actions
     setItems: (items: Item[]) => void;
@@ -24,6 +26,9 @@ interface StoreState extends AppState {
     undo: () => void;
     pushToUndoStack: (message?: string) => void;
     setIsMenuOpen: (isOpen: boolean) => void;
+    clearItems: () => void;
+    setShowCompleted: (show: boolean) => void;
+    setHideCompletedSubtasks: (hide: boolean) => void;
 }
 
 // Custom storage for chrome.storage.local
@@ -32,7 +37,17 @@ const chromeStorage = {
         return new Promise((resolve) => {
             if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
                 chrome.storage.local.get([name], (result) => {
-                    resolve(result[name] ? JSON.stringify(result[name]) : null);
+                    const data = result[name] as any;
+                    if (data) {
+                        // If data is not in the {state, version} format, wrap it
+                        if (data.state === undefined) {
+                            resolve(JSON.stringify({ state: data, version: 0 }));
+                        } else {
+                            resolve(JSON.stringify(data));
+                        }
+                    } else {
+                        resolve(null);
+                    }
                 });
             } else {
                 resolve(localStorage.getItem(name));
@@ -40,10 +55,10 @@ const chromeStorage = {
         });
     },
     setItem: (name: string, value: string): void | Promise<void> => {
-        const parsedValue = JSON.parse(value);
+        const data = JSON.parse(value);
         if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
             return new Promise((resolve) => {
-                chrome.storage.local.set({ [name]: parsedValue.state }, () => {
+                chrome.storage.local.set({ [name]: data }, () => {
                     resolve();
                 });
             });
@@ -75,6 +90,8 @@ export const useStore = create<StoreState>()(
             searchQuery: '',
             undoStack: [],
             isMenuOpen: false,
+            showCompleted: false,
+            hideCompletedSubtasks: true,
 
             setItems: (items) => set({ items }),
 
@@ -170,12 +187,30 @@ export const useStore = create<StoreState>()(
             },
 
             setIsMenuOpen: (isOpen) => set({ isMenuOpen: isOpen }),
+
+            clearItems: () => {
+                set({ items: [], undoStack: [] });
+                if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+                    chrome.storage.local.remove('list-dock-storage');
+                } else {
+                    localStorage.removeItem('list-dock-storage');
+                }
+                toast.success('All data cleared');
+            },
+
+            setShowCompleted: (show) => set({ showCompleted: show }),
+
+            setHideCompletedSubtasks: (hide) => set({ hideCompletedSubtasks: hide }),
         }),
         {
             name: 'list-dock-storage',
             storage: createJSONStorage(() => chromeStorage),
             version: STORAGE_VERSION,
-            partialize: (state) => ({ items: state.items }), // Only persist items
+            partialize: (state) => ({
+                items: state.items,
+                showCompleted: state.showCompleted,
+                hideCompletedSubtasks: state.hideCompletedSubtasks
+            }), // Persist items and settings
             migrate: (persistedState: any, version: number) => {
                 if (version < STORAGE_VERSION) {
                     console.log(`Migrating storage from version ${version} to ${STORAGE_VERSION}`);

@@ -12,11 +12,13 @@ interface FolderCardProps {
 
 const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
     const setView = useStore(state => state.setView);
-    const { items, deleteItem, moveItem, isMenuOpen } = useStore();
+    const { items, deleteItem, moveItem, isMenuOpen, showCompleted } = useStore();
     const { dragState, updateDragState, clearDragState } = useDnDContext();
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-    const folderItems = items.filter(i => i.parent_id === item.id);
+    const folderItems = items
+        .filter(i => i.parent_id === item.id)
+        .filter(i => showCompleted || !i.is_completed);
     const taskCount = folderItems.length;
 
     const handleDragOver = (e: React.DragEvent) => {
