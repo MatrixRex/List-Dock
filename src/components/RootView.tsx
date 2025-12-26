@@ -20,16 +20,16 @@ const RootView: React.FC = () => {
     return (
         <div className="space-y-6">
             {/* Top Section: Root Tasks */}
-            <section>
-                <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-1">Tasks</h2>
+            <section className="flex flex-col max-h-[50vh]">
+                <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-1 flex-shrink-0">Tasks</h2>
                 {rootTasks.length > 0 ? (
-                    <div className="space-y-2">
+                    <div className="space-y-2 overflow-y-auto custom-scrollbar pr-1">
                         {rootTasks.map(task => (
                             <TaskCard key={task.id} item={task} />
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center py-8 text-gray-500 text-sm">No pending tasks.</div>
+                    <div className="text-center py-8 text-gray-500 text-sm flex-shrink-0">No pending tasks.</div>
                 )}
             </section>
 
