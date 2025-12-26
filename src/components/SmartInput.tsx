@@ -34,7 +34,7 @@ const SmartInput: React.FC = () => {
     };
 
     return (
-        <div className="p-4 bg-gray-900 border-t border-gray-800 shrink-0 sticky bottom-0 z-[200]">
+        <div className="p-4 glass !border-b-0 !border-x-0 !rounded-none border-t border-white/10 shrink-0 sticky bottom-0 z-[200]">
             <div className={cn(
                 "flex items-center gap-2 bg-gray-800/80 backdrop-blur-md rounded-xl border border-gray-700/50 p-1.5 focus-within:border-blue-500/50 focus-within:ring-4 focus-within:ring-blue-500/5 transition-all shadow-2xl",
                 isMenuOpen && "pointer-events-none opacity-50 shadow-none border-gray-800"

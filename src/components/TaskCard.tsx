@@ -129,11 +129,11 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false }) => {
                 onDrop={handleDrop}
                 onDoubleClick={() => !isMenuOpen && setIsRenaming(true)}
                 className={cn(
-                    "group relative bg-gray-800 border border-gray-700/50 rounded-lg p-3 transition-all cursor-pointer",
-                    "hover:border-gray-600 active:scale-[0.98]",
-                    dragState.targetItemId === item.id && dragState.dropZone === 'right' && "border-blue-500 bg-blue-500/10 shadow-[0_0_15px_-3px_rgba(59,130,246,0.3)]",
+                    "group relative glass rounded-xl p-3 transition-all cursor-pointer",
+                    "hover:bg-white/[0.06] active:scale-[0.98]",
+                    dragState.targetItemId === item.id && dragState.dropZone === 'right' && "border-purple-500 bg-purple-500/10 shadow-[0_0_15px_-3px_rgba(168,85,247,0.3)]",
                     item.is_completed && "opacity-60",
-                    isSubtask && "ml-6 py-2 bg-gray-800/50",
+                    isSubtask && "ml-6 py-2 bg-white/[0.01]",
                     isMenuOpen && "pointer-events-none"
                 )}
             >

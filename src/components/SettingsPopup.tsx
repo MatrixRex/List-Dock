@@ -54,10 +54,10 @@ const SettingsPopup: React.FC<SettingsPopupProps> = ({ isOpen, onClose }) => {
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.95, opacity: 0, y: 10 }}
                         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                        className="relative w-full max-w-sm bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl overflow-hidden"
+                        className="relative w-full max-w-sm bg-black/60 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
                     >
                         {/* Header */}
-                        <div className="flex items-center justify-between p-4 border-b border-gray-800">
+                        <div className="flex items-center justify-between p-4 border-b border-white/5">
                             <div className="flex items-center gap-2">
                                 <SettingsIcon className="text-gray-400" size={18} />
                                 <h2 className="font-semibold text-white">Settings</h2>
@@ -75,7 +75,7 @@ const SettingsPopup: React.FC<SettingsPopupProps> = ({ isOpen, onClose }) => {
                             <div className="space-y-4">
                                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1"> Preferences </label>
 
-                                <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-800/50">
+                                <div className="bg-white/5 rounded-xl p-4 border border-white/5">
                                     <div className="flex items-center justify-between">
                                         <div className="space-y-1">
                                             <p className="text-sm font-medium text-white">Show Completed</p>

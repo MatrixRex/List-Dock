@@ -7,6 +7,9 @@
     "sidePanel",
     "storage"
   ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;"
+  },
   "action": {
     "default_title": "Open List Dock"
   },

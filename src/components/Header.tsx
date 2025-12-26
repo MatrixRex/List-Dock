@@ -10,7 +10,7 @@ const Header: React.FC = () => {
 
     return (
         <>
-            <header className="flex items-center justify-between p-4 bg-gray-900 border-b border-gray-800 shrink-0">
+            <header className="flex items-center justify-between p-4 glass !border-t-0 !border-x-0 !rounded-none border-b border-white/10 shrink-0">
                 <div className="flex items-center gap-2 overflow-hidden">
                     {currentView === 'folder' && (
                         <button

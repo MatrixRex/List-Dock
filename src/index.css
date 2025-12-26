@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
 @theme {
+  --font-sans: "Space Mono", monospace;
+  --font-mono: "Space Mono", monospace;
   --color-gray-900: #111827;
   --color-gray-800: #1f2937;
   --color-gray-700: #374151;
@@ -8,11 +10,46 @@
 }
 
 @layer base {
-  body {
-    @apply bg-gray-900 text-gray-100 font-sans;
+  *, ::before, ::after {
+    font-family: "Space Mono", monospace !important;
+    letter-spacing: 0.02em;
+  }
+
+  html {
+    background-color: #050408;
+    background-image: 
+      /* 1. TOP LAYER: Tactical Grid */
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      /* 2. MIDDLE LAYER: Grain Noise */
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"),
+      /* 3. BOTTOM LAYER: Mesh Gradients */
+      radial-gradient(at 0% 0%, rgba(184, 149, 177, 0.25) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(62, 26, 108, 0.3) 0px, transparent 50%),
+      radial-gradient(at 50% 50%, rgba(34, 13, 82, 0.15) 0px, transparent 80%),
+      radial-gradient(at 100% 20%, rgba(68, 38, 126, 0.1) 0px, transparent 40%);
+    background-size: 40px 40px, 40px 40px, 100px 100px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+    background-attachment: fixed;
+    background-blend-mode: normal, normal, overlay, normal, normal, normal, normal;
+  }
+
+  /* Custom Glossy Utility */
+  .glass {
+    background: rgba(40, 40, 40, 0.2) !important;
+    backdrop-filter: blur(2px) !important;
+    /* -webkit-backdrop-filter: blur(2px) !important; */
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+
+  body, #root {
+    background: transparent !important;
+    position: relative;
+    z-index: 10;
+    @apply text-gray-100;
     margin: 0;
     padding: 0;
     overflow-x: hidden;
+    min-height: 100vh;
   }
 }
 
@@ -22,13 +59,14 @@
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-900;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-700 rounded-full;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-600;
+  background: rgba(255, 255, 255, 0.2);
 }
