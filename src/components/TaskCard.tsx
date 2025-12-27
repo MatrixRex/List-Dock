@@ -120,21 +120,33 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
     };
 
     return (
-        <div className="group/task space-y-1 relative">
-            <div
+        <motion.div
+            layout
+            className="group/task space-y-1 relative"
+        >
+            <motion.div
                 ref={cardRef}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                whileHover={{
+                    paddingTop: "18px",
+                    paddingBottom: "18px",
+                    backgroundColor: "rgba(255, 255, 255, 0.08)"
+                }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
                 draggable={!isMenuOpen}
-                onDragStart={handleDragStart}
-                onDragOver={handleDragOver}
+                onDragStart={handleDragStart as any}
+                onDragOver={handleDragOver as any}
                 onDragLeave={() => updateDragState(dragState.draggedItemId, null, null)}
-                onDrop={handleDrop}
+                onDrop={handleDrop as any}
                 onDoubleClick={() => !isMenuOpen && setIsRenaming(true)}
                 className={cn(
-                    "group relative glass p-3 transition-all cursor-pointer",
+                    "group relative glass p-3 cursor-pointer",
                     !isSubtask && "rounded-t-xl",
                     !isSubtask && (!item.is_expanded || !hasSubtasks) && "rounded-b-xl",
                     isSubtask && isLast && (!item.is_expanded || !hasSubtasks) && "rounded-b-xl",
-                    "hover:bg-white/[0.06] active:scale-[0.98]",
+                    "active:scale-[0.98]",
                     dragState.targetItemId === item.id && dragState.dropZone === 'right' && "border-purple-500 bg-purple-500/10 shadow-[0_0_15px_-3px_rgba(168,85,247,0.3)]",
                     item.is_completed && "opacity-60",
                     isSubtask && "ml-6 py-2 bg-white/[0.01]",
@@ -273,7 +285,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                         <Trash2 size={14} /> Delete
                     </button>
                 </ContextMenu>
-            </div>
+            </motion.div>
 
             {/* Subtasks Accordion */}
             <AnimatePresence initial={false}>
@@ -296,7 +308,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
+        </motion.div>
     );
 };
 

@@ -6,6 +6,7 @@ import FolderView from './components/FolderView';
 import SmartInput from './components/SmartInput';
 import { Toaster } from 'sonner';
 import { DnDProvider } from './store/DnDContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const App: React.FC = () => {
   const currentView = useStore((state) => state.currentView);
@@ -46,8 +47,18 @@ const App: React.FC = () => {
       <div className="flex flex-col h-screen overflow-hidden">
         <Header />
 
-        <main className="flex-1 overflow-y-auto px-4 py-2 custom-scrollbar">
-          {currentView === 'root' ? <RootView /> : <FolderView />}
+        <main className="flex-1 overflow-y-auto px-4 py-2 custom-scrollbar relative">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentView}
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+            >
+              {currentView === 'root' ? <RootView /> : <FolderView />}
+            </motion.div>
+          </AnimatePresence>
         </main>
 
         <SmartInput />

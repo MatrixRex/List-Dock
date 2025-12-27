@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore';
 import { Plus, Search, FolderPlus, X } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { cn } from '../utils/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const SmartInput: React.FC = () => {
     const [value, setValue] = useState('');
@@ -40,39 +41,65 @@ const SmartInput: React.FC = () => {
                 "focus-within:!bg-white/[0.08] focus-within:shadow-[0_0_30px_-5px_rgba(255,255,255,0.08)]",
                 isMenuOpen && "pointer-events-none opacity-50 shadow-none border-gray-800"
             )}>
-                <div className="flex bg-white/5 rounded-lg p-0.5">
-                    <button
-                        onClick={() => setMode('task')}
-                        className={cn(
-                            "p-1.5 rounded-md transition-all",
-                            mode === 'task' ? "bg-blue-500 text-white shadow-lg" : "text-gray-500 hover:text-gray-300"
-                        )}
-                        title="Add Task"
-                    >
-                        <Plus size={18} />
-                    </button>
-                    {!isFolderView && (
+                <div className="flex bg-white/5 rounded-lg p-0.5 relative">
+                    <AnimatePresence mode="popLayout">
                         <button
-                            onClick={() => setMode('folder')}
+                            onClick={() => setMode('task')}
                             className={cn(
-                                "p-1.5 rounded-md transition-all",
-                                mode === 'folder' ? "bg-blue-500 text-white shadow-lg" : "text-gray-500 hover:text-gray-300"
+                                "p-1.5 rounded-md transition-all relative z-10",
+                                mode === 'task' ? "text-white" : "text-gray-500 hover:text-gray-300"
                             )}
-                            title="Add Folder"
+                            title="Add Task"
                         >
-                            <FolderPlus size={18} />
+                            <Plus size={18} />
+                            {mode === 'task' && (
+                                <motion.div
+                                    layoutId="mode-pill"
+                                    className="absolute inset-0 bg-blue-500 rounded-md shadow-lg -z-10"
+                                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                />
+                            )}
                         </button>
-                    )}
-                    <button
-                        onClick={() => setMode('search')}
-                        className={cn(
-                            "p-1.5 rounded-md transition-all",
-                            mode === 'search' ? "bg-blue-500 text-white shadow-lg" : "text-gray-500 hover:text-gray-300"
+                        {!isFolderView && (
+                            <motion.button
+                                initial={{ opacity: 0, scale: 0.8, width: 0 }}
+                                animate={{ opacity: 1, scale: 1, width: 'auto' }}
+                                exit={{ opacity: 0, scale: 0.8, width: 0 }}
+                                onClick={() => setMode('folder')}
+                                className={cn(
+                                    "p-1.5 rounded-md transition-all relative z-10",
+                                    mode === 'folder' ? "text-white" : "text-gray-500 hover:text-gray-300"
+                                )}
+                                title="Add Folder"
+                            >
+                                <FolderPlus size={18} />
+                                {mode === 'folder' && (
+                                    <motion.div
+                                        layoutId="mode-pill"
+                                        className="absolute inset-0 bg-blue-500 rounded-md shadow-lg -z-10"
+                                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                    />
+                                )}
+                            </motion.button>
                         )}
-                        title="Search"
-                    >
-                        <Search size={18} />
-                    </button>
+                        <button
+                            onClick={() => setMode('search')}
+                            className={cn(
+                                "p-1.5 rounded-md transition-all relative z-10",
+                                mode === 'search' ? "text-white" : "text-gray-500 hover:text-gray-300"
+                            )}
+                            title="Search"
+                        >
+                            <Search size={18} />
+                            {mode === 'search' && (
+                                <motion.div
+                                    layoutId="mode-pill"
+                                    className="absolute inset-0 bg-blue-500 rounded-md shadow-lg -z-10"
+                                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                />
+                            )}
+                        </button>
+                    </AnimatePresence>
                 </div>
 
                 <input

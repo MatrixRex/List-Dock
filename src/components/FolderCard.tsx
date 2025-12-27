@@ -5,6 +5,7 @@ import { Folder as FolderIcon, Trash2 } from 'lucide-react';
 import { useDnDContext } from '../store/DnDContext';
 import { cn } from '../utils/utils';
 import ConfirmDialog from './ui/ConfirmDialog';
+import { motion } from 'framer-motion';
 
 interface FolderCardProps {
     item: Item;
@@ -38,13 +39,22 @@ const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
     };
 
     return (
-        <div
+        <motion.div
+            layout
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            whileHover={{
+                scale: 1.04,
+                backgroundColor: "rgba(255, 255, 255, 0.08)"
+            }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
             onClick={() => !isMenuOpen && setView('folder', item.id)}
-            onDragOver={handleDragOver}
+            onDragOver={handleDragOver as any}
             onDragLeave={() => updateDragState(dragState.draggedItemId, null, null)}
-            onDrop={handleDrop}
+            onDrop={handleDrop as any}
             className={cn(
-                "glass rounded-xl p-2.5 hover:border-purple-500/50 transition-all cursor-pointer group relative",
+                "glass rounded-xl p-2.5 cursor-pointer group relative",
                 dragState.targetItemId === item.id && "border-purple-500 bg-purple-500/10 shadow-[0_0_15px_-3px_rgba(168,85,247,0.3)]",
                 isMenuOpen && "pointer-events-none"
             )}
@@ -84,7 +94,7 @@ const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
             {dragState.targetItemId === item.id && (
                 <div className="absolute inset-0 bg-blue-500/5 pointer-events-none" />
             )}
-        </div>
+        </motion.div>
     );
 };
 
