@@ -94,7 +94,7 @@ const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
                                 {isIconHovered ? (
                                     <LucideIcons.Edit2 size={16} />
                                 ) : isLetterIcon ? (
-                                    <span className="text-[10px] leading-none uppercase">{item.title.charAt(0) || '?'}</span>
+                                    <span className="text-[15px] leading-none uppercase">{item.title.charAt(0) || '?'}</span>
                                 ) : (
                                     <IconComponent size={16} />
                                 )}
