@@ -69,10 +69,7 @@ const SmartInput: React.FC = () => {
                             {mode === 'task' && (
                                 <motion.div
                                     layoutId="mode-pill"
-                                    className={cn(
-                                        "absolute inset-0 rounded-md shadow-lg -z-10",
-                                        selectedTaskId ? "bg-purple-600" : "bg-blue-500"
-                                    )}
+                                    className="absolute inset-0 bg-purple-600 rounded-md shadow-lg -z-10"
                                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                                 />
                             )}
@@ -93,7 +90,7 @@ const SmartInput: React.FC = () => {
                                 {mode === 'folder' && (
                                     <motion.div
                                         layoutId="mode-pill"
-                                        className="absolute inset-0 bg-blue-500 rounded-md shadow-lg -z-10"
+                                        className="absolute inset-0 bg-purple-500 rounded-md shadow-lg -z-10"
                                         transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                                     />
                                 )}
@@ -111,7 +108,7 @@ const SmartInput: React.FC = () => {
                             {mode === 'search' && (
                                 <motion.div
                                     layoutId="mode-pill"
-                                    className="absolute inset-0 bg-blue-500 rounded-md shadow-lg -z-10"
+                                    className="absolute inset-0 bg-purple-500 rounded-md shadow-lg -z-10"
                                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                                 />
                             )}

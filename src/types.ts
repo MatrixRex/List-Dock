@@ -9,6 +9,8 @@ export interface Item {
     order_index: number;
     is_expanded: boolean; // For accordion state
     created_at: number;
+    color?: string;
+    icon?: string;
 }
 
 export interface AppState {

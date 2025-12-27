@@ -164,10 +164,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
             >
                 {/* Drop Indicators */}
                 {dragState.targetItemId === item.id && dragState.dropZone === 'top' && (
-                    <div className="absolute -top-[1.5px] left-0 right-0 h-0.5 bg-blue-500 z-50 rounded-full" />
+                    <div className="absolute -top-[1.5px] left-0 right-0 h-0.5 bg-purple-500 z-50 rounded-full" />
                 )}
                 {dragState.targetItemId === item.id && dragState.dropZone === 'bottom' && (
-                    <div className="absolute -bottom-[1.5px] left-0 right-0 h-0.5 bg-blue-500 z-50 rounded-full" />
+                    <div className="absolute -bottom-[1.5px] left-0 right-0 h-0.5 bg-purple-500 z-50 rounded-full" />
                 )}
 
                 <div className="flex items-center gap-3">
@@ -197,7 +197,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                                 onChange={(e) => setRenameValue(e.target.value)}
                                 onBlur={handleRename}
                                 onKeyDown={(e) => e.key === 'Enter' && handleRename()}
-                                className="w-full bg-gray-700 border-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-0.5 text-sm outline-none"
+                                className="w-full bg-gray-700 border-none focus:ring-1 focus:ring-purple-500 rounded px-1 py-0.5 text-sm outline-none"
                             />
                         ) : (
                             <div className="flex items-center gap-2">
@@ -245,7 +245,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                         <div
                             className={cn(
                                 "h-full transition-all duration-500 ease-out",
-                                completedSubtasks === subtasks.length ? "bg-green-500" : "bg-blue-500"
+                                completedSubtasks === subtasks.length ? "bg-green-500" : "bg-purple-500"
                             )}
                             style={{ width: `${(completedSubtasks / subtasks.length) * 100}%` }}
                         />

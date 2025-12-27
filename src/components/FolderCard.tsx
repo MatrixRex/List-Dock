@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import type { Item } from '../types';
 import { useStore } from '../store/useStore';
-import { Folder as FolderIcon, Trash2 } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import { useDnDContext } from '../store/DnDContext';
 import { cn } from '../utils/utils';
 import ConfirmDialog from './ui/ConfirmDialog';
-import { motion } from 'framer-motion';
+import FolderSettingsPopup from './FolderSettingsPopup';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface FolderCardProps {
     item: Item;
@@ -16,6 +17,8 @@ const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
     const { items, deleteItem, moveItem, isMenuOpen, showCompleted } = useStore();
     const { dragState, updateDragState, clearDragState } = useDnDContext();
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
+    const [isIconHovered, setIsIconHovered] = useState(false);
 
     const folderItems = items
         .filter(i => i.parent_id === item.id)
@@ -37,6 +40,9 @@ const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
         }
         clearDragState();
     };
+
+    const IconComponent = (LucideIcons as any)[item.icon || 'Folder'] || LucideIcons.Folder;
+    const folderColor = item.color || '#a855f7';
 
     return (
         <motion.div
@@ -61,8 +67,28 @@ const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
         >
             <div className="flex flex-col gap-1 relative z-10">
                 <div className="flex items-center gap-2">
-                    <div className="text-blue-400/80 shrink-0">
-                        <FolderIcon size={16} />
+                    <div
+                        className="shrink-0 transition-all duration-200 relative w-5 h-5 flex items-center justify-center p-0.5"
+                        onMouseEnter={() => setIsIconHovered(true)}
+                        onMouseLeave={() => setIsIconHovered(false)}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setShowSettings(true);
+                        }}
+                        style={{ color: folderColor }}
+                    >
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={isIconHovered ? 'pen' : 'icon'}
+                                initial={{ opacity: 0, rotate: -20, scale: 0.8 }}
+                                animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                                exit={{ opacity: 0, rotate: 20, scale: 0.8 }}
+                                transition={{ duration: 0.15 }}
+                                className="flex items-center justify-center"
+                            >
+                                {isIconHovered ? <LucideIcons.Edit2 size={16} /> : <IconComponent size={16} />}
+                            </motion.div>
+                        </AnimatePresence>
                     </div>
                     <h3 className="text-sm font-medium truncate text-gray-100 flex-1">{item.title}</h3>
                 </div>
@@ -75,10 +101,16 @@ const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
                         }}
                         className="p-1 text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
                     >
-                        <Trash2 size={14} />
+                        <LucideIcons.Trash2 size={14} />
                     </button>
                 </div>
             </div>
+
+            <FolderSettingsPopup
+                isOpen={showSettings}
+                onClose={() => setShowSettings(false)}
+                folder={item}
+            />
 
             <ConfirmDialog
                 isOpen={showDeleteConfirm}
@@ -92,7 +124,7 @@ const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
 
             {/* Drop Indicator Overlay */}
             {dragState.targetItemId === item.id && (
-                <div className="absolute inset-0 bg-blue-500/5 pointer-events-none" />
+                <div className="absolute inset-0 bg-purple-500/5 pointer-events-none" />
             )}
         </motion.div>
     );

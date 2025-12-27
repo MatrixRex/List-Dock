@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
-import { ChevronLeft, Settings, Trash2, Check, Edit2 } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import SettingsPopup from './SettingsPopup';
 import ConfirmDialog from './ui/ConfirmDialog';
+import FolderSettingsPopup from './FolderSettingsPopup';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Header: React.FC = () => {
     const { currentView, currentFolderId, items, setView, isMenuOpen, updateItem, deleteItem } = useStore();
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showFolderSettings, setShowFolderSettings] = useState(false);
+    const [isIconHovered, setIsIconHovered] = useState(false);
 
     const folder = items.find(i => i.id === currentFolderId);
     const [titleValue, setTitleValue] = useState('');
@@ -33,6 +37,9 @@ const Header: React.FC = () => {
         setShowDeleteConfirm(false);
     };
 
+    const IconComponent = (folder && (LucideIcons as any)[folder.icon || 'Folder']) || LucideIcons.Folder;
+    const folderColor = folder?.color || '#a855f7';
+
     return (
         <>
             <header className="flex items-center justify-between p-4 glass glass-bottom-only shrink-0">
@@ -42,13 +49,35 @@ const Header: React.FC = () => {
                             onClick={() => !isMenuOpen && setView('root')}
                             className="p-1 hover:bg-white/10 rounded transition-colors shrink-0"
                         >
-                            <ChevronLeft size={18} />
+                            <LucideIcons.ChevronLeft size={18} />
                         </button>
                     )}
                     {currentView === 'root' ? (
                         <h1 className="font-bold text-lg truncate">List Dock</h1>
                     ) : (
                         <div className="flex items-center gap-2 flex-1 min-w-0">
+                            {/* Folder Icon in Header */}
+                            <div
+                                className="shrink-0 transition-all duration-200 relative w-5 h-5 flex items-center justify-center p-0.5 cursor-pointer"
+                                onMouseEnter={() => setIsIconHovered(true)}
+                                onMouseLeave={() => setIsIconHovered(false)}
+                                onClick={() => setShowFolderSettings(true)}
+                                style={{ color: folderColor }}
+                            >
+                                <AnimatePresence mode="wait">
+                                    <motion.div
+                                        key={isIconHovered ? 'pen' : 'icon'}
+                                        initial={{ opacity: 0, rotate: -20, scale: 0.8 }}
+                                        animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                                        exit={{ opacity: 0, rotate: 20, scale: 0.8 }}
+                                        transition={{ duration: 0.15 }}
+                                        className="flex items-center justify-center"
+                                    >
+                                        {isIconHovered ? <LucideIcons.Edit2 size={16} /> : <IconComponent size={16} />}
+                                    </motion.div>
+                                </AnimatePresence>
+                            </div>
+
                             {isEditingTitle ? (
                                 <div className="flex items-center gap-1 flex-1">
                                     <input
@@ -57,10 +86,10 @@ const Header: React.FC = () => {
                                         onChange={(e) => setTitleValue(e.target.value)}
                                         onBlur={handleUpdateTitle}
                                         onKeyDown={(e) => e.key === 'Enter' && handleUpdateTitle()}
-                                        className="w-full bg-white/10 border-none focus:ring-1 focus:ring-blue-500 rounded px-1.5 py-0.5 text-sm font-bold outline-none"
+                                        className="w-full bg-white/10 border-none focus:ring-1 focus:ring-purple-500 rounded px-1.5 py-0.5 text-sm font-bold outline-none"
                                     />
                                     <button onClick={handleUpdateTitle} className="text-green-500 p-1 hover:bg-white/10 rounded shrink-0">
-                                        <Check size={16} />
+                                        <LucideIcons.Check size={16} />
                                     </button>
                                 </div>
                             ) : (
@@ -71,7 +100,7 @@ const Header: React.FC = () => {
                                     >
                                         {folder?.title || 'Folder'}
                                     </h1>
-                                    <Edit2
+                                    <LucideIcons.Edit2
                                         size={12}
                                         className="text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 cursor-pointer"
                                         onClick={() => setIsEditingTitle(true)}
@@ -90,14 +119,14 @@ const Header: React.FC = () => {
                                     className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors"
                                     title="Delete Folder"
                                 >
-                                    <Trash2 size={18} />
+                                    <LucideIcons.Trash2 size={18} />
                                 </button>
                             )}
                             <button
                                 onClick={() => setIsSettingsOpen(true)}
                                 className="p-1.5 hover:bg-white/10 rounded transition-colors text-gray-400 hover:text-white"
                             >
-                                <Settings size={18} />
+                                <LucideIcons.Settings size={18} />
                             </button>
                         </div>
                     </div>
@@ -110,15 +139,22 @@ const Header: React.FC = () => {
             />
 
             {folder && (
-                <ConfirmDialog
-                    isOpen={showDeleteConfirm}
-                    onClose={() => setShowDeleteConfirm(false)}
-                    onConfirm={handleDeleteFolder}
-                    title="Delete Folder?"
-                    message={`Are you sure you want to delete "${folder.title}" and everything inside?`}
-                    confirmText="Delete Folder"
-                    variant="danger"
-                />
+                <>
+                    <FolderSettingsPopup
+                        isOpen={showFolderSettings}
+                        onClose={() => setShowFolderSettings(false)}
+                        folder={folder}
+                    />
+                    <ConfirmDialog
+                        isOpen={showDeleteConfirm}
+                        onClose={() => setShowDeleteConfirm(false)}
+                        onConfirm={handleDeleteFolder}
+                        title="Delete Folder?"
+                        message={`Are you sure you want to delete "${folder.title}" and everything inside?`}
+                        confirmText="Delete Folder"
+                        variant="danger"
+                    />
+                </>
             )}
         </>
     );

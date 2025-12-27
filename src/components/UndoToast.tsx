@@ -27,7 +27,7 @@ const UndoToast: React.FC<UndoToastProps> = ({ message, undo, id, duration = 500
 
             <button
                 onClick={handleUndo}
-                className="ml-auto p-1.5 rounded-lg text-blue-400 hover:bg-blue-400/20 transition-colors z-10 relative overflow-hidden group/btn"
+                className="ml-auto p-1.5 rounded-lg text-purple-400 hover:bg-purple-400/20 transition-colors z-10 relative overflow-hidden group/btn"
                 title="Undo"
             >
                 <RotateCcw size={16} className="group-hover/btn:rotate-[-45deg] transition-transform duration-300" />
@@ -36,7 +36,7 @@ const UndoToast: React.FC<UndoToastProps> = ({ message, undo, id, duration = 500
             {/* Progress Bar Container */}
             <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-700/50">
                 <div
-                    className="h-full bg-blue-500/60 transition-transform origin-left"
+                    className="h-full bg-purple-500/60 transition-transform origin-left"
                     style={{
                         animation: `toast-progress ${duration}ms linear forwards`,
                         animationPlayState: isHovered ? 'paused' : 'running'
