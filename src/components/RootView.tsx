@@ -35,6 +35,9 @@ const RootView: React.FC = () => {
                 )}
             </section>
 
+            {/* Separator Line */}
+            <div className="h-px bg-white/[0.05] mx-1" />
+
             {/* Bottom Section: Folder Grid */}
             <section>
                 <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 px-1">Folders</h2>
