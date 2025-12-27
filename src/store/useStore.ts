@@ -194,6 +194,7 @@ export const useStore = create<StoreState>()(
                             message,
                             undo: () => get().undo(),
                             duration: 5000,
+                            visible: t.visible,
                         }),
                     { duration: 5000 }
                 );
