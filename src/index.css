@@ -49,71 +49,6 @@
     transition: --mouse-x 0.5s cubic-bezier(0.16, 1, 0.3, 1), --mouse-y 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  /* Custom Glossy Utility with Spotlight Border */
-  .glass {
-    position: relative;
-    background: rgba(40, 40, 40, 0.2) !important;
-    backdrop-filter: blur(2px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  }
-
-  /* The actual spotlight border layer (GLOBAL MOUSE FOCUS) */
-  .glass::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1px; /* This defines the border thickness for the mask */
-    background: radial-gradient(
-      350px circle at var(--mouse-x) var(--mouse-y), 
-      rgba(255, 255, 255, 0.45) 0%, 
-      rgba(255, 255, 255, 0.1) 45%,
-      transparent 100%
-    );
-    background-attachment: fixed;
-    
-    /* Strict Border Mask: Only show what is IN the padding area */
-    -webkit-mask: linear-gradient(#fff, #fff) content-box, linear-gradient(#fff, #fff) border-box;
-    mask: linear-gradient(#fff, #fff) content-box, linear-gradient(#fff, #fff) border-box;
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    
-    pointer-events: none;
-    z-index: 20; /* Ensure it stays above content borders */
-  }
-
-  /* Variant for Header: Only bottom border glows/exists */
-  .glass-bottom-only {
-    border-top: none !important;
-    border-left: none !important;
-    border-right: none !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 0 !important;
-  }
-  .glass-bottom-only::before {
-    padding-top: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    padding-bottom: 1px !important;
-    border-radius: 0 !important;
-  }
-
-  /* Variant for Footer: Only top border glows/exists */
-  .glass-top-only {
-    border-bottom: none !important;
-    border-left: none !important;
-    border-right: none !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 0 !important;
-  }
-  .glass-top-only::before {
-    padding-bottom: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    padding-top: 1px !important;
-    border-radius: 0 !important;
-  }
-
   body, #root {
     background: transparent !important;
     position: relative;
@@ -124,10 +59,82 @@
     overflow-x: hidden;
     min-height: 100vh;
   }
+}
 
-  /* Sonner Toast Styling */
+/* Custom Glossy Utilities */
+@utility glass {
+  position: relative;
+  background: rgba(40, 40, 40, 0.2) !important;
+  backdrop-filter: blur(2px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+@utility glass-bottom-only {
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 0 !important;
+}
+
+@utility glass-top-only {
+  border-bottom: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 0 !important;
+}
+
+/* The actual spotlight border layer (GLOBAL MOUSE FOCUS) */
+.glass::before,
+.glass-bottom-only::before,
+.glass-top-only::before,
+[data-sonner-toast]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px; /* This defines the border thickness for the mask */
+  background: radial-gradient(
+    350px circle at var(--mouse-x) var(--mouse-y), 
+    rgba(255, 255, 255, 0.45) 0%, 
+    rgba(255, 255, 255, 0.1) 45%,
+    transparent 100%
+  );
+  background-attachment: fixed;
+  
+  /* Strict Border Mask: Only show what is IN the padding area */
+  -webkit-mask: linear-gradient(#fff, #fff) content-box, linear-gradient(#fff, #fff) border-box;
+  mask: linear-gradient(#fff, #fff) content-box, linear-gradient(#fff, #fff) border-box;
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  
+  pointer-events: none;
+  z-index: 20; /* Ensure it stays above content borders */
+}
+
+/* Variant for Header: Only bottom border glows/exists */
+.glass-bottom-only::before {
+  padding-top: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  padding-bottom: 1px !important;
+  border-radius: 0 !important;
+}
+
+/* Variant for Footer: Only top border glows/exists */
+.glass-top-only::before {
+  padding-bottom: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  padding-top: 1px !important;
+  border-radius: 0 !important;
+}
+
+/* Sonner Toast Styling */
+@layer base {
   [data-sonner-toast] {
-    @apply glass shadow-2xl !important;
+    @apply !glass !shadow-2xl;
     backdrop-filter: blur(12px) !important;
     border-radius: 12px !important;
     padding: 0 !important;
@@ -147,7 +154,7 @@
   }
 
   [data-sonner-toast] [data-title] {
-    @apply text-gray-100 font-medium !important;
+    @apply !text-gray-100 !font-medium;
     font-family: "Space Mono", monospace !important;
   }
 
