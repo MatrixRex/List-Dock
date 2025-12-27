@@ -36,10 +36,11 @@ const SmartInput: React.FC = () => {
     return (
         <div className="p-4 glass !border-b-0 !border-x-0 !rounded-none border-t border-white/10 shrink-0 sticky bottom-0 z-[200]">
             <div className={cn(
-                "flex items-center gap-2 bg-gray-800/80 backdrop-blur-md rounded-xl border border-gray-700/50 p-1.5 focus-within:border-blue-500/50 focus-within:ring-4 focus-within:ring-blue-500/5 transition-all shadow-2xl",
+                "flex items-center gap-2 bg-white/[0.03] backdrop-blur-xl rounded-xl border border-white/5 p-1.5 transition-all",
+                "focus-within:border-blue-500/30 focus-within:shadow-[0_0_25px_-5px_rgba(59,130,246,0.2)] focus-within:bg-white/[0.06]",
                 isMenuOpen && "pointer-events-none opacity-50 shadow-none border-gray-800"
             )}>
-                <div className="flex bg-gray-900/50 rounded-lg p-0.5">
+                <div className="flex bg-white/5 rounded-lg p-0.5">
                     <button
                         onClick={() => setMode('task')}
                         className={cn(
@@ -86,7 +87,7 @@ const SmartInput: React.FC = () => {
                         mode === 'task' ? (isFolderView ? "Add task to folder..." : "Add task to root...") :
                             mode === 'folder' ? "New folder name..." : "Search lists..."
                     }
-                    className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-1.5 px-2 placeholder:text-gray-600 text-gray-100"
+                    className="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none text-sm py-1.5 px-2 placeholder:text-gray-600 text-gray-100"
                 />
 
                 {value ? (

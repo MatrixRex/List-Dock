@@ -22,7 +22,7 @@
       linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
       /* 2. MIDDLE LAYER: Grain Noise */
-      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"),
       /* 3. BOTTOM LAYER: Mesh Gradients */
       radial-gradient(at 0% 0%, rgba(184, 149, 177, 0.25) 0px, transparent 50%),
       radial-gradient(at 100% 100%, rgba(62, 26, 108, 0.3) 0px, transparent 50%),
@@ -30,7 +30,7 @@
       radial-gradient(at 100% 20%, rgba(68, 38, 126, 0.1) 0px, transparent 40%);
     background-size: 40px 40px, 40px 40px, 100px 100px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
     background-attachment: fixed;
-    background-blend-mode: normal, normal, overlay, normal, normal, normal, normal;
+    background-blend-mode: normal, normal, multiply, normal, normal, normal, normal;
   }
 
   /* Custom Glossy Utility */
