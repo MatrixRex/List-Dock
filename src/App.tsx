@@ -44,7 +44,7 @@ const App: React.FC = () => {
 
   return (
     <DnDProvider>
-      <div className="flex flex-col h-screen overflow-hidden">
+      <div className="flex flex-col h-screen overflow-hidden border border-white/5 bg-[#050408]/50">
         <Header />
 
         <main className="flex-1 overflow-y-auto px-4 py-2 custom-scrollbar relative">

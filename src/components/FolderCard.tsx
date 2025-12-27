@@ -53,10 +53,15 @@ const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
             exit={{ opacity: 0, scale: 0.9 }}
             whileHover={{
                 scale: 1.04,
-                backgroundColor: "rgba(255, 255, 255, 0.08)"
+                backgroundColor: "rgba(255, 255, 255, 0.08)",
+                transition: { duration: 0.1, ease: "easeOut" }
             }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            onClick={() => !isMenuOpen && setView('folder', item.id)}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            onClick={() => {
+                if (isMenuOpen) return;
+                useStore.getState().setSearchQuery('');
+                setView('folder', item.id);
+            }}
             onDragOver={handleDragOver as any}
             onDragLeave={() => updateDragState(dragState.draggedItemId, null, null)}
             onDrop={handleDrop as any}

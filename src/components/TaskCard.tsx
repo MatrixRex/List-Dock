@@ -121,8 +121,30 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
         setIsMenuOpen(false);
     };
 
-    const handleCardClick = (e: React.MouseEvent) => {
+    const handleCardClick = () => {
         if (isMenuOpen || item.is_completed) return;
+
+        const currentSearch = useStore.getState().searchQuery;
+
+        if (currentSearch.trim()) {
+            // Exit search and go to item's location
+            let targetFolderId: string | null = null;
+
+            if (item.type === 'subtask') {
+                const parentTask = items.find(i => i.id === item.parent_id);
+                if (parentTask) {
+                    targetFolderId = parentTask.parent_id || null;
+                    // Expand parent task so the subtask is visible
+                    updateItem(parentTask.id, { is_expanded: true });
+                }
+            } else {
+                targetFolderId = item.parent_id || null;
+            }
+
+            useStore.getState().setSearchQuery('');
+            useStore.getState().setView(targetFolderId ? 'folder' : 'root', targetFolderId);
+        }
+
         setSelectedTaskId(item.id);
     };
 
@@ -139,9 +161,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                 whileHover={{
                     paddingTop: "18px",
                     paddingBottom: "18px",
-                    backgroundColor: "rgba(255, 255, 255, 0.08)"
+                    backgroundColor: "rgba(255, 255, 255, 0.08)",
+                    transition: { duration: 0.1, ease: "easeOut" }
                 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
                 draggable={!isMenuOpen}
                 onDragStart={handleDragStart as any}
                 onDragOver={handleDragOver as any}

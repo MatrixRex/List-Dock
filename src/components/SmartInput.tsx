@@ -50,7 +50,7 @@ const SmartInput: React.FC = () => {
         <div className="p-4 glass glass-top-only shrink-0 sticky bottom-0 z-[200]">
             <div className={cn(
                 "flex items-center gap-2 glass !bg-white/[0.03] backdrop-blur-xl rounded-xl p-1.5 transition-all text-gray-200",
-                "focus-within:!bg-white/[0.08] focus-within:shadow-[0_0_30px_-5px_rgba(255,255,255,0.08)]",
+                "focus-within:!bg-[#050408] focus-within:ring-1 focus-within:ring-white/10 focus-within:shadow-[0_0_40px_rgba(139,92,246,0.15)]",
                 "border border-white/5",
                 selectedTaskId && "border-purple-500/50 bg-purple-500/5",
                 isMenuOpen && "pointer-events-none opacity-50 shadow-none border-gray-800"
