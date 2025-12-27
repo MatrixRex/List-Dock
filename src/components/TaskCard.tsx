@@ -14,7 +14,7 @@ interface TaskCardProps {
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = false }) => {
-    const { updateItem, items, deleteItem, moveItem, showCompleted, hideCompletedSubtasks } = useStore();
+    const { updateItem, items, deleteItem, moveItem, showCompleted, hideCompletedSubtasks, selectedTaskId, setSelectedTaskId } = useStore();
     const { dragState, updateDragState, clearDragState, calculateZone } = useDnDContext();
     const cardRef = useRef<HTMLDivElement>(null);
     const [isRenaming, setIsRenaming] = useState(false);
@@ -22,6 +22,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
     const [showMenu, setShowMenu] = useState(false);
     const menuButtonRef = useRef<HTMLButtonElement>(null);
     const { isMenuOpen, setIsMenuOpen } = useStore();
+
+    const isSelected = selectedTaskId === item.id;
 
     const subtasks = items
         .filter(i => i.parent_id === item.id && i.type === 'subtask')
@@ -119,6 +121,11 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
         setIsMenuOpen(false);
     };
 
+    const handleCardClick = (e: React.MouseEvent) => {
+        if (isMenuOpen || item.is_completed) return;
+        setSelectedTaskId(item.id);
+    };
+
     return (
         <motion.div
             layout
@@ -141,14 +148,16 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                 onDragLeave={() => updateDragState(dragState.draggedItemId, null, null)}
                 onDrop={handleDrop as any}
                 onDoubleClick={() => !isMenuOpen && setIsRenaming(true)}
+                onClick={handleCardClick}
                 className={cn(
-                    "group relative glass p-3 cursor-pointer",
+                    "group relative glass p-3 cursor-pointer transition-all duration-300",
                     !isSubtask && "rounded-t-xl",
                     !isSubtask && (!item.is_expanded || !hasSubtasks) && "rounded-b-xl",
                     isSubtask && isLast && (!item.is_expanded || !hasSubtasks) && "rounded-b-xl",
                     "active:scale-[0.98]",
                     dragState.targetItemId === item.id && dragState.dropZone === 'right' && "border-purple-500 bg-purple-500/10 shadow-[0_0_15px_-3px_rgba(168,85,247,0.3)]",
-                    item.is_completed && "opacity-60",
+                    isSelected && "border-[#8b5cf6] bg-white/[0.05] shadow-[0_0_20px_-5px_rgba(139,92,246,0.3)]",
+                    item.is_completed && "opacity-60 grayscale-[0.5]",
                     isSubtask && "ml-6 py-2 bg-white/[0.01]",
                     isMenuOpen && "pointer-events-none"
                 )}

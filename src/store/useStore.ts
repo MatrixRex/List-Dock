@@ -14,6 +14,7 @@ interface StoreState extends AppState {
     isMenuOpen: boolean;
     showCompleted: boolean;
     hideCompletedSubtasks: boolean;
+    selectedTaskId: string | null;
 
     // Actions
     setItems: (items: Item[]) => void;
@@ -29,6 +30,7 @@ interface StoreState extends AppState {
     clearItems: () => void;
     setShowCompleted: (show: boolean) => void;
     setHideCompletedSubtasks: (hide: boolean) => void;
+    setSelectedTaskId: (id: string | null) => void;
 }
 
 // Custom storage for chrome.storage.local
@@ -92,19 +94,40 @@ export const useStore = create<StoreState>()(
             isMenuOpen: false,
             showCompleted: false,
             hideCompletedSubtasks: true,
+            selectedTaskId: null,
 
             setItems: (items) => set({ items }),
 
             addItem: (item) => {
-                const { items } = get();
-                get().pushToUndoStack(`Added ${item.title}`);
-                set({ items: [...items, item] });
+                const { items, selectedTaskId } = get();
+
+                let newItem = { ...item };
+
+                // If a task is selected, make this a subtask
+                if (selectedTaskId) {
+                    const selectedItem = items.find(i => i.id === selectedTaskId);
+                    if (selectedItem) {
+                        if (selectedItem.type === 'task') {
+                            newItem.parent_id = selectedTaskId;
+                            newItem.type = 'subtask';
+                        } else if (selectedItem.type === 'subtask') {
+                            // If subtask is selected, make sibling (subtask of same parent)
+                            newItem.parent_id = selectedItem.parent_id;
+                            newItem.type = 'subtask';
+                        }
+                    }
+                }
+
+                get().pushToUndoStack(`Added ${newItem.title}`);
+                set({ items: [...items, newItem] });
             },
 
             updateItem: (id, updates) => {
-                const { items } = get();
+                const { items, selectedTaskId } = get();
                 set({
                     items: items.map((item) => (item.id === id ? { ...item, ...updates } : item)),
+                    // Clear selection if the selected task is completed
+                    selectedTaskId: id === selectedTaskId && updates.is_completed ? null : selectedTaskId,
                 });
             },
 
@@ -156,7 +179,7 @@ export const useStore = create<StoreState>()(
                 set({ items: newItems });
             },
 
-            setView: (view, folderId = null) => set({ currentView: view, currentFolderId: folderId }),
+            setView: (view, folderId = null) => set({ currentView: view, currentFolderId: folderId, selectedTaskId: null }),
 
             setSearchQuery: (query) => set({ searchQuery: query }),
 
@@ -201,6 +224,10 @@ export const useStore = create<StoreState>()(
             setShowCompleted: (show) => set({ showCompleted: show }),
 
             setHideCompletedSubtasks: (hide) => set({ hideCompletedSubtasks: hide }),
+
+            setSelectedTaskId: (id) => set((state) => ({
+                selectedTaskId: state.selectedTaskId === id ? null : id
+            })),
         }),
         {
             name: 'list-dock-storage',
