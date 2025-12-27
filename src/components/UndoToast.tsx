@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { RotateCcw } from 'lucide-react';
-import { toast as sonnerToast } from 'sonner';
+import { toast } from 'react-hot-toast';
 
 interface UndoToastProps {
     message: string;
     undo: () => void;
-    id: string | number;
+    id: string;
     duration?: number;
 }
 
@@ -14,7 +14,7 @@ const UndoToast: React.FC<UndoToastProps> = ({ message, undo, id, duration = 500
 
     const handleUndo = () => {
         undo();
-        sonnerToast.dismiss(id);
+        toast.dismiss(id);
     };
 
     return (

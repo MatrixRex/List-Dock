@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Item, AppState } from '../types';
-import { toast } from 'sonner';
+import { toast } from 'react-hot-toast';
 import React from 'react';
 import UndoToast from '../components/UndoToast';
 
@@ -188,14 +188,14 @@ export const useStore = create<StoreState>()(
                 set({ undoStack: [...undoStack.slice(-19), items] }); // Keep last 20 states
 
                 toast.custom(
-                    (id) =>
+                    (t) =>
                         React.createElement(UndoToast, {
-                            id,
+                            id: t.id,
                             message,
                             undo: () => get().undo(),
                             duration: 5000,
                         }),
-                    { duration: 5000, unstyled: true }
+                    { duration: 5000 }
                 );
             },
 

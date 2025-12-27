@@ -4,7 +4,7 @@ import Header from './components/Header';
 import RootView from './components/RootView';
 import FolderView from './components/FolderView';
 import SmartInput from './components/SmartInput';
-import { Toaster } from 'sonner';
+import { Toaster } from 'react-hot-toast';
 import { DnDProvider } from './store/DnDContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -64,11 +64,17 @@ const App: React.FC = () => {
         <SmartInput />
         <Toaster
           position="bottom-center"
+          containerClassName="toast-container"
+          containerStyle={{
+            bottom: 80,
+          }}
           toastOptions={{
-            className: 'glass shadow-2xl rounded-xl',
+            duration: 5000,
+            className: 'glass-toast',
             style: {
-              marginBottom: '80px',
-            },
+              // Custom style overrides if needed, but classes handle most
+              padding: '0',
+            }
           }}
         />
       </div>
