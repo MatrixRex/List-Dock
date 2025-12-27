@@ -172,7 +172,7 @@ export const useStore = create<StoreState>()(
                             undo: () => get().undo(),
                             duration: 5000,
                         }),
-                    { duration: 5000 }
+                    { duration: 5000, unstyled: true }
                 );
             },
 

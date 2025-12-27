@@ -54,11 +54,8 @@ const App: React.FC = () => {
         <Toaster
           position="bottom-center"
           toastOptions={{
+            className: 'glass shadow-2xl rounded-xl',
             style: {
-              background: 'transparent',
-              border: 'none',
-              boxShadow: 'none',
-              padding: 0,
               marginBottom: '80px',
             },
           }}

@@ -19,7 +19,7 @@ const UndoToast: React.FC<UndoToastProps> = ({ message, undo, id, duration = 500
 
     return (
         <div
-            className="group relative flex items-center gap-3 bg-gray-800 border border-gray-700 shadow-2xl rounded-xl px-4 py-3 min-w-[240px] overflow-hidden"
+            className="group relative flex items-center gap-3 w-full min-w-[320px] px-4 py-3 overflow-hidden"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
