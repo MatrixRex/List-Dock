@@ -44,7 +44,7 @@ const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
             onDragLeave={() => updateDragState(dragState.draggedItemId, null, null)}
             onDrop={handleDrop}
             className={cn(
-                "glass rounded-xl p-2.5 hover:border-purple-500/50 transition-all cursor-pointer group relative overflow-hidden",
+                "glass rounded-xl p-2.5 hover:border-purple-500/50 transition-all cursor-pointer group relative",
                 dragState.targetItemId === item.id && "border-purple-500 bg-purple-500/10 shadow-[0_0_15px_-3px_rgba(168,85,247,0.3)]",
                 isMenuOpen && "pointer-events-none"
             )}

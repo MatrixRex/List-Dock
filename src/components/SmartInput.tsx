@@ -34,10 +34,10 @@ const SmartInput: React.FC = () => {
     };
 
     return (
-        <div className="p-4 glass !border-b-0 !border-x-0 !rounded-none border-t border-white/10 shrink-0 sticky bottom-0 z-[200]">
+        <div className="p-4 glass glass-top-only shrink-0 sticky bottom-0 z-[200]">
             <div className={cn(
-                "flex items-center gap-2 bg-white/[0.03] backdrop-blur-xl rounded-xl border border-white/5 p-1.5 transition-all",
-                "focus-within:border-blue-500/30 focus-within:shadow-[0_0_25px_-5px_rgba(59,130,246,0.2)] focus-within:bg-white/[0.06]",
+                "flex items-center gap-2 glass !bg-white/[0.03] backdrop-blur-xl rounded-xl p-1.5 transition-all",
+                "focus-within:!bg-white/[0.08] focus-within:shadow-[0_0_30px_-5px_rgba(255,255,255,0.08)]",
                 isMenuOpen && "pointer-events-none opacity-50 shadow-none border-gray-800"
             )}>
                 <div className="flex bg-white/5 rounded-lg p-0.5">
