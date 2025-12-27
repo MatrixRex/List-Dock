@@ -41,6 +41,7 @@ const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
         clearDragState();
     };
 
+    const isLetterIcon = !item.icon || item.icon === 'Letter';
     const IconComponent = (LucideIcons as any)[item.icon || 'Folder'] || LucideIcons.Folder;
     const folderColor = item.color || '#a855f7';
 
@@ -84,9 +85,15 @@ const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
                                 animate={{ opacity: 1, rotate: 0, scale: 1 }}
                                 exit={{ opacity: 0, rotate: 20, scale: 0.8 }}
                                 transition={{ duration: 0.15 }}
-                                className="flex items-center justify-center"
+                                className="flex items-center justify-center font-bold"
                             >
-                                {isIconHovered ? <LucideIcons.Edit2 size={16} /> : <IconComponent size={16} />}
+                                {isIconHovered ? (
+                                    <LucideIcons.Edit2 size={16} />
+                                ) : isLetterIcon ? (
+                                    <span className="text-[10px] leading-none uppercase">{item.title.charAt(0) || '?'}</span>
+                                ) : (
+                                    <IconComponent size={16} />
+                                )}
                             </motion.div>
                         </AnimatePresence>
                     </div>

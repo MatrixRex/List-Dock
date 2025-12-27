@@ -38,6 +38,7 @@ const Header: React.FC = () => {
     };
 
     const IconComponent = (folder && (LucideIcons as any)[folder.icon || 'Folder']) || LucideIcons.Folder;
+    const isLetterIcon = folder && (!folder.icon || folder.icon === 'Letter');
     const folderColor = folder?.color || '#a855f7';
 
     return (
@@ -58,7 +59,7 @@ const Header: React.FC = () => {
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                             {/* Folder Icon in Header */}
                             <div
-                                className="shrink-0 transition-all duration-200 relative w-5 h-5 flex items-center justify-center p-0.5 cursor-pointer"
+                                className="shrink-0 transition-all duration-200 relative w-5 h-5 flex items-center justify-center p-0.5 cursor-pointer font-bold"
                                 onMouseEnter={() => setIsIconHovered(true)}
                                 onMouseLeave={() => setIsIconHovered(false)}
                                 onClick={() => setShowFolderSettings(true)}
@@ -73,7 +74,13 @@ const Header: React.FC = () => {
                                         transition={{ duration: 0.15 }}
                                         className="flex items-center justify-center"
                                     >
-                                        {isIconHovered ? <LucideIcons.Edit2 size={16} /> : <IconComponent size={16} />}
+                                        {isIconHovered ? (
+                                            <LucideIcons.Edit2 size={16} />
+                                        ) : isLetterIcon ? (
+                                            <span className="text-[10px] leading-none uppercase">{folder?.title.charAt(0) || '?'}</span>
+                                        ) : (
+                                            <IconComponent size={16} />
+                                        )}
                                     </motion.div>
                                 </AnimatePresence>
                             </div>
