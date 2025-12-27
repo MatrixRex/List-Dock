@@ -159,12 +159,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 whileHover={{
-                    paddingTop: "18px",
-                    paddingBottom: "18px",
-                    backgroundColor: "rgba(255, 255, 255, 0.08)",
-                    transition: { duration: 0.1, ease: "easeOut" }
+                    backgroundColor: "rgba(255, 255, 255, 0.12)",
+                    borderColor: "rgba(255, 255, 255, 0)",
                 }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
                 draggable={!isMenuOpen}
                 onDragStart={handleDragStart as any}
                 onDragOver={handleDragOver as any}
@@ -173,7 +171,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                 onDoubleClick={() => !isMenuOpen && setIsRenaming(true)}
                 onClick={handleCardClick}
                 className={cn(
-                    "group relative glass p-3 cursor-pointer transition-all duration-300",
+                    "group relative glass p-3 cursor-pointer",
                     !isSubtask && "rounded-t-xl",
                     !isSubtask && (!item.is_expanded || !hasSubtasks) && "rounded-b-xl",
                     isSubtask && isLast && (!item.is_expanded || !hasSubtasks) && "rounded-b-xl",

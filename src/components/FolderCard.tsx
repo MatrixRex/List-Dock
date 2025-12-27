@@ -52,11 +52,10 @@ const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             whileHover={{
-                scale: 1.04,
-                backgroundColor: "rgba(255, 255, 255, 0.08)",
-                transition: { duration: 0.1, ease: "easeOut" }
+                backgroundColor: "rgba(255, 255, 255, 0.12)",
+                borderColor: "rgba(255, 255, 255, 0)",
             }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
             onClick={() => {
                 if (isMenuOpen) return;
                 useStore.getState().setSearchQuery('');

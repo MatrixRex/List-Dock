@@ -111,6 +111,14 @@
   
   pointer-events: none;
   z-index: 20; /* Ensure it stays above content borders */
+  transition: opacity 0.2s ease-out;
+}
+
+/* Hide spotlight border on hover */
+.glass:hover::before,
+.glass-bottom-only:hover::before,
+.glass-top-only:hover::before {
+  opacity: 0;
 }
 
 /* Variant for Header: Only bottom border glows/exists */
