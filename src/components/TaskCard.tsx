@@ -10,9 +10,10 @@ import ContextMenu from './ui/ContextMenu';
 interface TaskCardProps {
     item: Item;
     isSubtask?: boolean;
+    isLast?: boolean;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = false }) => {
     const { updateItem, items, deleteItem, moveItem, showCompleted, hideCompletedSubtasks } = useStore();
     const { dragState, updateDragState, clearDragState, calculateZone } = useDnDContext();
     const cardRef = useRef<HTMLDivElement>(null);
@@ -129,7 +130,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false }) => {
                 onDrop={handleDrop}
                 onDoubleClick={() => !isMenuOpen && setIsRenaming(true)}
                 className={cn(
-                    "group relative glass rounded-xl p-3 transition-all cursor-pointer",
+                    "group relative glass p-3 transition-all cursor-pointer",
+                    !isSubtask && "rounded-t-xl",
+                    !isSubtask && (!item.is_expanded || !hasSubtasks) && "rounded-b-xl",
+                    isSubtask && isLast && (!item.is_expanded || !hasSubtasks) && "rounded-b-xl",
                     "hover:bg-white/[0.06] active:scale-[0.98]",
                     dragState.targetItemId === item.id && dragState.dropZone === 'right' && "border-purple-500 bg-purple-500/10 shadow-[0_0_15px_-3px_rgba(168,85,247,0.3)]",
                     item.is_completed && "opacity-60",
@@ -279,10 +283,15 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false }) => {
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.2, ease: "easeOut" }}
-                        className="overflow-hidden space-y-1"
+                        className="overflow-hidden space-y-[2px] mt-[1px]"
                     >
-                        {subtasks.map(subtask => (
-                            <TaskCard key={subtask.id} item={subtask} isSubtask />
+                        {subtasks.map((subtask, index) => (
+                            <TaskCard
+                                key={subtask.id}
+                                item={subtask}
+                                isSubtask
+                                isLast={(!isSubtask || isLast) && index === subtasks.length - 1}
+                            />
                         ))}
                     </motion.div>
                 )}
