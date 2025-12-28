@@ -37,7 +37,7 @@ const App: React.FC = () => {
               // Using a simple toast for copy confirmation
               import('react-hot-toast').then(({ toast }) => {
                 toast.success('Copied to clipboard', {
-                  duration: 2000,
+                  duration: 3000,
                   id: 'copy-toast',
                   className: 'glass-toast-standard',
                 });
@@ -105,7 +105,7 @@ const App: React.FC = () => {
             bottom: 80,
           }}
           toastOptions={{
-            duration: 5000,
+            duration: 3000,
             className: 'glass-toast',
           }}
         />

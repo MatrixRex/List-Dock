@@ -11,7 +11,7 @@ interface UndoToastProps {
     visible?: boolean;
 }
 
-const UndoToast: React.FC<UndoToastProps> = ({ message, undo, id, duration = 5000, visible = true }) => {
+const UndoToast: React.FC<UndoToastProps> = ({ message, undo, id, duration = 3000, visible = true }) => {
     const [isHovered, setIsHovered] = useState(false);
 
     const handleUndo = () => {
