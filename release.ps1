@@ -23,7 +23,7 @@ Write-Host "Latest Git Tag:         $latestTag" -ForegroundColor Gray
 
 # 3. Handle Version Mismatch
 if ($latestTag -ne "None" -and $currentVersion -ne $tagVersion) {
-    Write-Host "`n⚠️  VERSION MISMATCH DETECTED!" -ForegroundColor Amber
+    Write-Host "VERSION MISMATCH DETECTED!" -ForegroundColor Yellow
     Write-Host "Package version (v$currentVersion) does not match Git tag ($latestTag)."
     Write-Host "Which version should be used as the base for this release?" -ForegroundColor Yellow
     Write-Host "1) Use Package Version (v$currentVersion)"
