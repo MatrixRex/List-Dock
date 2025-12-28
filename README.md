@@ -5,7 +5,7 @@ A sleek, high-performance Chrome Extension for managing your tasks directly in t
 [![Latest Release](https://img.shields.io/github/v/release/MatrixRex/List-Dock?label=Download&color=2e7d32&logo=github)](https://github.com/MatrixRex/List-Dock/releases/latest)
 
 <div align="center">
-  <img src="public/Screenshot_4.jpg" alt="List Dock Screenshot" width="128" />
+  <img src="public/Screenshot_4.jpg" alt="List Dock Screenshot" width="256" />
 </div>
 
 ## 🚀 Key Features
