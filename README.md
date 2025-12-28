@@ -1,73 +1,85 @@
-# React + TypeScript + Vite
+# List Dock 📋
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A sleek, high-performance Chrome Extension for managing your tasks directly in the side panel. Built with a focus on speed, aesthetics, and user experience.
 
-Currently, two official plugins are available:
+<div align="center">
+  <img src="public/Screenshot_4.jpg" alt="List Dock Screenshot" width="128" />
+</div>
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Key Features
 
-## React Compiler
+- **Side Panel Integration**: Open/Close with icon click.
+- **Combo Input**: Add task, folder and serach from one input.
+- **Drag & Drop**: Intuitive reorganization of tasks and folders.
+- **Folder Organization**: Categorize your tasks into folders with support for subtasks.
+- **Search**: Global and local search to find your tasks instantly.
+- **Undo Actions**: Use the undo from toast message.
+- **Sleek Design**: Modern glassmorphism UI with smooth Framer Motion animations.
+- **Fully Local**: Your data stays on your machine, synced and saved via `chrome.storage.local`.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠️ Tech Stack
 
-## Expanding the ESLint configuration
+- **Core**: [React 19](https://react.dev/), [TypeScript](https://www.typescriptlang.org/)
+- **Build System**: [Vite](https://vitejs.dev/) + [CRXJS](https://crxjs.dev/)
+- **State Management**: [Zustand](https://github.com/pmndrs/zustand)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
+- **Animations**: [Framer Motion](https://www.framer.com/motion/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Search**: [Fuse.js](https://www.fusejs.io/)
+- **Notifications**: [React Hot Toast](https://react-hot-toast.com/)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 📦 Installation
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+To install the extension in your browser:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+1. **Download the Latest Release**: Head to the [Latest Release](https://github.com/matra7/list-dock/releases/latest) page and download the `list-dock.zip` file.
+2. **Unzip the file**: Extract the contents to a folder on your computer.
+3. **Load in Chrome**:
+   - Open Chrome and navigate to `chrome://extensions/`.
+   - Enable **Developer mode** (top right toggle).
+   - Click **Load unpacked**.
+   - Select the folder you extracted in step 2.
+   - **Do not delete** the folder after loading.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 🛠️ Development
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+If you want to contribute or build the extension from source:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/matra7/list-dock.git
+   cd list-dock
+   ```
+2. **Install dependencies**:
+   ```bash
+   pnpm install
+   ```
+3. **Build the extension**:
+   ```bash
+   pnpm build
+   ```
+4. **Load the build**:
+   - Follow the "Load in Chrome" steps above, but select the `dist` folder generated inside the project directory.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+
+## 📖 How to Use
+
+- **Opening the Sidebar**: Click the List Dock extension icon ![alt text](public/icons/icon16.png) in your browser toolbar to toggle the side panel.
+- **Combo Input**: Use the multifunctional input at the bottom:
+  - **Task Mode**: Default mode to add tasks. If a task is selected, it adds a subtask.
+  - **Folder Mode**: Click the folder icon to create new categories. Only available in root.
+  - **Search Mode**: Click the magnifying glass to filter through all your tasks.
+- **Managing Tasks**: Drag and drop tasks to prioritize or move them into folders.
+- **Undo**: Use the toast notification to undo your last action.
+
+
+## 🔗 Links
+
+- **Latest Release**: [Download here](https://github.com/matra7/list-dock/releases/latest)
+- **Open Source**: This project is open for contributions!
+
+## 📄 License
+
+This project is **Open Source** and available under the [MIT License](LICENSE).
+
+
