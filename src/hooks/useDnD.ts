@@ -46,8 +46,8 @@ export function useDnD() {
         const widthPercentage = relativeX / targetRect.width;
         const heightPercentage = relativeY / targetRect.height;
 
-        // Right 25% is the subtask zone
-        if (widthPercentage > 0.75 && canAcceptSubtask) {
+        // Right 60% is the subtask zone
+        if (widthPercentage > 0.4 && canAcceptSubtask) {
             return 'right';
         }
 

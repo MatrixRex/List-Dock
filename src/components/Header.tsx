@@ -77,7 +77,7 @@ const Header: React.FC = () => {
                                         {isIconHovered ? (
                                             <LucideIcons.Edit2 size={16} />
                                         ) : isLetterIcon ? (
-                                            <span className="text-[10px] leading-none uppercase">{folder?.title.charAt(0) || '?'}</span>
+                                            <span className="text-[15px] leading-none uppercase">{folder?.title.charAt(0) || '?'}</span>
                                         ) : (
                                             <IconComponent size={16} />
                                         )}

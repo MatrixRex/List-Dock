@@ -52,8 +52,9 @@ const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             whileHover={{
-                backgroundColor: "rgba(255, 255, 255, 0.12)",
-                borderColor: "rgba(255, 255, 255, 0)",
+                backgroundColor: `${folderColor}15`,
+                borderColor: folderColor,
+                boxShadow: `0 0 20px ${folderColor}20`
             }}
             transition={{ duration: 0.2, ease: "easeOut" }}
             onClick={() => {

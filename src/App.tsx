@@ -46,6 +46,11 @@ const App: React.FC = () => {
           }
         }
       }
+
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        useStore.getState().undo();
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);

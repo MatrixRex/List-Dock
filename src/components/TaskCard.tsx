@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import type { Item } from '../types';
 import { useStore } from '../store/useStore';
 import { GripVertical, CheckCircle2, Circle, ChevronDown, ChevronRight, MoreVertical, Trash2, FolderInput, Edit2 } from 'lucide-react';
@@ -14,7 +14,7 @@ interface TaskCardProps {
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = false }) => {
-    const { updateItem, items, deleteItem, moveItem, showCompleted, hideCompletedSubtasks, selectedTaskId, setSelectedTaskId } = useStore();
+    const { updateItem, items, deleteItem, moveItem, showCompleted, hideCompletedSubtasks, selectedTaskId, setSelectedTaskId, pushToUndoStack } = useStore();
     const { dragState, updateDragState, clearDragState, calculateZone } = useDnDContext();
     const cardRef = useRef<HTMLDivElement>(null);
     const [isRenaming, setIsRenaming] = useState(false);
@@ -38,14 +38,17 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
         const nextCompleted = !item.is_completed;
         setIsVisualCompleted(nextCompleted);
 
-        // If we are completing a task and "show completed" is off,
+        const toggleAction = () => {
+            pushToUndoStack(nextCompleted ? `Completed "${item.title}"` : `Marked "${item.title}" as active`);
+            updateItem(item.id, { is_completed: nextCompleted });
+        };
+
+        // If we are completing a task and "show completed" is off, 
         // delay the store update so the animation can play before it's filtered out
         if (nextCompleted && !showCompleted) {
-            setTimeout(() => {
-                updateItem(item.id, { is_completed: true });
-            }, 800);
+            setTimeout(toggleAction, 800);
         } else {
-            updateItem(item.id, { is_completed: nextCompleted });
+            toggleAction();
         }
     };
 
@@ -56,12 +59,32 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
             if (showCompleted) return true;
             return !hideCompletedSubtasks;
         })
-        .sort((a, b) => a.order_index - b.order_index);
+        .sort((a, b) => {
+            if (a.is_completed !== b.is_completed) {
+                return a.is_completed ? 1 : -1;
+            }
+            return a.order_index - b.order_index;
+        });
 
     const completedSubtasks = subtasks.filter(s => s.is_completed).length;
     const hasSubtasks = subtasks.length > 0;
 
-    const folders = items.filter(i => i.type === 'folder');
+    // Determine the color for the selection border and glow
+    const activeColor = useMemo(() => {
+        if (item.parent_id) {
+            const parent = items.find(i => i.id === item.parent_id);
+            if (parent) {
+                if (parent.type === 'folder' && parent.color) return parent.color;
+                if (parent.type === 'task') {
+                    const grandParent = items.find(i => i.id === parent.parent_id);
+                    if (grandParent?.type === 'folder' && grandParent.color) return grandParent.color;
+                }
+            }
+        }
+        return "#a855f7"; // Default purple-500
+    }, [item.parent_id, items]);
+
+    const folders = useMemo(() => items.filter(i => i.type === 'folder'), [items]);
 
     const handleDragStart = (e: React.DragEvent) => {
         e.dataTransfer.setData('text/plain', item.id);
@@ -86,35 +109,38 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
 
     const handleDrop = (e: React.DragEvent) => {
         e.preventDefault();
-        const draggedId = dragState.draggedItemId;
-        const targetId = item.id;
-        const zone = dragState.dropZone;
+        if (dragState.draggedItemId === item.id) return;
 
-        if (!draggedId || draggedId === targetId) {
-            clearDragState();
-            return;
-        }
+        const { draggedItemId, targetItemId, dropZone } = dragState;
+        if (!draggedItemId || !targetItemId) return;
 
-        const draggedItem = items.find(i => i.id === draggedId);
+        const draggedItem = items.find(i => i.id === draggedItemId);
         if (!draggedItem) return;
 
-        if (zone === 'right') {
-            moveItem(draggedId, targetId, 'subtask', subtasks.length);
-            updateItem(targetId, { is_expanded: true });
-        } else if (zone === 'top' || zone === 'bottom') {
+        if (dropZone === 'right') {
+            moveItem(draggedItemId, item.id, 'subtask');
+        } else {
+            const isTargetSubtask = item.type === 'subtask';
+            const newType = isTargetSubtask ? 'subtask' : 'task';
             const newParentId = item.parent_id;
-            const newType = item.type as 'task' | 'subtask';
-            const newOrder = zone === 'top' ? item.order_index - 0.5 : item.order_index + 0.5;
 
-            if (newParentId !== draggedItem.parent_id) {
-                moveItem(draggedId, newParentId, newType, newOrder);
+            // Get siblings to calculate order
+            const siblings = items
+                .filter(i => i.parent_id === newParentId && i.type === newType)
+                .sort((a, b) => a.order_index - b.order_index);
+
+            const targetIndex = siblings.findIndex(s => s.id === item.id);
+            let newOrder;
+
+            if (dropZone === 'top') {
+                const prev = siblings[targetIndex - 1];
+                newOrder = prev ? (prev.order_index + item.order_index) / 2 : item.order_index - 1000;
             } else {
-                updateItem(draggedId, {
-                    parent_id: newParentId,
-                    type: newType,
-                    order_index: newOrder
-                });
+                const next = siblings[targetIndex + 1];
+                newOrder = next ? (item.order_index + next.order_index) / 2 : item.order_index + 1000;
             }
+
+            moveItem(draggedItemId, newParentId, newType, newOrder);
         }
 
         clearDragState();
@@ -145,8 +171,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
         setIsMenuOpen(false);
     };
 
-    const handleCardClick = () => {
-        if (isMenuOpen || item.is_completed) return;
+    const handleClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (isMenuOpen || isVisualCompleted) return;
 
         const currentSearch = useStore.getState().searchQuery;
 
@@ -180,15 +207,23 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
             <motion.div
                 ref={cardRef}
                 initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+                animate={{
+                    opacity: 1,
+                    y: 0,
+                    borderColor: (isSelected || (dragState.targetItemId === item.id && dragState.dropZone === 'right')) ? activeColor : "rgba(255, 255, 255, 0.05)",
+                    borderWidth: (isSelected || (dragState.targetItemId === item.id && dragState.dropZone === 'right')) ? "1.5px" : "1px",
+                    backgroundColor: (isSelected || (dragState.targetItemId === item.id && dragState.dropZone === 'right')) ? `${activeColor}15` : "rgba(255, 255, 255, 0)",
+                    boxShadow: (isSelected || (dragState.targetItemId === item.id && dragState.dropZone === 'right')) ? `0 0 20px ${activeColor}20` : "none"
+                }}
                 exit={{
                     opacity: 0,
                     scale: 0.95,
                     transition: { duration: 0.2 }
                 }}
                 whileHover={{
-                    backgroundColor: "rgba(255, 255, 255, 0.12)",
-                    borderColor: "rgba(255, 255, 255, 0)",
+                    backgroundColor: isSelected ? `${activeColor}25` : "rgba(255, 255, 255, 0.12)",
+                    borderColor: activeColor,
+                    boxShadow: `0 0 15px ${activeColor}15`
                 }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
                 draggable={!isMenuOpen}
@@ -197,17 +232,12 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                 onDragLeave={() => updateDragState(dragState.draggedItemId, null, null)}
                 onDrop={handleDrop as any}
                 onDoubleClick={() => !isMenuOpen && setIsRenaming(true)}
-                onClick={handleCardClick}
+                onClick={handleClick}
                 className={cn(
-                    "group relative glass p-3 cursor-pointer",
-                    !isSubtask && "rounded-t-xl",
-                    !isSubtask && (!item.is_expanded || !hasSubtasks) && "rounded-b-xl",
-                    isSubtask && isLast && (!item.is_expanded || !hasSubtasks) && "rounded-b-xl",
-                    "active:scale-[0.98]",
-                    dragState.targetItemId === item.id && dragState.dropZone === 'right' && "border-purple-500 bg-purple-500/10 shadow-[0_0_15px_-3px_rgba(168,85,247,0.3)]",
-                    isSelected && "border-[#8b5cf6] bg-white/[0.05] shadow-[0_0_20px_-5px_rgba(139,92,246,0.3)]",
+                    "group relative glass p-3 cursor-pointer select-none rounded-xl",
+                    isSubtask ? "ml-4" : "",
+                    (isSelected || (dragState.targetItemId === item.id && dragState.dropZone === 'right')) && "z-10",
                     item.is_completed && "opacity-60 grayscale-[0.5]",
-                    isSubtask && "ml-6 py-2 bg-white/[0.01]",
                     isMenuOpen && "pointer-events-none"
                 )}
             >
@@ -219,8 +249,27 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                     <div className="absolute -bottom-[1.5px] left-0 right-0 h-0.5 bg-purple-500 z-50 rounded-full" />
                 )}
 
+                {/* Tooltip for Subtask Drop */}
+                <AnimatePresence>
+                    {dragState.targetItemId === item.id && dragState.dropZone === 'right' && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, x: 20 }}
+                            animate={{ opacity: 1, scale: 1, x: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, x: 20 }}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 z-[100] flex items-center gap-2 pointer-events-none"
+                        >
+                            <div className="px-2 py-1 bg-purple-600 rounded text-[10px] font-bold text-white uppercase tracking-widest shadow-lg border border-white/20">
+                                Convert to Subtask
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
                 <div className="flex items-center gap-3">
-                    <div className="text-gray-600 cursor-grab active:cursor-grabbing hover:text-gray-400 transition-colors">
+                    <div
+                        className="cursor-grab active:cursor-grabbing transition-colors opacity-40 hover:opacity-100"
+                        style={{ color: activeColor }}
+                    >
                         <GripVertical size={16} />
                     </div>
 
@@ -232,17 +281,15 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                             rotate: isVisualCompleted ? [0, 10, 0] : 0
                         }}
                         transition={{ duration: 0.3 }}
-                        className={cn(
-                            "transition-colors",
-                            isVisualCompleted ? "text-green-500" : "text-gray-600 hover:text-gray-500"
-                        )}
+                        className="transition-colors"
+                        style={{ color: isVisualCompleted ? "#22c55e" : activeColor }}
                     >
                         {isVisualCompleted ? (
                             <motion.div initial={{ scale: 0.5 }} animate={{ scale: 1 }}>
-                                <CheckCircle2 size={18} />
+                                <CheckCircle2 size={16} />
                             </motion.div>
                         ) : (
-                            <Circle size={18} />
+                            <Circle size={16} />
                         )}
                     </motion.button>
 

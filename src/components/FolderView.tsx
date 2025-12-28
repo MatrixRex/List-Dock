@@ -16,7 +16,12 @@ const FolderView: React.FC = () => {
             .filter(i => showCompleted || !i.is_completed);
 
         if (!isSearching) {
-            return folderTasks.sort((a, b) => a.order_index - b.order_index);
+            return folderTasks.sort((a, b) => {
+                if (a.is_completed !== b.is_completed) {
+                    return a.is_completed ? 1 : -1;
+                }
+                return a.order_index - b.order_index;
+            });
         }
 
         const fuse = new Fuse(folderTasks, {
@@ -25,7 +30,12 @@ const FolderView: React.FC = () => {
             ignoreLocation: true
         });
 
-        return fuse.search(searchQuery).map(r => r.item);
+        return fuse.search(searchQuery).map(r => r.item).sort((a, b) => {
+            if (a.is_completed !== b.is_completed) {
+                return a.is_completed ? 1 : -1;
+            }
+            return 0; // Fuse already sorted by relevance, only override for completion
+        });
     }, [items, currentFolderId, searchQuery, showCompleted, isSearching]);
 
     if (!folder) return <div className="text-center py-8 text-gray-500">Folder not found.</div>;

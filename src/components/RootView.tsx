@@ -16,7 +16,12 @@ const RootView: React.FC = () => {
     const rootTasks = useMemo(() => items
         .filter(i => i.type === 'task' && i.parent_id === null)
         .filter(i => showCompleted || !i.is_completed)
-        .sort((a, b) => a.order_index - b.order_index),
+        .sort((a, b) => {
+            if (a.is_completed !== b.is_completed) {
+                return a.is_completed ? 1 : -1;
+            }
+            return a.order_index - b.order_index;
+        }),
         [items, showCompleted]);
 
     const folders = useMemo(() => items
@@ -42,7 +47,12 @@ const RootView: React.FC = () => {
         const folderFuse = new Fuse(searchableFolders, fuseOptions);
 
         return {
-            searchTaskResults: taskFuse.search(searchQuery).map(r => r.item),
+            searchTaskResults: taskFuse.search(searchQuery).map(r => r.item).sort((a, b) => {
+                if (a.is_completed !== b.is_completed) {
+                    return a.is_completed ? 1 : -1;
+                }
+                return 0; // Maintain fuse relevance within same completion status
+            }),
             searchFolderResults: folderFuse.search(searchQuery).map(r => r.item)
         };
     }, [items, searchQuery, isSearching, showCompleted]);
@@ -95,7 +105,7 @@ const RootView: React.FC = () => {
     return (
         <div className="space-y-6">
             {/* Top Section: Root Tasks */}
-            <section className="flex flex-col max-h-[50vh]">
+            <section className="flex flex-col min-h-[200px] max-h-[50vh]">
                 <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 px-1 flex-shrink-0">Tasks</h2>
                 {rootTasks.length > 0 ? (
                     <div className="space-y-2 overflow-y-auto custom-scrollbar pr-1">
