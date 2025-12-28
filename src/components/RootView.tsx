@@ -4,19 +4,20 @@ import TaskCard from './TaskCard';
 import FolderCard from './FolderCard';
 import { AnimatePresence } from 'framer-motion';
 import Fuse from 'fuse.js';
+import { type Item } from '../types';
 
 const RootView: React.FC = () => {
-    const items = useStore((state) => state.items);
-    const searchQuery = useStore((state) => state.searchQuery);
-    const showCompleted = useStore((state) => state.showCompleted);
+    const items = useStore((state: any) => state.items);
+    const searchQuery = useStore((state: any) => state.searchQuery);
+    const showCompleted = useStore((state: any) => state.showCompleted);
 
     const isSearching = searchQuery.trim().length > 0;
 
     // Normal Root Items (No search)
     const rootTasks = useMemo(() => items
-        .filter(i => i.type === 'task' && i.parent_id === null)
-        .filter(i => showCompleted || !i.is_completed)
-        .sort((a, b) => {
+        .filter((i: Item) => i.type === 'task' && i.parent_id === null)
+        .filter((i: Item) => showCompleted || !i.is_completed)
+        .sort((a: Item, b: Item) => {
             if (a.is_completed !== b.is_completed) {
                 return a.is_completed ? 1 : -1;
             }
@@ -25,16 +26,16 @@ const RootView: React.FC = () => {
         [items, showCompleted]);
 
     const folders = useMemo(() => items
-        .filter(i => i.type === 'folder')
-        .sort((a, b) => a.order_index - b.order_index),
+        .filter((i: Item) => i.type === 'folder')
+        .sort((a: Item, b: Item) => a.order_index - b.order_index),
         [items]);
 
     // Global Search Results (Fuzzy)
     const { searchTaskResults, searchFolderResults } = useMemo(() => {
         if (!isSearching) return { searchTaskResults: [], searchFolderResults: [] };
 
-        const searchableTasks = items.filter(i => (i.type === 'task' || i.type === 'subtask') && (showCompleted || !i.is_completed));
-        const searchableFolders = items.filter(i => i.type === 'folder');
+        const searchableTasks = items.filter((i: Item) => (i.type === 'task' || i.type === 'subtask') && (showCompleted || !i.is_completed));
+        const searchableFolders = items.filter((i: Item) => i.type === 'folder');
 
         const fuseOptions = {
             keys: ['title'],
@@ -47,13 +48,13 @@ const RootView: React.FC = () => {
         const folderFuse = new Fuse(searchableFolders, fuseOptions);
 
         return {
-            searchTaskResults: taskFuse.search(searchQuery).map(r => r.item).sort((a, b) => {
+            searchTaskResults: taskFuse.search(searchQuery).map(r => r.item as Item).sort((a: Item, b: Item) => {
                 if (a.is_completed !== b.is_completed) {
                     return a.is_completed ? 1 : -1;
                 }
                 return 0; // Maintain fuse relevance within same completion status
             }),
-            searchFolderResults: folderFuse.search(searchQuery).map(r => r.item)
+            searchFolderResults: folderFuse.search(searchQuery).map(r => r.item as Item)
         };
     }, [items, searchQuery, isSearching, showCompleted]);
 
@@ -72,7 +73,7 @@ const RootView: React.FC = () => {
                             <section className="space-y-3">
                                 <div className="space-y-2">
                                     <AnimatePresence mode="popLayout">
-                                        {searchTaskResults.map(task => (
+                                        {searchTaskResults.map((task: Item) => (
                                             <TaskCard key={task.id} item={task} />
                                         ))}
                                     </AnimatePresence>
@@ -85,7 +86,7 @@ const RootView: React.FC = () => {
                                 <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1">Matching Folders</h2>
                                 <div className="grid grid-cols-2 gap-2">
                                     <AnimatePresence mode="popLayout">
-                                        {searchFolderResults.map(folder => (
+                                        {searchFolderResults.map((folder: Item) => (
                                             <FolderCard key={folder.id} item={folder} />
                                         ))}
                                     </AnimatePresence>
@@ -110,7 +111,7 @@ const RootView: React.FC = () => {
                 {rootTasks.length > 0 ? (
                     <div className="space-y-2 overflow-y-auto custom-scrollbar pr-1">
                         <AnimatePresence initial={false} mode="popLayout">
-                            {rootTasks.map(task => (
+                            {rootTasks.map((task: Item) => (
                                 <TaskCard key={task.id} item={task} />
                             ))}
                         </AnimatePresence>
@@ -126,7 +127,7 @@ const RootView: React.FC = () => {
                 {folders.length > 0 ? (
                     <div className="grid grid-cols-2 gap-2 items-start pb-4">
                         <AnimatePresence initial={false} mode="popLayout">
-                            {folders.map(folder => (
+                            {folders.map((folder: Item) => (
                                 <FolderCard key={folder.id} item={folder} />
                             ))}
                         </AnimatePresence>

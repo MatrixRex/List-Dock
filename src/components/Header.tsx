@@ -5,6 +5,7 @@ import SettingsPopup from './SettingsPopup';
 import ConfirmDialog from './ui/ConfirmDialog';
 import FolderSettingsPopup from './FolderSettingsPopup';
 import { motion, AnimatePresence } from 'framer-motion';
+import { type Item } from '../types';
 
 const Header: React.FC = () => {
     const { currentView, currentFolderId, items, setView, isMenuOpen, updateItem, deleteItem } = useStore();
@@ -14,7 +15,7 @@ const Header: React.FC = () => {
     const [showFolderSettings, setShowFolderSettings] = useState(false);
     const [isIconHovered, setIsIconHovered] = useState(false);
 
-    const folder = items.find(i => i.id === currentFolderId);
+    const folder = items.find((i: Item) => i.id === currentFolderId);
     const [titleValue, setTitleValue] = useState('');
 
     // Update titleValue when folder changes

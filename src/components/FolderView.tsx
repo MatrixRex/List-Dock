@@ -31,7 +31,7 @@ const FolderView: React.FC = () => {
             ignoreLocation: true
         });
 
-        return fuse.search(searchQuery).map(r => r.item).sort((a, b) => {
+        return fuse.search(searchQuery).map(r => r.item as Item).sort((a: Item, b: Item) => {
             if (a.is_completed !== b.is_completed) {
                 return a.is_completed ? 1 : -1;
             }
@@ -55,7 +55,7 @@ const FolderView: React.FC = () => {
             <div className="space-y-2">
                 <AnimatePresence initial={false} mode="popLayout">
                     {tasks.length > 0 ? (
-                        tasks.map(task => <TaskCard key={task.id} item={task} />)
+                        tasks.map((task: Item) => <TaskCard key={task.id} item={task} />)
                     ) : (
                         <div key="no-tasks" className="text-center py-12 border border-white/5 bg-white/[0.01] rounded-xl">
                             <p className="text-gray-500 text-sm italic">{isSearching ? `No matches in "${folder.title}"` : "No tasks in this folder."}</p>
