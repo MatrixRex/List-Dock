@@ -1,5 +1,6 @@
 import React from 'react';
 import { useStore } from './store/useStore';
+import { type Item } from './types';
 import Header from './components/Header';
 import RootView from './components/RootView';
 import FolderView from './components/FolderView';
@@ -9,7 +10,7 @@ import { DnDProvider } from './store/DnDContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const App: React.FC = () => {
-  const currentView = useStore((state) => state.currentView);
+  const currentView = useStore((state: any) => state.currentView);
 
   React.useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -31,7 +32,7 @@ const App: React.FC = () => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
         const state = useStore.getState();
         if (state.selectedTaskId) {
-          const item = state.items.find(i => i.id === state.selectedTaskId);
+          const item = state.items.find((i: Item) => i.id === state.selectedTaskId);
           if (item) {
             navigator.clipboard.writeText(item.title).then(() => {
               // Using a simple toast for copy confirmation

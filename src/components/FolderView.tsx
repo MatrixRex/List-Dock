@@ -3,20 +3,21 @@ import { useStore } from '../store/useStore';
 import TaskCard from './TaskCard';
 import { AnimatePresence } from 'framer-motion';
 import Fuse from 'fuse.js';
+import { type Item } from '../types';
 
 const FolderView: React.FC = () => {
     const { items, currentFolderId, searchQuery, showCompleted } = useStore();
-    const folder = items.find(i => i.id === currentFolderId);
+    const folder = items.find((i: Item) => i.id === currentFolderId);
 
     const isSearching = searchQuery.trim().length > 0;
 
     const tasks = useMemo(() => {
         const folderTasks = items
-            .filter(i => i.parent_id === currentFolderId && i.type === 'task')
-            .filter(i => showCompleted || !i.is_completed);
+            .filter((i: Item) => i.parent_id === currentFolderId && i.type === 'task')
+            .filter((i: Item) => showCompleted || !i.is_completed);
 
         if (!isSearching) {
-            return folderTasks.sort((a, b) => {
+            return folderTasks.sort((a: Item, b: Item) => {
                 if (a.is_completed !== b.is_completed) {
                     return a.is_completed ? 1 : -1;
                 }
