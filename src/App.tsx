@@ -59,6 +59,18 @@ const App: React.FC = () => {
   }, []);
 
   React.useEffect(() => {
+    const handleClick = () => {
+      const { selectedTaskId, setSelectedTaskId } = useStore.getState();
+      if (selectedTaskId) {
+        setSelectedTaskId(null);
+      }
+    };
+
+    window.addEventListener('click', handleClick);
+    return () => window.removeEventListener('click', handleClick);
+  }, []);
+
+  React.useEffect(() => {
     // Establish connection with background script to track open state
     const port = chrome.runtime.connect({ name: 'sidepanel' });
 

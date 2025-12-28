@@ -31,6 +31,7 @@ const UndoToast: React.FC<UndoToastProps> = ({ message, undo, id, duration = 300
             className="group relative flex items-center gap-2.5 w-full min-w-[260px] px-3.5 py-2 overflow-hidden rounded-xl border border-white/10 backdrop-blur-2xl transition-all"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
+            onClick={(e) => e.stopPropagation()}
         >
             {/* Base Layer: Semi-transparent gray-toned track */}
             <div className="absolute inset-0 bg-white/[0.03] z-0" />

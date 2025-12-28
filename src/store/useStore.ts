@@ -103,8 +103,8 @@ export const useStore = create<StoreState>()(
 
                 let newItem = { ...item };
 
-                // If a task is selected, make this a subtask
-                if (selectedTaskId) {
+                // If a task is selected, make this a subtask (only if we're adding a task)
+                if (selectedTaskId && item.type === 'task') {
                     const selectedItem = items.find((i: Item) => i.id === selectedTaskId);
                     if (selectedItem) {
                         if (selectedItem.type === 'task') {

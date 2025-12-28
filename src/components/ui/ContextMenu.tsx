@@ -21,13 +21,46 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
     width = 192 // default 48 * 4
 }) => {
     const menuRef = useRef<HTMLDivElement>(null);
+    const [coords, setCoords] = React.useState({ top: 0, right: 0, isBottom: false });
+
+    // Calculate position
+    useEffect(() => {
+        if (!isOpen || !anchorRect) return;
+
+        // Estimate height if not yet rendered, or measure it
+        const menuHeight = menuRef.current?.offsetHeight || 200; // estimated default
+        const spaceBelow = window.innerHeight - anchorRect.bottom;
+        const spaceAbove = anchorRect.top;
+
+        let top = anchorRect.bottom + 8;
+        let isBottom = false;
+
+        // If not enough space below AND more space above, or if just not enough space below
+        if (spaceBelow < menuHeight + 20 && spaceAbove > spaceBelow) {
+            top = anchorRect.top - menuHeight - 8;
+            isBottom = true;
+        }
+
+        // Final safety check: ensure top is not negative
+        if (top < 8) top = 8;
+
+        // Final safety check: ensure it doesn't overflow bottom if forced there
+        if (!isBottom && top + menuHeight > window.innerHeight - 8) {
+            top = window.innerHeight - menuHeight - 8;
+        }
+
+        setCoords({
+            top,
+            right: window.innerWidth - anchorRect.right,
+            isBottom
+        });
+    }, [isOpen, anchorRect, width]);
 
     // Close on click outside (since we use a portal)
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (isOpen && menuRef.current && !menuRef.current.contains(event.target as Node)) {
-                // Check if the click was on the trigger button (if possible)
-                // Actually the backdrop handles this better in React Portals if we use one.
+                // Handled by backdrop
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -35,10 +68,6 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
     }, [isOpen, onClose]);
 
     if (!anchorRect) return null;
-
-    // Calculate position
-    const top = anchorRect.bottom + 8;
-    const right = window.innerWidth - anchorRect.right;
 
     return createPortal(
         <AnimatePresence>
@@ -59,16 +88,16 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
                     {/* Menu Content */}
                     <motion.div
                         ref={menuRef}
-                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                        initial={{ opacity: 0, scale: 0.95, y: coords.isBottom ? 10 : -10 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                        exit={{ opacity: 0, scale: 0.95, y: coords.isBottom ? 10 : -10 }}
                         className={cn(
-                            "fixed bg-black/40 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-[9999] py-1.5 overflow-hidden",
+                            "fixed bg-[#0c0a13]/90 backdrop-blur-2xl border border-white/10 rounded-xl shadow-2xl z-[9999] py-1.5 overflow-hidden",
                             className
                         )}
                         style={{
-                            top,
-                            right,
+                            top: coords.top,
+                            right: coords.right,
                             width
                         }}
                         onClick={e => e.stopPropagation()}

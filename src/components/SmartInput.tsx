@@ -17,6 +17,13 @@ const SmartInput: React.FC = () => {
     const isFolderView = currentView === 'folder';
     const selectedItem = items.find((i: Item) => i.id === selectedTaskId);
 
+    // Reset mode to task when entering folder view
+    React.useEffect(() => {
+        if (isFolderView && mode === 'folder') {
+            setMode('task');
+        }
+    }, [isFolderView]);
+
     const handleAction = () => {
         if (!value.trim() && mode !== 'search') return;
 
@@ -52,12 +59,15 @@ const SmartInput: React.FC = () => {
     };
 
     return (
-        <div className="p-4 glass glass-top-only shrink-0 sticky bottom-0 z-[200]">
+        <div
+            className="p-4 glass glass-top-only shrink-0 sticky bottom-0 z-[200]"
+            onClick={(e) => e.stopPropagation()}
+        >
             <div className={cn(
                 "flex items-center gap-2 glass !bg-white/[0.03] backdrop-blur-xl rounded-xl p-1.5 transition-all text-gray-200",
                 "focus-within:!bg-[#050408] focus-within:ring-1 focus-within:ring-white/10 focus-within:shadow-[0_0_40px_rgba(139,92,246,0.15)]",
                 "border border-white/5",
-                selectedTaskId && "border-purple-500/50 bg-purple-500/5",
+                (selectedTaskId && mode === 'task') && "border-purple-500/50 bg-purple-500/5",
                 isMenuOpen && "pointer-events-none opacity-50 shadow-none border-gray-800"
             )}>
                 <div className="flex bg-white/5 rounded-lg p-0.5 relative">
@@ -84,7 +94,10 @@ const SmartInput: React.FC = () => {
                                 initial={{ opacity: 0, scale: 0.8, width: 0 }}
                                 animate={{ opacity: 1, scale: 1, width: 'auto' }}
                                 exit={{ opacity: 0, scale: 0.8, width: 0 }}
-                                onClick={() => setMode('folder')}
+                                onClick={() => {
+                                    setMode('folder');
+                                    setSelectedTaskId(null);
+                                }}
                                 className={cn(
                                     "p-1.5 rounded-md transition-all relative z-10",
                                     mode === 'folder' ? "text-white" : "text-gray-500 hover:text-gray-300"
@@ -102,7 +115,10 @@ const SmartInput: React.FC = () => {
                             </motion.button>
                         )}
                         <button
-                            onClick={() => setMode('search')}
+                            onClick={() => {
+                                setMode('search');
+                                setSelectedTaskId(null);
+                            }}
                             className={cn(
                                 "p-1.5 rounded-md transition-all relative z-10",
                                 mode === 'search' ? "text-white" : "text-gray-500 hover:text-gray-300"
