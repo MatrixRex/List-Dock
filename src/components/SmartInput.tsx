@@ -40,6 +40,10 @@ const SmartInput: React.FC = () => {
         if (mode === 'folder') return "New folder name...";
 
         if (selectedItem) {
+            if (selectedItem.type === 'subtask') {
+                const parent = items.find(i => i.id === selectedItem.parent_id);
+                return `Add subtask to "${parent?.title || 'task'}"...`;
+            }
             return `Add subtask to "${selectedItem.title}"...`;
         }
 
