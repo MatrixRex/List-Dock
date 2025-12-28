@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { Plus, Search, FolderPlus, X } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import type { Item } from '../types';
 import { cn } from '../utils/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -14,7 +15,7 @@ const SmartInput: React.FC = () => {
     // Mode 3: Add Folder toggle (Root only)
 
     const isFolderView = currentView === 'folder';
-    const selectedItem = items.find(i => i.id === selectedTaskId);
+    const selectedItem = items.find((i: Item) => i.id === selectedTaskId);
 
     const handleAction = () => {
         if (!value.trim() && mode !== 'search') return;
@@ -41,7 +42,7 @@ const SmartInput: React.FC = () => {
 
         if (selectedItem) {
             if (selectedItem.type === 'subtask') {
-                const parent = items.find(i => i.id === selectedItem.parent_id);
+                const parent = items.find((i: Item) => i.id === selectedItem.parent_id);
                 return `Add subtask to "${parent?.title || 'task'}"...`;
             }
             return `Add subtask to "${selectedItem.title}"...`;

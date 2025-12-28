@@ -53,30 +53,30 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
     };
 
     const subtasks = items
-        .filter(i => i.parent_id === item.id && i.type === 'subtask')
-        .filter(i => {
+        .filter((i: Item) => i.parent_id === item.id && i.type === 'subtask')
+        .filter((i: Item) => {
             if (!i.is_completed) return true;
             if (showCompleted) return true;
             return !hideCompletedSubtasks;
         })
-        .sort((a, b) => {
+        .sort((a: Item, b: Item) => {
             if (a.is_completed !== b.is_completed) {
                 return a.is_completed ? 1 : -1;
             }
             return a.order_index - b.order_index;
         });
 
-    const completedSubtasks = subtasks.filter(s => s.is_completed).length;
+    const completedSubtasks = subtasks.filter((s: Item) => s.is_completed).length;
     const hasSubtasks = subtasks.length > 0;
 
     // Determine the color for the selection border and glow
     const activeColor = useMemo(() => {
         if (item.parent_id) {
-            const parent = items.find(i => i.id === item.parent_id);
+            const parent = items.find((i: Item) => i.id === item.parent_id);
             if (parent) {
                 if (parent.type === 'folder' && parent.color) return parent.color;
                 if (parent.type === 'task') {
-                    const grandParent = items.find(i => i.id === parent.parent_id);
+                    const grandParent = items.find((i: Item) => i.id === parent.parent_id);
                     if (grandParent?.type === 'folder' && grandParent.color) return grandParent.color;
                 }
             }
@@ -84,7 +84,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
         return "#a855f7"; // Default purple-500
     }, [item.parent_id, items]);
 
-    const folders = useMemo(() => items.filter(i => i.type === 'folder'), [items]);
+    const folders = useMemo(() => items.filter((i: Item) => i.type === 'folder'), [items]);
 
     const handleDragStart = (e: React.DragEvent) => {
         e.dataTransfer.setData('text/plain', item.id);
@@ -100,7 +100,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
         const rect = cardRef.current.getBoundingClientRect();
 
         // Check if dragged item is a parent (has subtasks)
-        const draggedHasSubtasks = items.some(i => i.parent_id === dragState.draggedItemId);
+        const draggedHasSubtasks = items.some((i: Item) => i.parent_id === dragState.draggedItemId);
         const canAcceptSubtask = !draggedHasSubtasks && !isSubtask && item.type !== 'subtask';
 
         const zone = calculateZone(e, rect, false, canAcceptSubtask);
@@ -114,7 +114,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
         const { draggedItemId, targetItemId, dropZone } = dragState;
         if (!draggedItemId || !targetItemId) return;
 
-        const draggedItem = items.find(i => i.id === draggedItemId);
+        const draggedItem = items.find((i: Item) => i.id === draggedItemId);
         if (!draggedItem) return;
 
         if (dropZone === 'right') {
@@ -126,10 +126,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
 
             // Get siblings to calculate order
             const siblings = items
-                .filter(i => i.parent_id === newParentId && i.type === newType)
-                .sort((a, b) => a.order_index - b.order_index);
+                .filter((i: Item) => i.parent_id === newParentId && i.type === newType)
+                .sort((a: Item, b: Item) => a.order_index - b.order_index);
 
-            const targetIndex = siblings.findIndex(s => s.id === item.id);
+            const targetIndex = siblings.findIndex((s: Item) => s.id === item.id);
             let newOrder;
 
             if (dropZone === 'top') {
@@ -182,7 +182,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
             let targetFolderId: string | null = null;
 
             if (item.type === 'subtask') {
-                const parentTask = items.find(i => i.id === item.parent_id);
+                const parentTask = items.find((i: Item) => i.id === item.parent_id);
                 if (parentTask) {
                     targetFolderId = parentTask.parent_id || null;
                     // Expand parent task so the subtask is visible
@@ -380,8 +380,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                         </button>
                     )}
                     {folders
-                        .filter(f => f.id !== item.parent_id)
-                        .map(folder => (
+                        .filter((f: Item) => f.id !== item.parent_id)
+                        .map((folder: Item) => (
                             <button
                                 key={folder.id}
                                 onClick={() => handleMoveToFolder(folder.id)}
@@ -411,7 +411,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                         transition={{ duration: 0.2, ease: "easeOut" }}
                         className="overflow-hidden space-y-[2px] mt-[1px]"
                     >
-                        {subtasks.map((subtask, index) => (
+                        {subtasks.map((subtask: Item, index: number) => (
                             <TaskCard
                                 key={subtask.id}
                                 item={subtask}

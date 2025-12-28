@@ -85,27 +85,27 @@ const STORAGE_VERSION = 1;
 
 export const useStore = create<StoreState>()(
     persist(
-        (set, get) => ({
-            items: [],
-            currentView: 'root',
-            currentFolderId: null,
+        (set: any, get: any) => ({
+            items: [] as Item[],
+            currentView: 'root' as 'root' | 'folder',
+            currentFolderId: null as string | null,
             searchQuery: '',
-            undoStack: [],
-            isMenuOpen: false,
-            showCompleted: false,
-            hideCompletedSubtasks: true,
-            selectedTaskId: null,
+            undoStack: [] as Item[][],
+            isMenuOpen: false as boolean,
+            showCompleted: false as boolean,
+            hideCompletedSubtasks: true as boolean,
+            selectedTaskId: null as string | null,
 
-            setItems: (items) => set({ items }),
+            setItems: (items: Item[]) => set({ items }),
 
-            addItem: (item) => {
+            addItem: (item: Item) => {
                 const { items, selectedTaskId } = get();
 
                 let newItem = { ...item };
 
                 // If a task is selected, make this a subtask
                 if (selectedTaskId) {
-                    const selectedItem = items.find(i => i.id === selectedTaskId);
+                    const selectedItem = items.find((i: Item) => i.id === selectedTaskId);
                     if (selectedItem) {
                         if (selectedItem.type === 'task') {
                             newItem.parent_id = selectedTaskId;
@@ -122,32 +122,32 @@ export const useStore = create<StoreState>()(
                 set({ items: [...items, newItem] });
             },
 
-            updateItem: (id, updates) => {
+            updateItem: (id: string, updates: Partial<Item>) => {
                 const { items, selectedTaskId } = get();
                 set({
-                    items: items.map((item) => (item.id === id ? { ...item, ...updates } : item)),
+                    items: items.map((item: Item) => (item.id === id ? { ...item, ...updates } : item)),
                     // Clear selection if the selected task is completed
                     selectedTaskId: id === selectedTaskId && updates.is_completed ? null : selectedTaskId,
                 });
             },
 
-            moveItem: (id, newParentId, newType, orderIndex) => {
+            moveItem: (id: string, newParentId: string | null, newType: 'task' | 'subtask', orderIndex?: number) => {
                 const { items, updateItem, pushToUndoStack } = get();
-                const item = items.find((i) => i.id === id);
+                const item = items.find((i: Item) => i.id === id);
                 if (!item) return;
 
                 const oldParentId = item.parent_id;
                 let message = `Moved "${item.title}"`;
 
                 if (newType === 'subtask') {
-                    const parentTask = items.find((t) => t.id === newParentId);
+                    const parentTask = items.find((t: Item) => t.id === newParentId);
                     message = `Moved "${item.title}" as subtask of "${parentTask?.title || 'task'}"`;
                 } else if (newParentId !== oldParentId) {
                     if (newParentId) {
-                        const newFolder = items.find((f) => f.id === newParentId);
+                        const newFolder = items.find((f: Item) => f.id === newParentId);
                         message = `Moved "${item.title}" to "${newFolder?.title || 'folder'}" folder`;
                     } else if (oldParentId) {
-                        const oldParent = items.find((p) => p.id === oldParentId);
+                        const oldParent = items.find((p: Item) => p.id === oldParentId);
                         if (oldParent?.type === 'folder') {
                             message = `Moved "${item.title}" out of "${oldParent.title}"`;
                         } else {
@@ -164,24 +164,24 @@ export const useStore = create<StoreState>()(
                 });
             },
 
-            deleteItem: (id) => {
+            deleteItem: (id: string) => {
                 const { items } = get();
-                const itemToDelete = items.find((i) => i.id === id);
+                const itemToDelete = items.find((i: Item) => i.id === id);
                 get().pushToUndoStack(`Deleted ${itemToDelete?.title || 'item'}`);
 
                 let newItems;
                 if (itemToDelete?.type === 'folder') {
-                    newItems = items.filter((i) => i.id !== id && i.parent_id !== id);
+                    newItems = items.filter((i: Item) => i.id !== id && i.parent_id !== id);
                 } else {
-                    newItems = items.filter((i) => i.id !== id);
+                    newItems = items.filter((i: Item) => i.id !== id);
                 }
 
                 set({ items: newItems });
             },
 
-            setView: (view, folderId = null) => set({ currentView: view, currentFolderId: folderId, selectedTaskId: null }),
+            setView: (view: 'root' | 'folder', folderId: string | null = null) => set({ currentView: view, currentFolderId: folderId, selectedTaskId: null }),
 
-            setSearchQuery: (query) => set({ searchQuery: query }),
+            setSearchQuery: (query: string) => set({ searchQuery: query }),
 
             pushToUndoStack: (message = 'Action performed') => {
                 const { items, undoStack } = get();
@@ -210,7 +210,7 @@ export const useStore = create<StoreState>()(
                 });
             },
 
-            setIsMenuOpen: (isOpen) => set({ isMenuOpen: isOpen }),
+            setIsMenuOpen: (isOpen: boolean) => set({ isMenuOpen: isOpen }),
 
             clearItems: () => {
                 set({ items: [], undoStack: [] });
@@ -222,11 +222,11 @@ export const useStore = create<StoreState>()(
                 toast.success('All data cleared');
             },
 
-            setShowCompleted: (show) => set({ showCompleted: show }),
+            setShowCompleted: (show: boolean) => set({ showCompleted: show }),
 
-            setHideCompletedSubtasks: (hide) => set({ hideCompletedSubtasks: hide }),
+            setHideCompletedSubtasks: (hide: boolean) => set({ hideCompletedSubtasks: hide }),
 
-            setSelectedTaskId: (id) => set((state) => ({
+            setSelectedTaskId: (id: string | null) => set((state: StoreState) => ({
                 selectedTaskId: state.selectedTaskId === id ? null : id
             })),
         }),
@@ -234,7 +234,7 @@ export const useStore = create<StoreState>()(
             name: 'list-dock-storage',
             storage: createJSONStorage(() => chromeStorage),
             version: STORAGE_VERSION,
-            partialize: (state) => ({
+            partialize: (state: StoreState) => ({
                 items: state.items,
                 showCompleted: state.showCompleted,
                 hideCompletedSubtasks: state.hideCompletedSubtasks
