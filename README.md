@@ -2,6 +2,8 @@
 
 A sleek, high-performance Chrome Extension for managing your tasks directly in the side panel. Built with a focus on speed, aesthetics, and user experience.
 
+[![Latest Release](https://img.shields.io/github/v/release/MatrixRex/List-Dock?label=Download&color=2e7d32&logo=github)](https://github.com/MatrixRex/List-Dock/releases/latest)
+
 <div align="center">
   <img src="public/Screenshot_4.jpg" alt="List Dock Screenshot" width="128" />
 </div>
@@ -32,7 +34,7 @@ A sleek, high-performance Chrome Extension for managing your tasks directly in t
 
 To install the extension in your browser:
 
-1. **Download the Latest Release**: Head to the [Latest Release](https://github.com/matra7/list-dock/releases/latest) page and download the `list-dock.zip` file.
+1. **Download the Latest Release**: Head to the [Latest Release](https://github.com/MatrixRex/List-Dock/releases/latest) page and download the `list-dock.zip` file.
 2. **Unzip the file**: Extract the contents to a folder on your computer.
 3. **Load in Chrome**:
    - Open Chrome and navigate to `chrome://extensions/`.
@@ -47,7 +49,7 @@ If you want to contribute or build the extension from source:
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/matra7/list-dock.git
+   git clone https://github.com/MatrixRex/List-Dock.git
    cd list-dock
    ```
 2. **Install dependencies**:
@@ -75,11 +77,9 @@ If you want to contribute or build the extension from source:
 
 ## 🔗 Links
 
-- **Latest Release**: [Download here](https://github.com/matra7/list-dock/releases/latest)
+- **Latest Release**: [Download here](https://github.com/MatrixRex/List-Dock/releases/latest)
 - **Open Source**: This project is open for contributions!
 
 ## 📄 License
 
 This project is **Open Source** and available under the [MIT License](LICENSE).
-
-
