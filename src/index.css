@@ -149,10 +149,26 @@
   .glass-toast {
     @apply !shadow-2xl;
     padding: 0 !important;
-    font-family: "Space Mono", monospace !important;
-    min-width: 300px !important;
-    pointer-events: auto !important;
     background: transparent !important;
+    border: none !important;
+    min-width: 260px !important;
+    pointer-events: auto !important;
+  }
+
+  .glass-toast-standard {
+    @apply !shadow-2xl;
+    padding: 10px 16px !important;
+    font-family: "Space Mono", monospace !important;
+    min-width: 260px !important;
+    pointer-events: auto !important;
+    background: rgba(15, 12, 20, 0.9) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    color: #f3f4f6 !important;
+    font-size: 11px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
   }
 }
 

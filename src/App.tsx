@@ -22,6 +22,37 @@ const App: React.FC = () => {
   }, []);
 
   React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't override standard copy if user is typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+        const state = useStore.getState();
+        if (state.selectedTaskId) {
+          const item = state.items.find(i => i.id === state.selectedTaskId);
+          if (item) {
+            navigator.clipboard.writeText(item.title).then(() => {
+              // Using a simple toast for copy confirmation
+              import('react-hot-toast').then(({ toast }) => {
+                toast.success('Copied to clipboard', {
+                  duration: 2000,
+                  id: 'copy-toast',
+                  className: 'glass-toast-standard',
+                });
+              });
+            });
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  React.useEffect(() => {
     // Establish connection with background script to track open state
     const port = chrome.runtime.connect({ name: 'sidepanel' });
 
@@ -71,10 +102,6 @@ const App: React.FC = () => {
           toastOptions={{
             duration: 5000,
             className: 'glass-toast',
-            style: {
-              // Custom style overrides if needed, but classes handle most
-              padding: '0',
-            }
           }}
         />
       </div>

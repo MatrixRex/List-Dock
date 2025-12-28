@@ -22,8 +22,32 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
     const [showMenu, setShowMenu] = useState(false);
     const menuButtonRef = useRef<HTMLButtonElement>(null);
     const { isMenuOpen, setIsMenuOpen } = useStore();
+    const [isVisualCompleted, setIsVisualCompleted] = useState(item.is_completed);
+
+    // Sync visual state with store state (important for Undo)
+    React.useEffect(() => {
+        setIsVisualCompleted(item.is_completed);
+    }, [item.is_completed]);
 
     const isSelected = selectedTaskId === item.id;
+
+    const handleToggle = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (isMenuOpen) return;
+
+        const nextCompleted = !item.is_completed;
+        setIsVisualCompleted(nextCompleted);
+
+        // If we are completing a task and "show completed" is off,
+        // delay the store update so the animation can play before it's filtered out
+        if (nextCompleted && !showCompleted) {
+            setTimeout(() => {
+                updateItem(item.id, { is_completed: true });
+            }, 800);
+        } else {
+            updateItem(item.id, { is_completed: nextCompleted });
+        }
+    };
 
     const subtasks = items
         .filter(i => i.parent_id === item.id && i.type === 'subtask')
@@ -157,7 +181,11 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                 ref={cardRef}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
+                exit={{
+                    opacity: 0,
+                    scale: 0.95,
+                    transition: { duration: 0.2 }
+                }}
                 whileHover={{
                     backgroundColor: "rgba(255, 255, 255, 0.12)",
                     borderColor: "rgba(255, 255, 255, 0)",
@@ -196,19 +224,27 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                         <GripVertical size={16} />
                     </div>
 
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            if (isMenuOpen) return;
-                            updateItem(item.id, { is_completed: !item.is_completed });
+                    <motion.button
+                        onClick={handleToggle}
+                        whileTap={{ scale: 0.8 }}
+                        animate={{
+                            scale: isVisualCompleted ? [1, 1.2, 1] : 1,
+                            rotate: isVisualCompleted ? [0, 10, 0] : 0
                         }}
+                        transition={{ duration: 0.3 }}
                         className={cn(
-                            "transition-all transform hover:scale-110",
-                            item.is_completed ? "text-green-500" : "text-gray-600 hover:text-gray-500"
+                            "transition-colors",
+                            isVisualCompleted ? "text-green-500" : "text-gray-600 hover:text-gray-500"
                         )}
                     >
-                        {item.is_completed ? <CheckCircle2 size={18} /> : <Circle size={18} />}
-                    </button>
+                        {isVisualCompleted ? (
+                            <motion.div initial={{ scale: 0.5 }} animate={{ scale: 1 }}>
+                                <CheckCircle2 size={18} />
+                            </motion.div>
+                        ) : (
+                            <Circle size={18} />
+                        )}
+                    </motion.button>
 
                     <div className="flex-1 min-w-0">
                         {isRenaming ? (
@@ -221,10 +257,11 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                                 className="w-full bg-gray-700 border-none focus:ring-1 focus:ring-purple-500 rounded px-1 py-0.5 text-sm outline-none"
                             />
                         ) : (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-start gap-2">
                                 <span className={cn(
-                                    "text-sm font-medium truncate text-gray-200",
-                                    item.is_completed && "text-gray-500 line-through"
+                                    "text-sm font-medium text-gray-200 transition-all duration-200 flex-1 min-w-0 block",
+                                    (!isSelected) ? "truncate group-hover/task:whitespace-normal group-hover/task:break-words" : "whitespace-normal break-words",
+                                    isVisualCompleted && "text-gray-500 line-through"
                                 )}>
                                     {item.title}
                                 </span>

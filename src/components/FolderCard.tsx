@@ -101,7 +101,12 @@ const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
                             </motion.div>
                         </AnimatePresence>
                     </div>
-                    <h3 className="text-sm font-medium truncate text-gray-100 flex-1">{item.title}</h3>
+                    <h3 className={cn(
+                        "text-sm font-medium text-gray-100 flex-1 transition-all duration-200",
+                        "truncate group-hover:whitespace-normal group-hover:break-words"
+                    )}>
+                        {item.title}
+                    </h3>
                 </div>
                 <div className="flex items-center justify-between h-5">
                     <p className="text-[10px] text-gray-500 font-medium uppercase tracking-tight">{taskCount} Items</p>
