@@ -65,22 +65,18 @@ If you want to contribute or build the extension from source:
 
 ## 🏷️ Release & Versioning
 
-To automate semantic versioning and GitHub releases, use the following commands:
+To automate semantic versioning and GitHub releases, run:
 
-- **Check current version**: `pnpm version:show`
-- **Patch release** (0.0.1): `pnpm release:patch`
-- **Minor release** (0.1.0): `pnpm release:minor`
-- **Major release** (1.0.0): `pnpm release:major`
-
-Alternatively, on Windows, you can run the PowerShell script:
-```powershell
-./release.ps1 patch  # Options: patch, minor, major
+```bash
+pnpm release
 ```
 
-These commands will:
-1. Bump the version in `package.json`.
-2. Create a git tag matching the version (e.g., `v1.2.3`).
-3. Push the code and tags to GitHub, which triggers the automated Build/Release workflow.
+This will launch an **interactive wizard** that:
+1.  **Checks** if your Git working directory is clean.
+2.  **Shows** your current version and latest tag.
+3.  **Prompts** you to select the release type (Patch, Minor, Major).
+4.  **Asks** for an optional custom commit message.
+5.  **Bumps** the version in `package.json`, tags it, and pushes both to GitHub.
 
 
 ## 📖 How to Use

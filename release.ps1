@@ -1,39 +1,64 @@
-param (
-    [Parameter(Mandatory = $true)]
-    [ValidateSet("major", "minor", "patch")]
-    $Type
-)
+# release.ps1 - Interactive Release Script for Windows
 
-# 1. Get current version from package.json
-$currentVersion = node -p "require('./package.json').version"
-# 2. Get latest git tag
-$latestTag = git describe --tags --abbrev=0 2>$null
-if (!$latestTag) { $latestTag = "No tags found" }
+Write-Host "--- List Dock Release Assistant ---" -ForegroundColor Cyan
 
-Write-Host "--- Version Info ---" -ForegroundColor Yellow
-Write-Host "Current Package Version: v$currentVersion"
-Write-Host "Latest Git Tag:         $latestTag"
-Write-Host "Upcoming Bump:          $Type"
-Write-Host "--------------------"
-
-# Check if there are uncommitted changes
+# 1. Check if there are uncommitted changes
 $status = git status --porcelain
 if ($status) {
     Write-Host "Error: You have uncommitted changes. Please commit or stash them first." -ForegroundColor Red
+    git status
     exit 1
 }
 
-# Ask for confirmation
-$confirmation = Read-Host "Proceed with $Type release? (y/n)"
+# 2. Get current version info
+$currentVersion = node -p "require('./package.json').version"
+$latestTag = git describe --tags --abbrev=0 2>$null
+if (!$latestTag) { $latestTag = "None" }
+
+Write-Host "Current Package Version: v$currentVersion" -ForegroundColor Gray
+Write-Host "Latest Git Tag:         $latestTag" -ForegroundColor Gray
+
+# 3. Ask for release type
+Write-Host "`nSelect release type:" -ForegroundColor Yellow
+Write-Host "1) Patch (0.0.x)"
+Write-Host "2) Minor (0.x.0)"
+Write-Host "3) Major (x.0.0)"
+Write-Host "q) Quit"
+
+$choice = Read-Host "Choice"
+$type = ""
+
+switch ($choice) {
+    "1" { $type = "patch" }
+    "2" { $type = "minor" }
+    "3" { $type = "major" }
+    "q" { Write-Host "Cancelled."; exit 0 }
+    default { Write-Host "Invalid choice."; exit 1 }
+}
+
+# 4. Ask for custom commit message
+Write-Host "`nEnter commit message (leave blank for auto: '$type release vX.X.X'):" -ForegroundColor Yellow
+$customMsg = Read-Host "Message"
+
+# 5. Final Confirmation
+Write-Host "`nReady to release $type..." -ForegroundColor Cyan
+$confirmation = Read-Host "Proceed? (y/n)"
 if ($confirmation -ne 'y') {
     Write-Host "Release cancelled." -ForegroundColor Gray
     exit 0
 }
 
-Write-Host "Updating version and tagging..." -ForegroundColor Cyan
+Write-Host "`nBumping version..." -ForegroundColor Cyan
 
 # Run npm version
-$newVersion = npm version $Type
+# We use -m to store the custom message if provided
+if ($customMsg) {
+    $newVersion = npm version $type -m "$customMsg"
+}
+else {
+    $newVersion = npm version $type
+}
+
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Error: npm version failed." -ForegroundColor Red
     exit 1
@@ -41,8 +66,9 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host "New Version: $newVersion" -ForegroundColor Green
 
-Write-Host "Pushing changes and tags to GitHub..." -ForegroundColor Cyan
+# 6. Push to origin
+Write-Host "`nPushing changes and tags to origin..." -ForegroundColor Cyan
 git push
 git push --tags
 
-Write-Host "Success! GitHub Actions will now build the release." -ForegroundColor Green
+Write-Host "`n✨ Release $newVersion successful! GitHub Actions check has started." -ForegroundColor Green
