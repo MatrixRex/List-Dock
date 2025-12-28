@@ -63,6 +63,25 @@ If you want to contribute or build the extension from source:
 4. **Load the build**:
    - Follow the "Load in Chrome" steps above, but select the `dist` folder generated inside the project directory.
 
+## 🏷️ Release & Versioning
+
+To automate semantic versioning and GitHub releases, use the following commands:
+
+- **Check current version**: `pnpm version:show`
+- **Patch release** (0.0.1): `pnpm release:patch`
+- **Minor release** (0.1.0): `pnpm release:minor`
+- **Major release** (1.0.0): `pnpm release:major`
+
+Alternatively, on Windows, you can run the PowerShell script:
+```powershell
+./release.ps1 patch  # Options: patch, minor, major
+```
+
+These commands will:
+1. Bump the version in `package.json`.
+2. Create a git tag matching the version (e.g., `v1.2.3`).
+3. Push the code and tags to GitHub, which triggers the automated Build/Release workflow.
+
 
 ## 📖 How to Use
 
