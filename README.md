@@ -19,16 +19,6 @@ A sleek, high-performance Chrome Extension for managing your tasks directly in t
 - **Sleek Design**: Modern glassmorphism UI with smooth Framer Motion animations.
 - **Fully Local**: Your data stays on your machine, synced and saved via `chrome.storage.local`.
 
-## 🛠️ Tech Stack
-
-- **Core**: [React 19](https://react.dev/), [TypeScript](https://www.typescriptlang.org/)
-- **Build System**: [Vite](https://vitejs.dev/) + [CRXJS](https://crxjs.dev/)
-- **State Management**: [Zustand](https://github.com/pmndrs/zustand)
-- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
-- **Animations**: [Framer Motion](https://www.framer.com/motion/)
-- **Icons**: [Lucide React](https://lucide.dev/)
-- **Search**: [Fuse.js](https://www.fusejs.io/)
-- **Notifications**: [React Hot Toast](https://react-hot-toast.com/)
 
 ## 📦 Installation
 
@@ -42,6 +32,27 @@ To install the extension in your browser:
    - Click **Load unpacked**.
    - Select the folder you extracted in step 2.
    - **Do not delete** the folder after loading.
+
+## 📖 How to Use
+
+- **Opening the Sidebar**: Click the List Dock extension icon ![alt text](public/icons/icon16.png) in your browser toolbar to toggle the side panel.
+- **Combo Input**: Use the multifunctional input at the bottom:
+  - **Task Mode**: Default mode to add tasks. If a task is selected, it adds a subtask.
+  - **Folder Mode**: Click the folder icon to create new categories. Only available in root.
+  - **Search Mode**: Click the magnifying glass to filter through all your tasks.
+- **Managing Tasks**: Drag and drop tasks to prioritize or move them into folders.
+- **Undo**: Use the toast notification to undo your last action.
+
+## 🛠️ Tech Stack
+
+- **Core**: [React 19](https://react.dev/), [TypeScript](https://www.typescriptlang.org/)
+- **Build System**: [Vite](https://vitejs.dev/) + [CRXJS](https://crxjs.dev/)
+- **State Management**: [Zustand](https://github.com/pmndrs/zustand)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
+- **Animations**: [Framer Motion](https://www.framer.com/motion/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Search**: [Fuse.js](https://www.fusejs.io/)
+- **Notifications**: [React Hot Toast](https://react-hot-toast.com/)
 
 ## 🛠️ Development
 
@@ -77,23 +88,6 @@ This will launch an **interactive wizard** that:
 3.  **Prompts** you to select the release type (Patch, Minor, Major).
 4.  **Asks** for an optional custom commit message.
 5.  **Bumps** the version in `package.json`, tags it, and pushes both to GitHub.
-
-
-## 📖 How to Use
-
-- **Opening the Sidebar**: Click the List Dock extension icon ![alt text](public/icons/icon16.png) in your browser toolbar to toggle the side panel.
-- **Combo Input**: Use the multifunctional input at the bottom:
-  - **Task Mode**: Default mode to add tasks. If a task is selected, it adds a subtask.
-  - **Folder Mode**: Click the folder icon to create new categories. Only available in root.
-  - **Search Mode**: Click the magnifying glass to filter through all your tasks.
-- **Managing Tasks**: Drag and drop tasks to prioritize or move them into folders.
-- **Undo**: Use the toast notification to undo your last action.
-
-
-## 🔗 Links
-
-- **Latest Release**: [Download here](https://github.com/MatrixRex/List-Dock/releases/latest)
-- **Open Source**: This project is open for contributions!
 
 ## 📄 License
 
