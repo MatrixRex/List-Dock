@@ -22,6 +22,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
     const [showMenu, setShowMenu] = useState(false);
     const menuButtonRef = useRef<HTMLButtonElement>(null);
     const { isMenuOpen, setIsMenuOpen } = useStore();
+    const [isHovered, setIsHovered] = useState(false);
     const [isVisualCompleted, setIsVisualCompleted] = useState(item.is_completed);
 
     // Sync visual state with store state (important for Undo)
@@ -202,10 +203,13 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
     return (
         <motion.div
             layout
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
             className="group/task space-y-1 relative"
         >
             <motion.div
                 ref={cardRef}
+                layout
                 initial={{ opacity: 0, y: 10 }}
                 animate={{
                     opacity: 1,
@@ -225,7 +229,11 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                     borderColor: activeColor,
                     boxShadow: `0 0 15px ${activeColor}15`
                 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
+                transition={{
+                    duration: 0.2,
+                    ease: "easeOut",
+                    layout: { duration: 0.2, ease: "easeOut" }
+                }}
                 draggable={!isMenuOpen}
                 onDragStart={handleDragStart as any}
                 onDragOver={handleDragOver as any}
@@ -265,33 +273,37 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                     )}
                 </AnimatePresence>
 
-                <div className="flex items-center gap-3">
-                    <div
-                        className="cursor-grab active:cursor-grabbing transition-colors opacity-40 hover:opacity-100"
-                        style={{ color: activeColor }}
-                    >
-                        <GripVertical size={16} />
+                <div className="flex items-start gap-3">
+                    <div className="h-5 flex items-center">
+                        <div
+                            className="cursor-grab active:cursor-grabbing transition-colors opacity-40 hover:opacity-100"
+                            style={{ color: activeColor }}
+                        >
+                            <GripVertical size={16} />
+                        </div>
                     </div>
 
-                    <motion.button
-                        onClick={handleToggle}
-                        whileTap={{ scale: 0.8 }}
-                        animate={{
-                            scale: isVisualCompleted ? [1, 1.2, 1] : 1,
-                            rotate: isVisualCompleted ? [0, 10, 0] : 0
-                        }}
-                        transition={{ duration: 0.3 }}
-                        className="transition-colors"
-                        style={{ color: isVisualCompleted ? "#22c55e" : activeColor }}
-                    >
-                        {isVisualCompleted ? (
-                            <motion.div initial={{ scale: 0.5 }} animate={{ scale: 1 }}>
-                                <CheckCircle2 size={16} />
-                            </motion.div>
-                        ) : (
-                            <Circle size={16} />
-                        )}
-                    </motion.button>
+                    <div className="h-5 flex items-center">
+                        <motion.button
+                            onClick={handleToggle}
+                            whileTap={{ scale: 0.8 }}
+                            animate={{
+                                scale: isVisualCompleted ? [1, 1.2, 1] : 1,
+                                rotate: isVisualCompleted ? [0, 10, 0] : 0
+                            }}
+                            transition={{ duration: 0.3 }}
+                            className="transition-colors"
+                            style={{ color: isVisualCompleted ? "#22c55e" : activeColor }}
+                        >
+                            {isVisualCompleted ? (
+                                <motion.div initial={{ scale: 0.5 }} animate={{ scale: 1 }}>
+                                    <CheckCircle2 size={16} />
+                                </motion.div>
+                            ) : (
+                                <Circle size={16} />
+                            )}
+                        </motion.button>
+                    </div>
 
                     <div className="flex-1 min-w-0">
                         {isRenaming ? (
@@ -305,23 +317,32 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                             />
                         ) : (
                             <div className="flex items-start gap-2">
-                                <span className={cn(
-                                    "text-sm font-medium text-gray-200 transition-all duration-200 flex-1 min-w-0 block",
-                                    (!isSelected) ? "truncate group-hover/task:whitespace-normal group-hover/task:break-words" : "whitespace-normal break-words",
-                                    isVisualCompleted && "text-gray-500 line-through"
-                                )}>
-                                    {item.title}
-                                </span>
+                                <div className="flex-1 min-w-0">
+                                    <motion.div
+                                        animate={{ height: (isHovered || isSelected) ? 'auto' : '1.25rem' }}
+                                        className="overflow-hidden"
+                                        transition={{ duration: 0.2, ease: "easeOut" }}
+                                    >
+                                        <span className={cn(
+                                            "text-sm font-medium text-gray-200 block whitespace-normal break-all",
+                                            isVisualCompleted && "text-gray-500 line-through"
+                                        )}>
+                                            {item.title}
+                                        </span>
+                                    </motion.div>
+                                </div>
                                 {hasSubtasks && (
-                                    <span className="text-[10px] bg-gray-700 text-gray-400 px-1.5 py-0.5 rounded-full font-bold">
-                                        {completedSubtasks}/{subtasks.length}
-                                    </span>
+                                    <div className="h-5 flex items-center">
+                                        <span className="text-[10px] bg-gray-700 text-gray-400 px-1.5 py-0.5 rounded-full font-bold">
+                                            {completedSubtasks}/{subtasks.length}
+                                        </span>
+                                    </div>
                                 )}
                             </div>
                         )}
                     </div>
 
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="h-5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         {!isSubtask && hasSubtasks && (
                             <button
                                 onClick={(e) => {
