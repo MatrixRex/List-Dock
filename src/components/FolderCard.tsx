@@ -15,7 +15,7 @@ interface FolderCardProps {
 const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
     const setView = useStore((state: any) => state.setView);
     const { items, deleteItem, moveItem, isMenuOpen, showCompleted } = useStore();
-    const { dragState, updateDragState, clearDragState } = useDnDContext();
+    const { dragState, updateDragState, clearDragState, calculateZone } = useDnDContext();
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [isIconHovered, setIsIconHovered] = useState(false);
@@ -25,16 +25,51 @@ const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
         .filter((i: Item) => showCompleted || !i.is_completed);
     const taskCount = folderItems.length;
 
+    const handleDragStart = (e: React.DragEvent) => {
+        e.dataTransfer.setData('text/plain', item.id);
+        updateDragState(item.id, null, null);
+    };
+
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
         if (isMenuOpen || dragState.draggedItemId === item.id) return;
-        updateDragState(dragState.draggedItemId, item.id, 'folder');
+
+        const draggedItem = items.find((i: Item) => i.id === dragState.draggedItemId);
+        const isFolderDrag = draggedItem?.type === 'folder';
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+
+        const zone = calculateZone(e, rect, true, false, isFolderDrag);
+        updateDragState(dragState.draggedItemId, item.id, zone);
     };
 
     const handleDrop = (e: React.DragEvent) => {
         e.preventDefault();
         const draggedId = dragState.draggedItemId;
-        if (draggedId && draggedId !== item.id) {
+        if (!draggedId || draggedId === item.id) return;
+
+        const draggedItem = items.find((i: Item) => i.id === draggedId);
+        if (!draggedItem) return;
+
+        if (draggedItem.type === 'folder') {
+            // Folder reordering
+            const dropFolder = item;
+            const siblings = items
+                .filter((i: Item) => i.type === 'folder')
+                .sort((a: Item, b: Item) => a.order_index - b.order_index);
+
+            const targetIndex = siblings.findIndex((s: Item) => s.id === dropFolder.id);
+            let newOrder;
+
+            if (dragState.dropZone === 'left') {
+                const prev = siblings[targetIndex - 1];
+                newOrder = prev ? (prev.order_index + dropFolder.order_index) / 2 : dropFolder.order_index - 1000;
+            } else {
+                const next = siblings[targetIndex + 1];
+                newOrder = next ? (dropFolder.order_index + next.order_index) / 2 : dropFolder.order_index + 1000;
+            }
+
+            moveItem(draggedId, null, 'folder', newOrder); // Correctly keep 'folder' type
+        } else {
             // Move task into folder
             moveItem(draggedId, item.id, 'task');
         }
@@ -57,6 +92,8 @@ const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
                 boxShadow: `0 0 20px ${folderColor}20`
             }}
             transition={{ duration: 0.2, ease: "easeOut" }}
+            draggable={!isMenuOpen}
+            onDragStart={handleDragStart as any}
             onClick={() => {
                 if (isMenuOpen) return;
                 useStore.getState().setSearchQuery('');
@@ -67,10 +104,18 @@ const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
             onDrop={handleDrop as any}
             className={cn(
                 "glass rounded-xl p-2.5 cursor-pointer group relative",
-                dragState.targetItemId === item.id && "border-purple-500 bg-purple-500/10 shadow-[0_0_15px_-3px_rgba(168,85,247,0.3)]",
+                dragState.targetItemId === item.id && dragState.dropZone === 'folder' && "border-purple-500 bg-purple-500/10 shadow-[0_0_15px_-3px_rgba(168,85,247,0.3)]",
                 isMenuOpen && "pointer-events-none"
             )}
         >
+            {/* Drop Indicators */}
+            {dragState.targetItemId === item.id && dragState.dropZone === 'left' && (
+                <div className="absolute -left-[1.5px] top-0 bottom-0 w-0.5 bg-purple-500 z-50 rounded-full" />
+            )}
+            {dragState.targetItemId === item.id && dragState.dropZone === 'right' && (
+                <div className="absolute -right-[1.5px] top-0 bottom-0 w-0.5 bg-purple-500 z-50 rounded-full" />
+            )}
+
             <div className="flex flex-col gap-1 relative z-10">
                 <div className="flex items-center gap-2">
                     <div

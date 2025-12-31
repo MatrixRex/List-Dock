@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 
-export type DropZone = 'top' | 'bottom' | 'right' | 'folder' | null;
+export type DropZone = 'top' | 'bottom' | 'left' | 'right' | 'folder' | null;
 
 interface DragState {
     draggedItemId: string | null;
@@ -34,17 +34,25 @@ export function useDnD() {
     const calculateZone = useCallback((
         e: React.MouseEvent | MouseEvent,
         targetRect: DOMRect,
-        isFolder: boolean,
-        canAcceptSubtask: boolean
+        isFolderTarget: boolean,
+        canAcceptSubtask: boolean,
+        isFolderDrag: boolean = false
     ): DropZone => {
-        if (isFolder) return 'folder';
-
         const { clientX, clientY } = e;
         const relativeX = clientX - targetRect.left;
         const relativeY = clientY - targetRect.top;
 
         const widthPercentage = relativeX / targetRect.width;
         const heightPercentage = relativeY / targetRect.height;
+
+        if (isFolderTarget) {
+            // If dragging a folder, we want to reorder (left/right)
+            if (isFolderDrag) {
+                return widthPercentage < 0.5 ? 'left' : 'right';
+            }
+            // If dragging a task, we want to move into folder
+            return 'folder';
+        }
 
         // Right 60% is the subtask zone
         if (widthPercentage > 0.4 && canAcceptSubtask) {

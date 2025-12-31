@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { Item, AppState } from '../types';
+import type { Item, AppState, ItemType } from '../types';
 import { toast } from 'react-hot-toast';
 import React from 'react';
 import UndoToast from '../components/UndoToast';
@@ -20,7 +20,7 @@ interface StoreState extends AppState {
     setItems: (items: Item[]) => void;
     addItem: (item: Item) => void;
     updateItem: (id: string, updates: Partial<Item>) => void;
-    moveItem: (id: string, newParentId: string | null, newType: 'task' | 'subtask', orderIndex?: number) => void;
+    moveItem: (id: string, newParentId: string | null, newType: ItemType, orderIndex?: number) => void;
     deleteItem: (id: string) => void;
     setView: (view: 'root' | 'folder', folderId?: string | null) => void;
     setSearchQuery: (query: string) => void;
@@ -131,23 +131,24 @@ export const useStore = create<StoreState>()(
                 });
             },
 
-            moveItem: (id: string, newParentId: string | null, newType: 'task' | 'subtask', orderIndex?: number) => {
+            moveItem: (id: string, newParentId: string | null, newType: ItemType, orderIndex?: number) => {
                 const { items, updateItem, pushToUndoStack } = get();
                 const item = items.find((i: Item) => i.id === id);
                 if (!item) return;
 
-                const oldParentId = item.parent_id;
                 let message = `Moved "${item.title}"`;
 
                 if (newType === 'subtask') {
                     const parentTask = items.find((t: Item) => t.id === newParentId);
                     message = `Moved "${item.title}" as subtask of "${parentTask?.title || 'task'}"`;
-                } else if (newParentId !== oldParentId) {
+                } else if (item.type === 'folder' && orderIndex !== undefined) {
+                    message = `Reordered folder "${item.title}"`;
+                } else if (newParentId !== item.parent_id) {
                     if (newParentId) {
                         const newFolder = items.find((f: Item) => f.id === newParentId);
                         message = `Moved "${item.title}" to "${newFolder?.title || 'folder'}" folder`;
-                    } else if (oldParentId) {
-                        const oldParent = items.find((p: Item) => p.id === oldParentId);
+                    } else if (item.parent_id) {
+                        const oldParent = items.find((p: Item) => p.id === item.parent_id);
                         if (oldParent?.type === 'folder') {
                             message = `Moved "${item.title}" out of "${oldParent.title}"`;
                         } else {

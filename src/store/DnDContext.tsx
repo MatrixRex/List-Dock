@@ -9,7 +9,7 @@ interface DnDContextType {
     };
     updateDragState: (draggedId: string | null, targetId: string | null, zone: DropZone) => void;
     clearDragState: () => void;
-    calculateZone: (e: React.MouseEvent | MouseEvent, targetRect: DOMRect, isFolder: boolean, canAcceptSubtask: boolean) => DropZone;
+    calculateZone: (e: React.MouseEvent | MouseEvent, targetRect: DOMRect, isFolder: boolean, canAcceptSubtask: boolean, isFolderDrag?: boolean) => DropZone;
 }
 
 const DnDContext = createContext<DnDContextType | undefined>(undefined);
