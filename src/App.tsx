@@ -24,8 +24,29 @@ const App: React.FC = () => {
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't override standard copy if user is typing in an input
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+      const isInput = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement;
+
+      // Global Undo (Ctrl+Z)
+      const isZ = e.key === 'z' || e.key === 'Z' || e.code === 'KeyZ';
+      if ((e.ctrlKey || e.metaKey) && isZ && !e.shiftKey && !e.altKey) {
+        // If in input, only override if input is empty
+        if (isInput) {
+          const target = e.target as HTMLInputElement;
+          if (target.value !== '') return;
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const state = useStore.getState();
+        if (state.undo) {
+          state.undo();
+        }
+        return;
+      }
+
+      // Input Guard for other shortcuts
+      if (isInput) {
         return;
       }
 
@@ -47,15 +68,10 @@ const App: React.FC = () => {
           }
         }
       }
-
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
-        e.preventDefault();
-        useStore.getState().undo();
-      }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, []);
 
   React.useEffect(() => {

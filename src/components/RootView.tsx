@@ -109,7 +109,7 @@ const RootView: React.FC = () => {
             <section className="flex flex-col min-h-[200px] max-h-[50vh]">
                 <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 px-1 flex-shrink-0">Tasks</h2>
                 {rootTasks.length > 0 ? (
-                    <div className="space-y-2 overflow-y-auto custom-scrollbar pr-1">
+                    <div className="overflow-y-auto custom-scrollbar pr-1">
                         <AnimatePresence initial={false} mode="popLayout">
                             {rootTasks.map((task: Item) => (
                                 <TaskCard key={task.id} item={task} />

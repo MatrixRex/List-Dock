@@ -24,6 +24,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
     const { isMenuOpen, setIsMenuOpen } = useStore();
     const [isHovered, setIsHovered] = useState(false);
     const [isVisualCompleted, setIsVisualCompleted] = useState(item.is_completed);
+    const [isCheckingSubtasks, setIsCheckingSubtasks] = useState(false);
 
     // Sync visual state with store state (important for Undo)
     React.useEffect(() => {
@@ -37,19 +38,41 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
         if (isMenuOpen) return;
 
         const nextCompleted = !item.is_completed;
-        setIsVisualCompleted(nextCompleted);
 
-        const toggleAction = () => {
+        const performUpdate = () => {
             pushToUndoStack(nextCompleted ? `Completed "${item.title}"` : `Marked "${item.title}" as active`);
             updateItem(item.id, { is_completed: nextCompleted });
         };
 
-        // If we are completing a task and "show completed" is off, 
-        // delay the store update so the animation can play before it's filtered out
-        if (nextCompleted && !showCompleted) {
-            setTimeout(toggleAction, 800);
+        if (nextCompleted && !isSubtask && subtasks.length > 0) {
+            // Sequence: 1. Check all subtasks
+            setIsCheckingSubtasks(true);
+            subtasks.forEach(s => updateItem(s.id, { is_completed: true }));
+
+            // 2. Wait for subtasks check animation (300ms), then check parent
+            setTimeout(() => {
+                setIsVisualCompleted(true);
+                // 3. Wait for parent check animation (300ms), then hide
+                if (!showCompleted) {
+                    setTimeout(() => {
+                        performUpdate();
+                        setIsCheckingSubtasks(false);
+                    }, 500);
+                } else {
+                    performUpdate();
+                    setIsCheckingSubtasks(false);
+                }
+            }, 350);
         } else {
-            toggleAction();
+            setIsVisualCompleted(nextCompleted);
+
+            // If we are completing a task and "show completed" is off, 
+            // delay the store update so the animation can play before it's filtered out
+            if (nextCompleted && !showCompleted) {
+                setTimeout(performUpdate, 400);
+            } else {
+                performUpdate();
+            }
         }
     };
 
@@ -58,6 +81,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
         .filter((i: Item) => {
             if (!i.is_completed) return true;
             if (showCompleted) return true;
+            // Keep subtasks visible if we are in the middle of a parent completion sequence
+            if (isCheckingSubtasks || isVisualCompleted) return true;
             return !hideCompletedSubtasks;
         })
         .sort((a: Item, b: Item) => {
@@ -96,6 +121,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
+        e.stopPropagation();
         if (!cardRef.current || dragState.draggedItemId === item.id) return;
 
         const rect = cardRef.current.getBoundingClientRect();
@@ -110,6 +136,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
 
     const handleDrop = (e: React.DragEvent) => {
         e.preventDefault();
+        e.stopPropagation();
         if (dragState.draggedItemId === item.id) return;
 
         const { draggedItemId, targetItemId, dropZone } = dragState;
@@ -148,7 +175,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
     };
 
     const handleRename = () => {
-        if (renameValue.trim()) {
+        if (renameValue.trim() && renameValue !== item.title) {
+            pushToUndoStack(`Renamed "${item.title}" to "${renameValue}"`);
             updateItem(item.id, { title: renameValue });
         } else {
             setRenameValue(item.title);
@@ -205,7 +233,13 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
             layout
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            className="group/task space-y-1 relative"
+            onDragOver={handleDragOver as any}
+            onDragLeave={() => updateDragState(dragState.draggedItemId, null, null)}
+            onDrop={handleDrop as any}
+            className={cn(
+                "group/task relative transition-all",
+                isSubtask ? "py-[2px]" : "py-1"
+            )}
         >
             <motion.div
                 ref={cardRef}
@@ -221,8 +255,13 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                 }}
                 exit={{
                     opacity: 0,
+                    x: -50,
                     scale: 0.95,
-                    transition: { duration: 0.2 }
+                    filter: "blur(10px)",
+                    transition: {
+                        duration: 0.4,
+                        ease: [0.4, 0, 0.2, 1]
+                    }
                 }}
                 whileHover={{
                     backgroundColor: isSelected ? `${activeColor}25` : "rgba(255, 255, 255, 0.12)",
@@ -236,9 +275,6 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                 }}
                 draggable={!isMenuOpen}
                 onDragStart={handleDragStart as any}
-                onDragOver={handleDragOver as any}
-                onDragLeave={() => updateDragState(dragState.draggedItemId, null, null)}
-                onDrop={handleDrop as any}
                 onDoubleClick={() => !isMenuOpen && setIsRenaming(true)}
                 onClick={handleClick}
                 className={cn(
@@ -430,7 +466,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.2, ease: "easeOut" }}
-                        className="overflow-hidden space-y-[2px] mt-[1px]"
+                        className="overflow-hidden mt-1"
                     >
                         {subtasks.map((subtask: Item, index: number) => (
                             <TaskCard

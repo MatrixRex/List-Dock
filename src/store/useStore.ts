@@ -189,7 +189,7 @@ export const useStore = create<StoreState>()(
 
             pushToUndoStack: (message = 'Action performed') => {
                 const { items, undoStack } = get();
-                set({ undoStack: [...undoStack.slice(-19), items] }); // Keep last 20 states
+                set({ undoStack: [...undoStack.slice(-9), items] }); // Keep last 10 states
 
                 toast.custom(
                     (t) =>
@@ -206,11 +206,21 @@ export const useStore = create<StoreState>()(
 
             undo: () => {
                 const { undoStack } = get();
-                if (undoStack.length === 0) return;
+                if (undoStack.length === 0) {
+                    toast.error('Nothing to undo', {
+                        id: 'undo-empty',
+                        className: 'glass-toast-standard',
+                    });
+                    return;
+                }
                 const previousState = undoStack[undoStack.length - 1];
                 set({
                     items: previousState,
                     undoStack: undoStack.slice(0, -1),
+                });
+                toast.success('Action undone', {
+                    id: 'undo-success',
+                    className: 'glass-toast-standard',
                 });
             },
 
@@ -244,6 +254,7 @@ export const useStore = create<StoreState>()(
                 showCompleted: state.showCompleted,
                 hideCompletedSubtasks: state.hideCompletedSubtasks,
                 persistLastFolder: state.persistLastFolder,
+                undoStack: state.undoStack,
                 // Only persist view and folder ID if the toggle is ON
                 ...(state.persistLastFolder ? {
                     currentView: state.currentView,

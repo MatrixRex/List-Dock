@@ -24,7 +24,8 @@ const Header: React.FC = () => {
     }, [folder?.id]);
 
     const handleUpdateTitle = () => {
-        if (titleValue.trim() && folder) {
+        if (titleValue.trim() && folder && titleValue !== folder.title) {
+            useStore.getState().pushToUndoStack(`Renamed folder "${folder.title}" to "${titleValue}"`);
             updateItem(folder.id, { title: titleValue });
         }
         setIsEditingTitle(false);

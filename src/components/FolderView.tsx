@@ -52,7 +52,7 @@ const FolderView: React.FC = () => {
                 </div>
             )}
 
-            <div className="space-y-2">
+            <div className="">
                 <AnimatePresence initial={false} mode="popLayout">
                     {tasks.length > 0 ? (
                         tasks.map((task: Item) => <TaskCard key={task.id} item={task} />)

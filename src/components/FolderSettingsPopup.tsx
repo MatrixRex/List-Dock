@@ -31,6 +31,8 @@ const FolderSettingsPopup: React.FC<FolderSettingsPopupProps> = ({ isOpen, onClo
     const [selectedIcon, setSelectedIcon] = useState(folder.icon || 'Letter');
 
     const handleSave = () => {
+        const { pushToUndoStack } = useStore.getState();
+        pushToUndoStack(`Modified folder "${folder.title}"`);
         updateItem(folder.id, {
             title: title.trim(),
             color: selectedColor,
