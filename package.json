@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "release": "powershell -ExecutionPolicy Bypass -File ./release.ps1",
+    "release": "node release.js",
     "version:show": "node -p \"require('./package.json').version\""
   },
   "dependencies": {
