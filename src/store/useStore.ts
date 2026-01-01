@@ -15,6 +15,7 @@ interface StoreState extends AppState {
     showCompleted: boolean;
     hideCompletedSubtasks: boolean;
     selectedTaskId: string | null;
+    persistLastFolder: boolean;
 
     // Actions
     setItems: (items: Item[]) => void;
@@ -31,6 +32,7 @@ interface StoreState extends AppState {
     setShowCompleted: (show: boolean) => void;
     setHideCompletedSubtasks: (hide: boolean) => void;
     setSelectedTaskId: (id: string | null) => void;
+    setPersistLastFolder: (persist: boolean) => void;
 }
 
 // Custom storage for chrome.storage.local
@@ -95,6 +97,7 @@ export const useStore = create<StoreState>()(
             showCompleted: false as boolean,
             hideCompletedSubtasks: true as boolean,
             selectedTaskId: null as string | null,
+            persistLastFolder: false as boolean,
 
             setItems: (items: Item[]) => set({ items }),
 
@@ -230,6 +233,7 @@ export const useStore = create<StoreState>()(
             setSelectedTaskId: (id: string | null) => set((state: StoreState) => ({
                 selectedTaskId: state.selectedTaskId === id ? null : id
             })),
+            setPersistLastFolder: (persist: boolean) => set({ persistLastFolder: persist }),
         }),
         {
             name: 'list-dock-storage',
@@ -238,7 +242,13 @@ export const useStore = create<StoreState>()(
             partialize: (state: StoreState) => ({
                 items: state.items,
                 showCompleted: state.showCompleted,
-                hideCompletedSubtasks: state.hideCompletedSubtasks
+                hideCompletedSubtasks: state.hideCompletedSubtasks,
+                persistLastFolder: state.persistLastFolder,
+                // Only persist view and folder ID if the toggle is ON
+                ...(state.persistLastFolder ? {
+                    currentView: state.currentView,
+                    currentFolderId: state.currentFolderId,
+                } : {})
             }), // Persist items and settings
             migrate: (persistedState: any, version: number) => {
                 if (version < STORAGE_VERSION) {

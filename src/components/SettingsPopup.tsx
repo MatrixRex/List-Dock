@@ -14,7 +14,9 @@ const SettingsPopup: React.FC<SettingsPopupProps> = ({ isOpen, onClose }) => {
         showCompleted,
         setShowCompleted,
         hideCompletedSubtasks,
-        setHideCompletedSubtasks
+        setHideCompletedSubtasks,
+        persistLastFolder,
+        setPersistLastFolder
     } = useStore();
     const [showConfirm, setShowConfirm] = React.useState(false);
 
@@ -106,6 +108,24 @@ const SettingsPopup: React.FC<SettingsPopupProps> = ({ isOpen, onClose }) => {
                                             <span
                                                 aria-hidden="true"
                                                 className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${hideCompletedSubtasks ? 'translate-x-5' : 'translate-x-0'}`}
+                                            />
+                                        </button>
+                                    </div>
+
+                                    <div className="h-px bg-gray-800/80 my-3" />
+
+                                    <div className="flex items-center justify-between">
+                                        <div className="space-y-1">
+                                            <p className="text-sm font-medium text-white">Remember Last Folder</p>
+                                            <p className="text-xs text-gray-400">Reopen the last used folder on startup.</p>
+                                        </div>
+                                        <button
+                                            onClick={() => setPersistLastFolder(!persistLastFolder)}
+                                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${persistLastFolder ? 'bg-purple-500' : 'bg-gray-700'}`}
+                                        >
+                                            <span
+                                                aria-hidden="true"
+                                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${persistLastFolder ? 'translate-x-5' : 'translate-x-0'}`}
                                             />
                                         </button>
                                     </div>

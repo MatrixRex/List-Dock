@@ -18,4 +18,5 @@ export interface AppState {
     currentView: 'root' | 'folder';
     currentFolderId: string | null;
     searchQuery: string;
+    persistLastFolder: boolean;
 }
