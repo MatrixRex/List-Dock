@@ -14,7 +14,7 @@ interface StoreState extends AppState {
     isMenuOpen: boolean;
     showCompleted: boolean;
     hideCompletedSubtasks: boolean;
-    selectedTaskId: string | null;
+    selectedTaskIds: string[];
     persistLastFolder: boolean;
 
     // Actions
@@ -31,7 +31,12 @@ interface StoreState extends AppState {
     clearItems: () => void;
     setShowCompleted: (show: boolean) => void;
     setHideCompletedSubtasks: (hide: boolean) => void;
-    setSelectedTaskId: (id: string | null) => void;
+    setSelectedTaskIds: (ids: string[]) => void;
+    toggleTaskSelection: (id: string, isMulti?: boolean, rangeIds?: string[]) => void;
+    clearTaskSelection: () => void;
+    deleteSelectedTasks: () => void;
+    moveSelectedTasks: (newParentId: string | null) => void;
+    moveMultipleItems: (ids: string[], newParentId: string | null, newType: ItemType, orderIndex?: number) => void;
     setPersistLastFolder: (persist: boolean) => void;
 }
 
@@ -96,25 +101,26 @@ export const useStore = create<StoreState>()(
             isMenuOpen: false as boolean,
             showCompleted: false as boolean,
             hideCompletedSubtasks: true as boolean,
-            selectedTaskId: null as string | null,
+            selectedTaskIds: [] as string[],
             persistLastFolder: false as boolean,
 
             setItems: (items: Item[]) => set({ items }),
 
             addItem: (item: Item) => {
-                const { items, selectedTaskId } = get();
+                const { items, selectedTaskIds } = get();
 
                 let newItem = { ...item };
 
-                // If a task is selected, make this a subtask (only if we're adding a task)
-                if (selectedTaskId && item.type === 'task') {
+                // If multiple tasks are selected, just add as a normal task (ignore subtask logic)
+                // If only one task is selected, follow subtask logic
+                if (selectedTaskIds.length === 1 && item.type === 'task') {
+                    const selectedTaskId = selectedTaskIds[0];
                     const selectedItem = items.find((i: Item) => i.id === selectedTaskId);
                     if (selectedItem) {
                         if (selectedItem.type === 'task') {
                             newItem.parent_id = selectedTaskId;
                             newItem.type = 'subtask';
                         } else if (selectedItem.type === 'subtask') {
-                            // If subtask is selected, make sibling (subtask of same parent)
                             newItem.parent_id = selectedItem.parent_id;
                             newItem.type = 'subtask';
                         }
@@ -122,15 +128,24 @@ export const useStore = create<StoreState>()(
                 }
 
                 get().pushToUndoStack(`Added ${newItem.title}`);
-                set({ items: [...items, newItem] });
+
+                // If we're adding a folder and have multiple tasks selected, move those tasks into the new folder
+                let updatedItems = [...items, newItem];
+                if (item.type === 'folder' && selectedTaskIds.length > 0) {
+                    updatedItems = updatedItems.map(i =>
+                        selectedTaskIds.includes(i.id) ? { ...i, parent_id: newItem.id, type: 'task' as ItemType } : i
+                    );
+                }
+
+                set({ items: updatedItems, selectedTaskIds: [] });
             },
 
             updateItem: (id: string, updates: Partial<Item>) => {
-                const { items, selectedTaskId } = get();
+                const { items, selectedTaskIds } = get();
                 set({
                     items: items.map((item: Item) => (item.id === id ? { ...item, ...updates } : item)),
-                    // Clear selection if the selected task is completed
-                    selectedTaskId: id === selectedTaskId && updates.is_completed ? null : selectedTaskId,
+                    // Remove from selection if the task is completed
+                    selectedTaskIds: updates.is_completed ? selectedTaskIds.filter((sid: string) => sid !== id) : selectedTaskIds,
                 });
             },
 
@@ -183,7 +198,11 @@ export const useStore = create<StoreState>()(
                 set({ items: newItems });
             },
 
-            setView: (view: 'root' | 'folder', folderId: string | null = null) => set({ currentView: view, currentFolderId: folderId, selectedTaskId: null }),
+            setView: (view: 'root' | 'folder', folderId: string | null = null) => set({
+                currentView: view,
+                currentFolderId: folderId,
+                selectedTaskIds: []
+            }),
 
             setSearchQuery: (query: string) => set({ searchQuery: query }),
 
@@ -240,9 +259,90 @@ export const useStore = create<StoreState>()(
 
             setHideCompletedSubtasks: (hide: boolean) => set({ hideCompletedSubtasks: hide }),
 
-            setSelectedTaskId: (id: string | null) => set((state: StoreState) => ({
-                selectedTaskId: state.selectedTaskId === id ? null : id
-            })),
+            setSelectedTaskIds: (ids: string[]) => set({ selectedTaskIds: ids }),
+
+            toggleTaskSelection: (id: string, isMulti = false, rangeIds?: string[]) => set((state: StoreState) => {
+                if (rangeIds) {
+                    // Shift-click logic: toggle the entire range
+                    const allInRageAlreadySelected = rangeIds.every((rid: string) => state.selectedTaskIds.includes(rid));
+                    if (allInRageAlreadySelected) {
+                        return { selectedTaskIds: state.selectedTaskIds.filter(sid => !rangeIds.includes(sid)) };
+                    } else {
+                        const newSelection = [...new Set([...state.selectedTaskIds, ...rangeIds])];
+                        return { selectedTaskIds: newSelection };
+                    }
+                }
+
+                if (isMulti) {
+                    if (state.selectedTaskIds.includes(id)) {
+                        return { selectedTaskIds: state.selectedTaskIds.filter((sid: string) => sid !== id) };
+                    } else {
+                        return { selectedTaskIds: [...state.selectedTaskIds, id] };
+                    }
+                } else {
+                    if (state.selectedTaskIds.length === 1 && state.selectedTaskIds[0] === id) {
+                        return { selectedTaskIds: [] };
+                    } else {
+                        return { selectedTaskIds: [id] };
+                    }
+                }
+            }),
+
+            clearTaskSelection: () => set({ selectedTaskIds: [] }),
+
+            deleteSelectedTasks: () => {
+                const { items, selectedTaskIds, pushToUndoStack } = get();
+                if (selectedTaskIds.length === 0) return;
+
+                pushToUndoStack(`Deleted ${selectedTaskIds.length} items`);
+
+                // Get all items to delete including sub-items of folders
+                const foldersToDelete = selectedTaskIds.filter((id: string) => items.find((i: Item) => i.id === id)?.type === 'folder');
+
+                const newItems = items.filter((i: Item) => {
+                    // Don't keep if it's explicitly selected
+                    if (selectedTaskIds.includes(i.id)) return false;
+                    // Don't keep if its parent is a folder being deleted
+                    if (i.parent_id && foldersToDelete.includes(i.parent_id)) return false;
+                    return true;
+                });
+
+                set({ items: newItems, selectedTaskIds: [] });
+            },
+
+            moveSelectedTasks: (newParentId: string | null) => {
+                const { selectedTaskIds, moveMultipleItems } = get();
+                if (selectedTaskIds.length === 0) return;
+                moveMultipleItems(selectedTaskIds, newParentId, 'task');
+            },
+
+            moveMultipleItems: (ids: string[], newParentId: string | null, newType: ItemType, orderIndex?: number) => {
+                const { items, pushToUndoStack } = get();
+                if (ids.length === 0) return;
+
+                let message = `Moved ${ids.length} items`;
+                if (newParentId) {
+                    const target = items.find((i: Item) => i.id === newParentId);
+                    message = `Moved ${ids.length} items to "${target?.title || 'folder'}"`;
+                }
+
+                pushToUndoStack(message);
+
+                const newItems = items.map((item: Item) => {
+                    if (ids.includes(item.id)) {
+                        return {
+                            ...item,
+                            parent_id: newParentId,
+                            type: newType,
+                            order_index: orderIndex !== undefined ? orderIndex + (Math.random() * 0.1) : Date.now() + Math.random()
+                        };
+                    }
+                    return item;
+                });
+
+                set({ items: newItems, selectedTaskIds: [] });
+            },
+
             setPersistLastFolder: (persist: boolean) => set({ persistLastFolder: persist }),
         }),
         {

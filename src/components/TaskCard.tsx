@@ -14,7 +14,7 @@ interface TaskCardProps {
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = false }) => {
-    const { updateItem, items, deleteItem, moveItem, showCompleted, hideCompletedSubtasks, selectedTaskId, setSelectedTaskId, pushToUndoStack } = useStore();
+    const { updateItem, items, deleteItem, moveItem, showCompleted, hideCompletedSubtasks, selectedTaskIds, toggleTaskSelection, pushToUndoStack } = useStore();
     const { dragState, updateDragState, clearDragState, calculateZone } = useDnDContext();
     const cardRef = useRef<HTMLDivElement>(null);
     const [isRenaming, setIsRenaming] = useState(false);
@@ -31,7 +31,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
         setIsVisualCompleted(item.is_completed);
     }, [item.is_completed]);
 
-    const isSelected = selectedTaskId === item.id;
+    const isSelected = selectedTaskIds.includes(item.id);
+    const isMultiSelected = selectedTaskIds.length > 1;
 
     const handleToggle = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -145,8 +146,12 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
         const draggedItem = items.find((i: Item) => i.id === draggedItemId);
         if (!draggedItem) return;
 
+        // Multi-drag support
+        const isDraggingSelection = selectedTaskIds.includes(draggedItemId);
+        const idsToMove = isDraggingSelection ? selectedTaskIds : [draggedItemId];
+
         if (dropZone === 'right') {
-            moveItem(draggedItemId, item.id, 'subtask');
+            useStore.getState().moveMultipleItems(idsToMove, item.id, 'subtask');
         } else {
             const isTargetSubtask = item.type === 'subtask';
             const newType = isTargetSubtask ? 'subtask' : 'task';
@@ -154,7 +159,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
 
             // Get siblings to calculate order
             const siblings = items
-                .filter((i: Item) => i.parent_id === newParentId && i.type === newType)
+                .filter((i: Item) => i.parent_id === newParentId && i.type === newType && !idsToMove.includes(i.id))
                 .sort((a: Item, b: Item) => a.order_index - b.order_index);
 
             const targetIndex = siblings.findIndex((s: Item) => s.id === item.id);
@@ -168,13 +173,14 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                 newOrder = next ? (item.order_index + next.order_index) / 2 : item.order_index + 1000;
             }
 
-            moveItem(draggedItemId, newParentId, newType, newOrder);
+            useStore.getState().moveMultipleItems(idsToMove, newParentId, newType, newOrder);
         }
 
         clearDragState();
     };
 
     const handleRename = () => {
+        if (isMultiSelected) return; // Rename disabled for multi-select
         if (renameValue.trim() && renameValue !== item.title) {
             pushToUndoStack(`Renamed "${item.title}" to "${renameValue}"`);
             updateItem(item.id, { title: renameValue });
@@ -195,7 +201,11 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
     };
 
     const handleMoveToFolder = (folderId: string | null) => {
-        moveItem(item.id, folderId, 'task');
+        if (isMultiSelected) {
+            useStore.getState().moveSelectedTasks(folderId);
+        } else {
+            moveItem(item.id, folderId, 'task');
+        }
         setShowMenu(false);
         setIsMenuOpen(false);
     };
@@ -204,9 +214,12 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
         e.stopPropagation();
         if (isMenuOpen || isVisualCompleted) return;
 
+        const isMulti = e.ctrlKey || e.metaKey;
+        const isShift = e.shiftKey;
+
         const currentSearch = useStore.getState().searchQuery;
 
-        if (currentSearch.trim()) {
+        if (!isMulti && !isShift && currentSearch.trim()) {
             // Exit search and go to item's location
             let targetFolderId: string | null = null;
 
@@ -225,7 +238,28 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
             useStore.getState().setView(targetFolderId ? 'folder' : 'root', targetFolderId);
         }
 
-        setSelectedTaskId(item.id);
+        if (isShift && selectedTaskIds.length > 0) {
+            // Shift-click range selection
+            const container = cardRef.current?.closest('.space-y-4, .space-y-2, .overflow-y-auto, section');
+            if (container) {
+                const cards = Array.from(container.querySelectorAll('[data-task-id]'));
+                const cardIds = cards.map(c => c.getAttribute('data-task-id') as string);
+
+                const lastSelectedId = selectedTaskIds[selectedTaskIds.length - 1];
+                const lastIdx = cardIds.indexOf(lastSelectedId);
+                const currentIdx = cardIds.indexOf(item.id);
+
+                if (lastIdx !== -1 && currentIdx !== -1) {
+                    const start = Math.min(lastIdx, currentIdx);
+                    const end = Math.max(lastIdx, currentIdx);
+                    const rangeIds = cardIds.slice(start, end + 1);
+                    toggleTaskSelection(item.id, true, rangeIds);
+                    return;
+                }
+            }
+        }
+
+        toggleTaskSelection(item.id, isMulti);
     };
 
     return (
@@ -275,8 +309,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                 }}
                 draggable={!isMenuOpen}
                 onDragStart={handleDragStart as any}
-                onDoubleClick={() => !isMenuOpen && setIsRenaming(true)}
+                onDoubleClick={() => !isMenuOpen && !isMultiSelected && setIsRenaming(true)}
                 onClick={handleClick}
+                data-task-id={item.id}
                 className={cn(
                     "group relative glass p-3 cursor-pointer select-none rounded-xl",
                     isSubtask ? "ml-4" : "",
@@ -356,7 +391,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                                 <div className="flex-1 min-w-0">
                                     <motion.div
                                         animate={{ height: (isHovered || isSelected) ? 'auto' : '1.25rem' }}
-                                        className="overflow-hidden"
+                                        className={cn(
+                                            "overflow-hidden",
+                                            isMultiSelected && "pointer-events-none"
+                                        )}
                                         transition={{ duration: 0.2, ease: "easeOut" }}
                                     >
                                         <span className={cn(
@@ -420,14 +458,18 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                     onClose={() => { setShowMenu(false); setIsMenuOpen(false); }}
                     anchorRect={menuButtonRef.current?.getBoundingClientRect() || null}
                 >
-                    <button
-                        onClick={() => { setIsRenaming(true); setShowMenu(false); setIsMenuOpen(false); }}
-                        className="w-full text-left px-3.5 py-2.5 text-xs text-gray-300 hover:bg-white/10 flex items-center gap-2.5 transition-colors"
-                    >
-                        <Edit2 size={14} /> Rename
-                    </button>
-                    <div className="h-px bg-gray-800/50 mx-2 my-1" />
-                    <div className="px-3.5 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Move To</div>
+                    {!isMultiSelected && (
+                        <button
+                            onClick={() => { setIsRenaming(true); setShowMenu(false); setIsMenuOpen(false); }}
+                            className="w-full text-left px-3.5 py-2.5 text-xs text-gray-300 hover:bg-white/10 flex items-center gap-2.5 transition-colors"
+                        >
+                            <Edit2 size={14} /> Rename
+                        </button>
+                    )}
+                    {!isMultiSelected && <div className="h-px bg-gray-800/50 mx-2 my-1" />}
+                    <div className="px-3.5 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                        {isMultiSelected ? `Move Selection (${selectedTaskIds.length})` : 'Move To'}
+                    </div>
                     {item.parent_id !== null && (
                         <button
                             onClick={() => handleMoveToFolder(null)}
@@ -450,10 +492,18 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                     }
                     <div className="h-px bg-gray-800/50 mx-2 my-1" />
                     <button
-                        onClick={() => { deleteItem(item.id); setShowMenu(false); setIsMenuOpen(false); }}
+                        onClick={() => {
+                            if (isMultiSelected) {
+                                useStore.getState().deleteSelectedTasks();
+                            } else {
+                                deleteItem(item.id);
+                            }
+                            setShowMenu(false);
+                            setIsMenuOpen(false);
+                        }}
                         className="w-full text-left px-3.5 py-2.5 text-xs text-red-400 hover:bg-red-500/10 flex items-center gap-2.5 transition-colors font-medium"
                     >
-                        <Trash2 size={14} /> Delete
+                        <Trash2 size={14} /> {isMultiSelected ? `Delete Selected (${selectedTaskIds.length})` : 'Delete'}
                     </button>
                 </ContextMenu>
             </motion.div>

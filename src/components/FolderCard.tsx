@@ -14,7 +14,7 @@ interface FolderCardProps {
 
 const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
     const setView = useStore((state: any) => state.setView);
-    const { items, deleteItem, moveItem, isMenuOpen, showCompleted } = useStore();
+    const { items, deleteItem, isMenuOpen, showCompleted } = useStore();
     const { dragState, updateDragState, clearDragState, calculateZone } = useDnDContext();
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
@@ -50,11 +50,15 @@ const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
         const draggedItem = items.find((i: Item) => i.id === draggedId);
         if (!draggedItem) return;
 
+        const selectedTaskIds = useStore.getState().selectedTaskIds;
+        const isDraggingSelection = selectedTaskIds.includes(draggedId);
+        const idsToMove = isDraggingSelection ? selectedTaskIds : [draggedId];
+
         if (draggedItem.type === 'folder') {
             // Folder reordering
             const dropFolder = item;
             const siblings = items
-                .filter((i: Item) => i.type === 'folder')
+                .filter((i: Item) => i.type === 'folder' && !idsToMove.includes(i.id))
                 .sort((a: Item, b: Item) => a.order_index - b.order_index);
 
             const targetIndex = siblings.findIndex((s: Item) => s.id === dropFolder.id);
@@ -68,10 +72,10 @@ const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
                 newOrder = next ? (dropFolder.order_index + next.order_index) / 2 : dropFolder.order_index + 1000;
             }
 
-            moveItem(draggedId, null, 'folder', newOrder); // Correctly keep 'folder' type
+            useStore.getState().moveMultipleItems(idsToMove, null, 'folder', newOrder);
         } else {
-            // Move task into folder
-            moveItem(draggedId, item.id, 'task');
+            // Move tasks into folder
+            useStore.getState().moveMultipleItems(idsToMove, item.id, 'task');
         }
         clearDragState();
     };

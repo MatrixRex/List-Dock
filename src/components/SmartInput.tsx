@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
-import { Plus, Search, FolderPlus, X } from 'lucide-react';
+import { Plus, Search, FolderPlus } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import type { Item } from '../types';
 import { cn } from '../utils/utils';
@@ -9,13 +9,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 const SmartInput: React.FC = () => {
     const [value, setValue] = useState('');
     const [mode, setMode] = useState<'task' | 'folder' | 'search'>('task');
-    const { addItem, currentView, currentFolderId, setSearchQuery, isMenuOpen, selectedTaskId, setSelectedTaskId, items } = useStore();
+    const { addItem, currentView, currentFolderId, setSearchQuery, isMenuOpen, selectedTaskIds, items } = useStore();
 
     // Mode 2: Add Subtask (if task selected - let's simplify and use mode for UI)
     // Mode 3: Add Folder toggle (Root only)
 
     const isFolderView = currentView === 'folder';
-    const selectedItem = items.find((i: Item) => i.id === selectedTaskId);
+    const selectedItem = selectedTaskIds.length === 1 ? items.find((i: Item) => i.id === selectedTaskIds[0]) : null;
+    const isMultiSelected = selectedTaskIds.length > 1;
 
     // Reset mode to task when entering folder view
     React.useEffect(() => {
@@ -45,7 +46,10 @@ const SmartInput: React.FC = () => {
 
     const getPlaceholder = () => {
         if (mode === 'search') return "Search lists...";
-        if (mode === 'folder') return "New folder name...";
+        if (mode === 'folder') {
+            if (isMultiSelected) return `Create folder with ${selectedTaskIds.length} tasks...`;
+            return "New folder name...";
+        }
 
         if (selectedItem) {
             if (selectedItem.type === 'subtask') {
@@ -53,6 +57,10 @@ const SmartInput: React.FC = () => {
                 return `Add subtask to "${parent?.title || 'task'}"...`;
             }
             return `Add subtask to "${selectedItem.title}"...`;
+        }
+
+        if (isMultiSelected) {
+            return `Add task (ignoring selection)...`;
         }
 
         return isFolderView ? "Add task to folder..." : "Add task to root...";
@@ -67,7 +75,7 @@ const SmartInput: React.FC = () => {
                 "flex items-center gap-2 glass !bg-white/[0.03] backdrop-blur-xl rounded-xl p-1.5 transition-all text-gray-200",
                 "focus-within:!bg-[#050408] focus-within:ring-1 focus-within:ring-white/10 focus-within:shadow-[0_0_40px_rgba(139,92,246,0.15)]",
                 "border border-white/5",
-                (selectedTaskId && mode === 'task') && "border-purple-500/50 bg-purple-500/5",
+                (selectedTaskIds.length > 0 && mode === 'task') && "border-purple-500/50 bg-purple-500/5",
                 isMenuOpen && "pointer-events-none opacity-50 shadow-none border-gray-800"
             )}>
                 <div className="flex bg-white/5 rounded-lg p-0.5 relative">
@@ -96,7 +104,6 @@ const SmartInput: React.FC = () => {
                                 exit={{ opacity: 0, scale: 0.8, width: 0 }}
                                 onClick={() => {
                                     setMode('folder');
-                                    setSelectedTaskId(null);
                                 }}
                                 className={cn(
                                     "p-1.5 rounded-md transition-all relative z-10",
@@ -117,7 +124,6 @@ const SmartInput: React.FC = () => {
                         <button
                             onClick={() => {
                                 setMode('search');
-                                setSelectedTaskId(null);
                             }}
                             className={cn(
                                 "p-1.5 rounded-md transition-all relative z-10",
@@ -149,22 +155,6 @@ const SmartInput: React.FC = () => {
                     className="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none text-sm py-1.5 px-2 placeholder:text-gray-600 text-gray-100"
                 />
 
-                {(value || (selectedTaskId && mode === 'task')) && (
-                    <button
-                        onClick={() => {
-                            if (value) {
-                                setValue('');
-                                if (mode === 'search') setSearchQuery('');
-                            } else if (selectedTaskId) {
-                                setSelectedTaskId(null);
-                            }
-                        }}
-                        className="p-1 px-2 text-gray-500 hover:text-white transition-colors"
-                        title={value ? "Clear input" : "Deselect task"}
-                    >
-                        <X size={16} />
-                    </button>
-                )}
                 {mode !== 'search' && !value && (
                     <div className="px-3 text-[10px] font-bold text-gray-600 uppercase tracking-widest hidden sm:block">
                         Enter

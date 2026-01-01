@@ -52,13 +52,14 @@ const App: React.FC = () => {
 
       if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
         const state = useStore.getState();
-        if (state.selectedTaskId) {
-          const item = state.items.find((i: Item) => i.id === state.selectedTaskId);
-          if (item) {
-            navigator.clipboard.writeText(item.title).then(() => {
-              // Using a simple toast for copy confirmation
+        if (state.selectedTaskIds.length > 0) {
+          const selectedItems = state.items.filter((i: Item) => state.selectedTaskIds.includes(i.id));
+          const textToCopy = selectedItems.map(i => i.title).join('\n');
+
+          if (textToCopy) {
+            navigator.clipboard.writeText(textToCopy).then(() => {
               import('react-hot-toast').then(({ toast }) => {
-                toast.success('Copied to clipboard', {
+                toast.success(selectedItems.length > 1 ? `Copied ${selectedItems.length} items` : 'Copied to clipboard', {
                   duration: 3000,
                   id: 'copy-toast',
                   className: 'glass-toast-standard',
@@ -76,9 +77,9 @@ const App: React.FC = () => {
 
   React.useEffect(() => {
     const handleClick = () => {
-      const { selectedTaskId, setSelectedTaskId } = useStore.getState();
-      if (selectedTaskId) {
-        setSelectedTaskId(null);
+      const { selectedTaskIds, clearTaskSelection } = useStore.getState();
+      if (selectedTaskIds.length > 0) {
+        clearTaskSelection();
       }
     };
 
