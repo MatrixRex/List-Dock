@@ -40,6 +40,7 @@ interface StoreState extends AppState {
     setPersistLastFolder: (persist: boolean) => void;
     exportItems: (includeCompleted: boolean) => void;
     importItems: (jsonData: string) => void;
+    convertToFolder: (taskId: string) => void;
 }
 
 // Custom storage for chrome.storage.local
@@ -392,6 +393,27 @@ export const useStore = create<StoreState>()(
                 } catch (error: any) {
                     toast.error(`Import failed: ${error.message}`);
                 }
+            },
+
+            convertToFolder: (taskId: string) => {
+                const { items, pushToUndoStack } = get();
+                const task = items.find((i: Item) => i.id === taskId);
+                if (!task || task.type !== 'task') return;
+
+                pushToUndoStack(`Converted "${task.title}" to folder`);
+
+                const newItems = items.map((item: Item) => {
+                    if (item.id === taskId) {
+                        return { ...item, type: 'folder' as ItemType, parent_id: null, is_expanded: true };
+                    }
+                    if (item.parent_id === taskId && item.type === 'subtask') {
+                        return { ...item, type: 'task' as ItemType };
+                    }
+                    return item;
+                });
+
+                set({ items: newItems });
+                toast.success(`"${task.title}" is now a folder`);
             },
         }),
         {

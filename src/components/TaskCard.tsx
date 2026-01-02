@@ -1,7 +1,7 @@
 import React, { useRef, useState, useMemo } from 'react';
 import type { Item } from '../types';
 import { useStore } from '../store/useStore';
-import { GripVertical, CheckCircle2, Circle, ChevronDown, ChevronRight, MoreVertical, Trash2, FolderInput, Edit2 } from 'lucide-react';
+import { GripVertical, CheckCircle2, Circle, ChevronDown, ChevronRight, MoreVertical, Trash2, FolderInput, Edit2, FolderPlus } from 'lucide-react';
 import { cn } from '../utils/utils';
 import { useDnDContext } from '../store/DnDContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,7 +14,7 @@ interface TaskCardProps {
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = false }) => {
-    const { updateItem, items, deleteItem, moveItem, showCompleted, hideCompletedSubtasks, selectedTaskIds, toggleTaskSelection, pushToUndoStack } = useStore();
+    const { updateItem, items, deleteItem, moveItem, showCompleted, hideCompletedSubtasks, selectedTaskIds, toggleTaskSelection, pushToUndoStack, convertToFolder } = useStore();
     const { dragState, updateDragState, clearDragState, calculateZone } = useDnDContext();
     const cardRef = useRef<HTMLDivElement>(null);
     const [isRenaming, setIsRenaming] = useState(false);
@@ -464,6 +464,14 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                             className="w-full text-left px-3.5 py-2.5 text-xs text-gray-300 hover:bg-white/10 flex items-center gap-2.5 transition-colors"
                         >
                             <Edit2 size={14} /> Rename
+                        </button>
+                    )}
+                    {!isMultiSelected && !isSubtask && hasSubtasks && (
+                        <button
+                            onClick={() => { convertToFolder(item.id); setShowMenu(false); setIsMenuOpen(false); }}
+                            className="w-full text-left px-3.5 py-2.5 text-xs text-purple-400 hover:bg-purple-500/10 flex items-center gap-2.5 transition-colors"
+                        >
+                            <FolderPlus size={14} /> Convert to Folder
                         </button>
                     )}
                     {!isMultiSelected && <div className="h-px bg-gray-800/50 mx-2 my-1" />}
