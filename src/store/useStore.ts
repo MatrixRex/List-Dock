@@ -38,6 +38,8 @@ interface StoreState extends AppState {
     moveSelectedTasks: (newParentId: string | null) => void;
     moveMultipleItems: (ids: string[], newParentId: string | null, newType: ItemType, orderIndex?: number) => void;
     setPersistLastFolder: (persist: boolean) => void;
+    exportItems: (includeCompleted: boolean) => void;
+    importItems: (jsonData: string) => void;
 }
 
 // Custom storage for chrome.storage.local
@@ -344,6 +346,53 @@ export const useStore = create<StoreState>()(
             },
 
             setPersistLastFolder: (persist: boolean) => set({ persistLastFolder: persist }),
+
+            exportItems: (includeCompleted: boolean) => {
+                const { items } = get();
+                const itemsToExport = includeCompleted ? items : items.filter((i: Item) => !i.is_completed);
+
+                // If we're excluding completed tasks, we need to make sure we don't have dangling subtasks
+                // although usually subtasks are completed if parent is. But just in case.
+                const finalExport = itemsToExport;
+
+                const dataStr = JSON.stringify(finalExport, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+
+                const exportFileDefaultName = `list-dock-backup-${new Date().toISOString().split('T')[0]}.json`;
+
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+
+                toast.success('Backup exported successfully');
+            },
+
+            importItems: (jsonData: string) => {
+                try {
+                    const importedItems = JSON.parse(jsonData);
+                    if (!Array.isArray(importedItems)) {
+                        throw new Error('Invalid format: Expected an array of items');
+                    }
+
+                    // Basic validation
+                    const isValid = importedItems.every(item =>
+                        item.id && item.type && item.title !== undefined
+                    );
+
+                    if (!isValid) {
+                        throw new Error('Invalid format: Items missing required fields');
+                    }
+
+                    const { pushToUndoStack } = get();
+                    pushToUndoStack('Imported data');
+
+                    set({ items: importedItems });
+                    toast.success(`Imported ${importedItems.length} items successfully`);
+                } catch (error: any) {
+                    toast.error(`Import failed: ${error.message}`);
+                }
+            },
         }),
         {
             name: 'list-dock-storage',

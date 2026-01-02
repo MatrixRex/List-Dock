@@ -1,7 +1,8 @@
 import React from 'react';
 import { useStore } from '../store/useStore';
-import { Trash2, X, Settings as SettingsIcon, AlertTriangle } from 'lucide-react';
+import { Trash2, X, Settings as SettingsIcon, AlertTriangle, Download, Upload } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { type Item } from '../types';
 
 interface SettingsPopupProps {
     isOpen: boolean;
@@ -16,9 +17,13 @@ const SettingsPopup: React.FC<SettingsPopupProps> = ({ isOpen, onClose }) => {
         hideCompletedSubtasks,
         setHideCompletedSubtasks,
         persistLastFolder,
-        setPersistLastFolder
+        setPersistLastFolder,
+        exportItems,
+        importItems
     } = useStore();
     const [showConfirm, setShowConfirm] = React.useState(false);
+    const [includeCompleted, setIncludeCompleted] = React.useState(true);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     // Reset confirm state when closing
     React.useEffect(() => {
@@ -35,6 +40,24 @@ const SettingsPopup: React.FC<SettingsPopupProps> = ({ isOpen, onClose }) => {
         } else {
             setShowConfirm(true);
         }
+    };
+
+    const handleImportClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const content = event.target?.result as string;
+            importItems(content);
+        };
+        reader.readAsText(file);
+        // Reset input
+        e.target.value = '';
     };
 
     return (
@@ -191,6 +214,52 @@ const SettingsPopup: React.FC<SettingsPopupProps> = ({ isOpen, onClose }) => {
                                             </motion.div>
                                         )}
                                     </AnimatePresence>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1"> Backup & Restore </label>
+
+                                <div className="bg-white/5 rounded-xl p-4 border border-white/5 space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="space-y-1">
+                                            <p className="text-sm font-medium text-white">Include Completed</p>
+                                            <p className="text-xs text-gray-400">Include finished tasks in export.</p>
+                                        </div>
+                                        <button
+                                            onClick={() => setIncludeCompleted(!includeCompleted)}
+                                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${includeCompleted ? 'bg-purple-500' : 'bg-gray-700'}`}
+                                        >
+                                            <span
+                                                aria-hidden="true"
+                                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${includeCompleted ? 'translate-x-5' : 'translate-x-0'}`}
+                                            />
+                                        </button>
+                                    </div>
+
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => exportItems(includeCompleted)}
+                                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 rounded-lg text-sm font-medium transition-all border border-purple-500/20"
+                                        >
+                                            <Download size={16} />
+                                            Export JSON
+                                        </button>
+                                        <button
+                                            onClick={handleImportClick}
+                                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-sm font-medium transition-all border border-white/10"
+                                        >
+                                            <Upload size={16} />
+                                            Import JSON
+                                        </button>
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            onChange={handleFileChange}
+                                            accept=".json"
+                                            className="hidden"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
