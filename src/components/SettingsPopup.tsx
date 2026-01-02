@@ -2,7 +2,6 @@ import React from 'react';
 import { useStore } from '../store/useStore';
 import { Trash2, X, Settings as SettingsIcon, AlertTriangle, Download, Upload } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { type Item } from '../types';
 
 interface SettingsPopupProps {
     isOpen: boolean;
@@ -18,6 +17,8 @@ const SettingsPopup: React.FC<SettingsPopupProps> = ({ isOpen, onClose }) => {
         setHideCompletedSubtasks,
         persistLastFolder,
         setPersistLastFolder,
+        copyWithSubtasks,
+        setCopyWithSubtasks,
         exportItems,
         importItems
     } = useStore();
@@ -149,6 +150,24 @@ const SettingsPopup: React.FC<SettingsPopupProps> = ({ isOpen, onClose }) => {
                                             <span
                                                 aria-hidden="true"
                                                 className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${persistLastFolder ? 'translate-x-5' : 'translate-x-0'}`}
+                                            />
+                                        </button>
+                                    </div>
+
+                                    <div className="h-px bg-gray-800/80 my-3" />
+
+                                    <div className="flex items-center justify-between">
+                                        <div className="space-y-1">
+                                            <p className="text-sm font-medium text-white">Copy with Subtasks</p>
+                                            <p className="text-xs text-gray-400">Include subtasks when copying a task.</p>
+                                        </div>
+                                        <button
+                                            onClick={() => setCopyWithSubtasks(!copyWithSubtasks)}
+                                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${copyWithSubtasks ? 'bg-purple-500' : 'bg-gray-700'}`}
+                                        >
+                                            <span
+                                                aria-hidden="true"
+                                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${copyWithSubtasks ? 'translate-x-5' : 'translate-x-0'}`}
                                             />
                                         </button>
                                     </div>

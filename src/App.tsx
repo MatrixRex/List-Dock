@@ -53,13 +53,48 @@ const App: React.FC = () => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
         const state = useStore.getState();
         if (state.selectedTaskIds.length > 0) {
-          const selectedItems = state.items.filter((i: Item) => state.selectedTaskIds.includes(i.id));
-          const textToCopy = selectedItems.map(i => i.title).join('\n');
+          const { items, selectedTaskIds, copyWithSubtasks } = state;
+          const selectedItems = items.filter((i: Item) => selectedTaskIds.includes(i.id));
+
+          let textToCopy = '';
+
+          if (copyWithSubtasks) {
+            // Find top-level items among selection to avoid duplicates
+            const topLevelSelected = selectedItems.filter(item =>
+              !item.parent_id || !selectedTaskIds.includes(item.parent_id)
+            );
+
+            const formatItemRecursive = (item: Item, depth = 0): string => {
+              const indent = "  ".repeat(depth);
+              let text = `${indent}- ${item.title}`;
+
+              // Find children in the full items list
+              const children = items
+                .filter((i: Item) => i.parent_id === item.id)
+                .sort((a: Item, b: Item) => a.order_index - b.order_index);
+
+              if (children.length > 0) {
+                const childrenText = children.map(c => formatItemRecursive(c, depth + 1)).join('\n');
+                text += '\n' + childrenText;
+              }
+              return text;
+            };
+
+            textToCopy = topLevelSelected
+              .map(item => formatItemRecursive(item))
+              .join('\n');
+          } else {
+            textToCopy = selectedItems.map(i => i.title).join('\n');
+          }
 
           if (textToCopy) {
             navigator.clipboard.writeText(textToCopy).then(() => {
               import('react-hot-toast').then(({ toast }) => {
-                toast.success(selectedItems.length > 1 ? `Copied ${selectedItems.length} items` : 'Copied to clipboard', {
+                const message = copyWithSubtasks && selectedItems.some(item => items.some(i => i.parent_id === item.id))
+                  ? (selectedItems.length > 1 ? `Copied ${selectedItems.length} items with subtasks` : 'Copied with subtasks')
+                  : (selectedItems.length > 1 ? `Copied ${selectedItems.length} items` : 'Copied to clipboard');
+
+                toast.success(message, {
                   duration: 3000,
                   id: 'copy-toast',
                   className: 'glass-toast-standard',

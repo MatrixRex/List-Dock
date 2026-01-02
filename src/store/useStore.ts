@@ -16,6 +16,7 @@ interface StoreState extends AppState {
     hideCompletedSubtasks: boolean;
     selectedTaskIds: string[];
     persistLastFolder: boolean;
+    copyWithSubtasks: boolean;
 
     // Actions
     setItems: (items: Item[]) => void;
@@ -41,6 +42,7 @@ interface StoreState extends AppState {
     exportItems: (includeCompleted: boolean) => void;
     importItems: (jsonData: string) => void;
     convertToFolder: (taskId: string) => void;
+    setCopyWithSubtasks: (enabled: boolean) => void;
 }
 
 // Custom storage for chrome.storage.local
@@ -106,6 +108,7 @@ export const useStore = create<StoreState>()(
             hideCompletedSubtasks: true as boolean,
             selectedTaskIds: [] as string[],
             persistLastFolder: false as boolean,
+            copyWithSubtasks: true as boolean,
 
             setItems: (items: Item[]) => set({ items }),
 
@@ -415,6 +418,8 @@ export const useStore = create<StoreState>()(
                 set({ items: newItems });
                 toast.success(`"${task.title}" is now a folder`);
             },
+
+            setCopyWithSubtasks: (enabled: boolean) => set({ copyWithSubtasks: enabled }),
         }),
         {
             name: 'list-dock-storage',
@@ -426,6 +431,7 @@ export const useStore = create<StoreState>()(
                 hideCompletedSubtasks: state.hideCompletedSubtasks,
                 persistLastFolder: state.persistLastFolder,
                 undoStack: state.undoStack,
+                copyWithSubtasks: state.copyWithSubtasks,
                 // Only persist view and folder ID if the toggle is ON
                 ...(state.persistLastFolder ? {
                     currentView: state.currentView,
