@@ -111,6 +111,21 @@ const App: React.FC = () => {
   }, []);
 
   React.useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const isInput = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement;
+      if (isInput) return;
+
+      const text = e.clipboardData?.getData('text');
+      if (text) {
+        useStore.getState().handlePaste(text);
+      }
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, []);
+
+  React.useEffect(() => {
     const handleClick = () => {
       const { selectedTaskIds, clearTaskSelection } = useStore.getState();
       if (selectedTaskIds.length > 0) {

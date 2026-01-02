@@ -4,6 +4,7 @@ import type { Item, AppState, ItemType } from '../types';
 import { toast } from 'react-hot-toast';
 import React from 'react';
 import UndoToast from '../components/UndoToast';
+import { v4 as uuidv4 } from 'uuid';
 
 interface StoreState extends AppState {
     items: Item[];
@@ -43,6 +44,7 @@ interface StoreState extends AppState {
     importItems: (jsonData: string) => void;
     convertToFolder: (taskId: string) => void;
     setCopyWithSubtasks: (enabled: boolean) => void;
+    handlePaste: (text: string) => void;
 }
 
 // Custom storage for chrome.storage.local
@@ -420,6 +422,92 @@ export const useStore = create<StoreState>()(
             },
 
             setCopyWithSubtasks: (enabled: boolean) => set({ copyWithSubtasks: enabled }),
+
+            handlePaste: (text: string) => {
+                const { items, currentFolderId, selectedTaskIds, pushToUndoStack } = get();
+                const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+                if (lines.length === 0) return;
+
+                const newItems: Item[] = [];
+                const parentStack: { level: number, id: string }[] = [];
+
+                // Determine base parent and type
+                let baseParentId = currentFolderId;
+                let baseType: ItemType = 'task';
+
+                if (selectedTaskIds.length === 1) {
+                    const selectedId = selectedTaskIds[0];
+                    const selectedItem = items.find((i: Item) => i.id === selectedId);
+                    if (selectedItem) {
+                        if (selectedItem.type === 'task') {
+                            baseParentId = selectedId;
+                            baseType = 'subtask';
+                        } else if (selectedItem.type === 'subtask') {
+                            baseParentId = selectedItem.parent_id;
+                            baseType = 'subtask';
+                        }
+                    }
+                }
+
+                lines.forEach((line, index) => {
+                    const indentMatch = line.match(/^(\s*)/);
+                    let title = line.trim();
+
+                    // Detect if it's a list item (starts with -, *, +, or number like 1.)
+                    const isListLine = /^([-*+]|\d+\.)\s/.test(title);
+                    // Add virtual indentation for bulleted/numbered items to treat them as subtasks
+                    // even if they are not literally indented relative to their parent heading.
+                    const indent = (indentMatch ? indentMatch[0].length : 0) + (isListLine ? 2 : 0);
+
+                    // Detect markdown completion status: [x] or [X]
+                    const isCompleted = /^([-*+]|\d+\.)\s+\[[xX]\]/.test(title) || /^\[[xX]\]/.test(title);
+
+                    // Markdown cleaning: remove bullets, numbers, and checkboxes
+                    title = title.replace(/^([-*+]|\d+\.)\s+(\[[\sxX]\]\s+)?/, '');
+                    title = title.replace(/^\[[\sxX]\]\s+/, ''); // Also handle checkbox without bullet
+                    title = title.replace(/^#+\s+/, ''); // Remove markdown headings like ###
+
+                    if (!title) return;
+
+                    const id = uuidv4();
+
+                    // Find parent in stack
+                    while (parentStack.length > 0 && parentStack[parentStack.length - 1].level >= indent) {
+                        parentStack.pop();
+                    }
+
+                    // We only support one level of nesting (Task -> Subtask).
+                    // If the stack has more than 1 item, it means we are at level 3+, 
+                    // so we use the first item in the stack as the parent (the root of the hierarchy).
+                    let parent_id = parentStack.length > 0 ? parentStack[0].id : baseParentId;
+                    let type: ItemType = parentStack.length > 0 ? 'subtask' : baseType;
+
+                    const newItem: Item = {
+                        id,
+                        title,
+                        type,
+                        parent_id,
+                        is_completed: isCompleted,
+                        order_index: Date.now() + index,
+                        is_expanded: true,
+                        created_at: Date.now(),
+                    };
+
+                    newItems.push(newItem);
+                    // Keep track of the current level for stack management (to handle indentation changes)
+                    // but we always use parentStack[0] as the actual parent to keep everything flat.
+                    parentStack.push({ level: indent, id });
+                });
+
+                if (newItems.length > 0) {
+                    pushToUndoStack(`Pasted ${newItems.length} items`);
+                    set({ items: [...items, ...newItems], selectedTaskIds: [] });
+                    toast.success(`Pasted ${newItems.length} items`, {
+                        id: 'paste-success',
+                        className: 'glass-toast-standard',
+                    });
+                }
+            },
         }),
         {
             name: 'list-dock-storage',
