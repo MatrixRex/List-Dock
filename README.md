@@ -6,9 +6,17 @@ A sleek, high-performance Chrome Extension for managing your tasks directly in t
 ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/Matrixrex/List-Dock/total)
 
 
-<div align="center">
-  <video src="public/demo.mp4" width="320" controls autoplay muted loop></video>
-</div>
+<p align="center">
+  <a href="https://www.youtube.com/shorts/MdnGKwZ9yDM" target="_blank">
+    <img src="https://img.youtube.com/vi/MdnGKwZ9yDM/maxresdefault.jpg"
+         alt="Demo video"
+         width="720">
+  </a>
+  <p align="center">
+  ▶ Click to watch the demo (YouTube)
+</p>
+</p>
+
 
 ## ✨ Key Features
 
