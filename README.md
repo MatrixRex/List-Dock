@@ -7,7 +7,7 @@ A sleek, high-performance Chrome Extension for managing your tasks directly in t
 
 
 <p align="center">
-  <a href="https://www.youtube.com/shorts/MdnGKwZ9yDM" target="_blank">
+  <a href="https://www.youtube.com/shorts/MdnGKwZ9yDM" target="_blank" rel="noopener noreferrer">
     <img src="https://img.youtube.com/vi/MdnGKwZ9yDM/maxresdefault.jpg"
          alt="Demo video"
          width="720">
