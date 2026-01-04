@@ -3,6 +3,8 @@
 A sleek, high-performance Chrome Extension for managing your tasks directly in the side panel. Built with a focus on speed, premium aesthetics, and a seamless user experience.
 
 [![Latest Release](https://img.shields.io/github/v/release/MatrixRex/List-Dock?label=Download&color=2e7d32&logo=github)](https://github.com/MatrixRex/List-Dock/releases/latest)
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/Matrixrex/List-Dock/total)
+
 
 <div align="center">
   <video src="public/demo.mp4" width="320" controls autoplay muted loop></video>
