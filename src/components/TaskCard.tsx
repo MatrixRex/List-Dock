@@ -45,10 +45,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
             updateItem(item.id, { is_completed: nextCompleted });
         };
 
-        if (nextCompleted && !isSubtask && subtasks.length > 0) {
+        if (nextCompleted && !isSubtask && allSubtasks.length > 0) {
             // Sequence: 1. Check all subtasks
             setIsCheckingSubtasks(true);
-            subtasks.forEach(s => updateItem(s.id, { is_completed: true }));
+            allSubtasks.forEach(s => updateItem(s.id, { is_completed: true }));
 
             // 2. Wait for subtasks check animation (300ms), then check parent
             setTimeout(() => {
@@ -77,24 +77,31 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
         }
     };
 
-    const subtasks = items
-        .filter((i: Item) => i.parent_id === item.id && i.type === 'subtask')
-        .filter((i: Item) => {
-            if (!i.is_completed) return true;
-            if (showCompleted) return true;
-            // Keep subtasks visible if we are in the middle of a parent completion sequence
-            if (isCheckingSubtasks || isVisualCompleted) return true;
-            return !hideCompletedSubtasks;
-        })
-        .sort((a: Item, b: Item) => {
-            if (a.is_completed !== b.is_completed) {
-                return a.is_completed ? 1 : -1;
-            }
-            return a.order_index - b.order_index;
-        });
+    const allSubtasks = useMemo(() =>
+        items.filter((i: Item) => i.parent_id === item.id && i.type === 'subtask'),
+        [items, item.id]
+    );
 
-    const completedSubtasks = subtasks.filter((s: Item) => s.is_completed).length;
-    const hasSubtasks = subtasks.length > 0;
+    const visibleSubtasks = useMemo(() =>
+        allSubtasks
+            .filter((i: Item) => {
+                if (!i.is_completed) return true;
+                if (showCompleted) return true;
+                // Keep subtasks visible if we are in the middle of a parent completion sequence
+                if (isCheckingSubtasks || isVisualCompleted) return true;
+                return !hideCompletedSubtasks;
+            })
+            .sort((a: Item, b: Item) => {
+                if (a.is_completed !== b.is_completed) {
+                    return a.is_completed ? 1 : -1;
+                }
+                return a.order_index - b.order_index;
+            }),
+        [allSubtasks, showCompleted, isCheckingSubtasks, isVisualCompleted, hideCompletedSubtasks]
+    );
+
+    const completedSubtasksCount = allSubtasks.filter((s: Item) => s.is_completed).length;
+    const hasSubtasks = allSubtasks.length > 0;
 
     // Determine the color for the selection border and glow
     const activeColor = useMemo(() => {
@@ -408,7 +415,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                                 {hasSubtasks && (
                                     <div className="h-5 flex items-center">
                                         <span className="text-[10px] bg-gray-700 text-gray-400 px-1.5 py-0.5 rounded-full font-bold">
-                                            {completedSubtasks}/{subtasks.length}
+                                            {completedSubtasksCount}/{allSubtasks.length}
                                         </span>
                                     </div>
                                 )}
@@ -445,9 +452,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                         <div
                             className={cn(
                                 "h-full transition-all duration-500 ease-out",
-                                completedSubtasks === subtasks.length ? "bg-green-500" : "bg-purple-500"
+                                completedSubtasksCount === allSubtasks.length ? "bg-green-500" : "bg-purple-500"
                             )}
-                            style={{ width: `${(completedSubtasks / subtasks.length) * 100}%` }}
+                            style={{ width: `${(completedSubtasksCount / allSubtasks.length) * 100}%` }}
                         />
                     </div>
                 )}
@@ -526,14 +533,24 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                         transition={{ duration: 0.2, ease: "easeOut" }}
                         className="overflow-hidden mt-1"
                     >
-                        {subtasks.map((subtask: Item, index: number) => (
+                        {visibleSubtasks.map((subtask: Item, index: number) => (
                             <TaskCard
                                 key={subtask.id}
                                 item={subtask}
                                 isSubtask
-                                isLast={(!isSubtask || isLast) && index === subtasks.length - 1}
+                                isLast={(!isSubtask || isLast) && index === visibleSubtasks.length - 1}
                             />
                         ))}
+                        {hideCompletedSubtasks && !showCompleted && !isCheckingSubtasks && !isVisualCompleted && allSubtasks.length > visibleSubtasks.length && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="text-[10px] text-gray-500 italic mt-2 mb-1 ml-6 flex items-center gap-1.5 py-1"
+                            >
+                                <div className="w-1 h-1 rounded-full bg-gray-600" />
+                                Completed subtasks are hidden
+                            </motion.div>
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>
