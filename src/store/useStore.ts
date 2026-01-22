@@ -145,7 +145,10 @@ export const useStore = create<StoreState>()(
                     );
                 }
 
-                set({ items: updatedItems, selectedTaskIds: [] });
+                set({
+                    items: updatedItems,
+                    selectedTaskIds: newItem.type === 'subtask' ? selectedTaskIds : []
+                });
             },
 
             updateItem: (id: string, updates: Partial<Item>) => {
@@ -501,7 +504,10 @@ export const useStore = create<StoreState>()(
 
                 if (newItems.length > 0) {
                     pushToUndoStack(`Pasted ${newItems.length} items`);
-                    set({ items: [...items, ...newItems], selectedTaskIds: [] });
+                    set({
+                        items: [...items, ...newItems],
+                        selectedTaskIds: baseType === 'subtask' ? selectedTaskIds : []
+                    });
                     toast.success(`Pasted ${newItems.length} items`, {
                         id: 'paste-success',
                         className: 'glass-toast-standard',
