@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "List Dock",
-  "version": "1.0.0",
+  "version": "1.5.1",
   "description": "A persistent To-Do Sidebar for Chrome",
   "permissions": [
     "sidePanel",

@@ -272,20 +272,31 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
     return (
         <motion.div
             layout
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{
+                opacity: 0,
+                x: -50,
+                scale: 0.95,
+                filter: "blur(10px)",
+                transition: {
+                    duration: 0.4,
+                    ease: [0.4, 0, 0.2, 1]
+                }
+            }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             onDragOver={handleDragOver as any}
             onDragLeave={() => updateDragState(dragState.draggedItemId, null, null)}
             onDrop={handleDrop as any}
             className={cn(
-                "group/task relative transition-all",
+                "group/task relative",
                 isSubtask ? "py-[2px]" : "py-1"
             )}
         >
             <motion.div
                 ref={cardRef}
                 layout
-                initial={{ opacity: 0, y: 10 }}
                 animate={{
                     opacity: 1,
                     y: 0,
@@ -293,16 +304,6 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                     borderWidth: (isSelected || (dragState.targetItemId === item.id && dragState.dropZone === 'right')) ? "1.5px" : "1px",
                     backgroundColor: (isSelected || (dragState.targetItemId === item.id && dragState.dropZone === 'right')) ? `${activeColor}15` : "rgba(255, 255, 255, 0)",
                     boxShadow: (isSelected || (dragState.targetItemId === item.id && dragState.dropZone === 'right')) ? `0 0 20px ${activeColor}20` : "none"
-                }}
-                exit={{
-                    opacity: 0,
-                    x: -50,
-                    scale: 0.95,
-                    filter: "blur(10px)",
-                    transition: {
-                        duration: 0.4,
-                        ease: [0.4, 0, 0.2, 1]
-                    }
                 }}
                 whileHover={{
                     backgroundColor: isSelected ? `${activeColor}25` : "rgba(255, 255, 255, 0.12)",
