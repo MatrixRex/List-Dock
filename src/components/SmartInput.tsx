@@ -97,8 +97,8 @@ const SmartInput: React.FC<SmartInputProps> = ({ isMobileOverlay, onClose, onMod
     return (
         <div
             className={cn(
-                "p-4 shrink-0 z-[200]",
-                isMobileOverlay ? "fixed bottom-0 left-0 right-0 p-6 bg-[#050408]/90 backdrop-blur-3xl border-t border-white/10 rounded-t-[2.5rem] shadow-[0_-20px_40px_rgba(0,0,0,0.5)]" : "glass glass-top-only sticky bottom-0"
+                "shrink-0 z-[200] sticky bottom-0 w-full",
+                isMobileOverlay ? "p-6 bg-[#050408]/90 backdrop-blur-3xl border-t border-white/10 rounded-t-[2.5rem] shadow-[0_-20px_40px_rgba(0,0,0,0.5)]" : "glass glass-top-only p-4"
             )}
             onClick={(e) => e.stopPropagation()}
         >
