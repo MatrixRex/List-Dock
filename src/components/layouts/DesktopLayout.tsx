@@ -5,9 +5,12 @@ import SmartInput from '../SmartInput';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../../store/useStore';
 import { LayoutGrid, List, Settings, User, Search, Plus } from 'lucide-react';
+import SettingsPopup from '../SettingsPopup';
 
 const DesktopLayout: React.FC = () => {
   const currentView = useStore((state: any) => state.currentView);
+  const isSettingsOpen = useStore((state: any) => state.isSettingsOpen);
+  const setIsSettingsOpen = useStore((state: any) => state.setIsSettingsOpen);
   
   return (
     <div className="flex h-dvh overflow-hidden bg-[#050408]/50 text-white selection:bg-purple-500/30">
@@ -37,7 +40,10 @@ const DesktopLayout: React.FC = () => {
               <User size={20} className="group-hover:text-purple-400/50 transition-colors" />
               <span className="font-semibold text-sm">Account</span>
             </button>
-            <button className="w-full flex items-center gap-3.5 px-5 py-4 rounded-2xl text-white/30 hover:bg-white/5 hover:text-white/80 transition-all group">
+            <button 
+              onClick={() => setIsSettingsOpen(true)}
+              className="w-full flex items-center gap-3.5 px-5 py-4 rounded-2xl text-white/30 hover:bg-white/5 hover:text-white/80 transition-all group"
+            >
               <Settings size={20} className="group-hover:text-purple-400/50 transition-colors" />
               <span className="font-semibold text-sm">Settings</span>
             </button>
@@ -114,6 +120,11 @@ const DesktopLayout: React.FC = () => {
           <p className="text-xs text-white/30 leading-relaxed">Use <kbd className="px-1.5 py-0.5 rounded bg-white/10 font-sans text-white/60">Ctrl + Z</kbd> to undo any action instantly from the universal workspace.</p>
         </div>
       </aside>
+
+      <SettingsPopup 
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
     </div>
   );
 };

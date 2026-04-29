@@ -18,6 +18,7 @@ interface StoreState extends AppState {
     selectedTaskIds: string[];
     persistLastFolder: boolean;
     copyWithSubtasks: boolean;
+    isSettingsOpen: boolean;
 
     // Actions
     setItems: (items: Item[]) => void;
@@ -44,6 +45,7 @@ interface StoreState extends AppState {
     importItems: (jsonData: string) => void;
     convertToFolder: (taskId: string) => void;
     setCopyWithSubtasks: (enabled: boolean) => void;
+    setIsSettingsOpen: (isOpen: boolean) => void;
     handlePaste: (text: string) => void;
 }
 
@@ -111,6 +113,7 @@ export const useStore = create<StoreState>()(
             selectedTaskIds: [] as string[],
             persistLastFolder: false as boolean,
             copyWithSubtasks: true as boolean,
+            isSettingsOpen: false as boolean,
 
             setItems: (items: Item[]) => set({ items }),
 
@@ -220,6 +223,12 @@ export const useStore = create<StoreState>()(
             pushToUndoStack: (message = 'Action performed') => {
                 const { items, undoStack } = get();
                 set({ undoStack: [...undoStack.slice(-9), items] }); // Keep last 10 states
+
+                // On mobile, only show toast for deletions
+                const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+                const isDeletion = message.toLowerCase().includes('deleted');
+
+                if (isMobile && !isDeletion) return;
 
                 toast.custom(
                     (t) =>
@@ -351,7 +360,7 @@ export const useStore = create<StoreState>()(
                     return item;
                 });
 
-                set({ items: newItems, selectedTaskIds: [] });
+                set({ items: newItems });
             },
 
             setPersistLastFolder: (persist: boolean) => set({ persistLastFolder: persist }),
@@ -421,10 +430,15 @@ export const useStore = create<StoreState>()(
                 });
 
                 set({ items: newItems });
-                toast.success(`"${task.title}" is now a folder`);
+                const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+                if (!isMobile) {
+                    toast.success(`"${task.title}" is now a folder`);
+                }
             },
 
             setCopyWithSubtasks: (enabled: boolean) => set({ copyWithSubtasks: enabled }),
+
+            setIsSettingsOpen: (isOpen: boolean) => set({ isSettingsOpen: isOpen }),
 
             handlePaste: (text: string) => {
                 const { items, currentFolderId, selectedTaskIds, pushToUndoStack } = get();
@@ -508,10 +522,14 @@ export const useStore = create<StoreState>()(
                         items: [...items, ...newItems],
                         selectedTaskIds: baseType === 'subtask' ? selectedTaskIds : []
                     });
-                    toast.success(`Pasted ${newItems.length} items`, {
-                        id: 'paste-success',
-                        className: 'glass-toast-standard',
-                    });
+                    
+                    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+                    if (!isMobile) {
+                        toast.success(`Pasted ${newItems.length} items`, {
+                            id: 'paste-success',
+                            className: 'glass-toast-standard',
+                        });
+                    }
                 }
             },
         }),

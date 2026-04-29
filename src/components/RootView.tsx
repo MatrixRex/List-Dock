@@ -73,8 +73,8 @@ const RootView: React.FC = () => {
                             <section className="space-y-3">
                                 <div className="space-y-2">
                                     <AnimatePresence mode="popLayout">
-                                        {searchTaskResults.map((task: Item) => (
-                                            <TaskCard key={task.id} item={task} />
+                                        {searchTaskResults.map((task: Item, index: number) => (
+                                            <TaskCard key={task.id || `task-${index}`} item={task} />
                                         ))}
                                     </AnimatePresence>
                                 </div>
@@ -86,8 +86,8 @@ const RootView: React.FC = () => {
                                 <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1">Matching Folders</h2>
                                 <div className="grid grid-cols-2 gap-2">
                                     <AnimatePresence mode="popLayout">
-                                        {searchFolderResults.map((folder: Item) => (
-                                            <FolderCard key={folder.id} item={folder} />
+                                        {searchFolderResults.map((folder: Item, index: number) => (
+                                            <FolderCard key={folder.id || `folder-${index}`} item={folder} />
                                         ))}
                                     </AnimatePresence>
                                 </div>
@@ -111,8 +111,8 @@ const RootView: React.FC = () => {
                 {rootTasks.length > 0 ? (
                     <div className="overflow-y-auto custom-scrollbar pr-1">
                         <AnimatePresence initial={false} mode="popLayout">
-                            {rootTasks.map((task: Item) => (
-                                <TaskCard key={task.id} item={task} />
+                            {rootTasks.map((task: Item, index: number) => (
+                                <TaskCard key={task.id || `task-${index}`} item={task} />
                             ))}
                         </AnimatePresence>
                     </div>
@@ -127,8 +127,8 @@ const RootView: React.FC = () => {
                 {folders.length > 0 ? (
                     <div className="grid grid-cols-2 gap-2 items-start pb-4">
                         <AnimatePresence initial={false} mode="popLayout">
-                            {folders.map((folder: Item) => (
-                                <FolderCard key={folder.id} item={folder} />
+                            {folders.map((folder: Item, index: number) => (
+                                <FolderCard key={folder.id || `folder-${index}`} item={folder} />
                             ))}
                         </AnimatePresence>
                     </div>

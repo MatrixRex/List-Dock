@@ -11,9 +11,10 @@ interface TaskCardProps {
     item: Item;
     isSubtask?: boolean;
     isLast?: boolean;
+    hideSubtasks?: boolean;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = false }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = false, hideSubtasks = false }) => {
     const { updateItem, items, deleteItem, moveItem, showCompleted, hideCompletedSubtasks, selectedTaskIds, toggleTaskSelection, pushToUndoStack, convertToFolder } = useStore();
     const { dragState, updateDragState, clearDragState, calculateZone } = useDnDContext();
     const cardRef = useRef<HTMLDivElement>(null);
@@ -186,6 +187,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
         clearDragState();
     };
 
+    const handleDragEnd = () => {
+        clearDragState();
+    };
+
     const handleRename = () => {
         if (isMultiSelected) return; // Rename disabled for multi-select
         if (renameValue.trim() && renameValue !== item.title) {
@@ -317,6 +322,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                 }}
                 draggable={!isMenuOpen}
                 onDragStart={handleDragStart as any}
+                onDragEnd={handleDragEnd}
                 onDoubleClick={() => !isMenuOpen && !isMultiSelected && setIsRenaming(true)}
                 onClick={handleClick}
                 data-task-id={item.id}
@@ -526,7 +532,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
 
             {/* Subtasks Accordion */}
             <AnimatePresence initial={false}>
-                {!isSubtask && item.is_expanded && hasSubtasks && (
+                {!isSubtask && !hideSubtasks && item.is_expanded && hasSubtasks && (
                     <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
@@ -536,7 +542,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                     >
                         {visibleSubtasks.map((subtask: Item, index: number) => (
                             <TaskCard
-                                key={subtask.id}
+                                key={subtask.id || `subtask-${index}`}
                                 item={subtask}
                                 isSubtask
                                 isLast={(!isSubtask || isLast) && index === visibleSubtasks.length - 1}

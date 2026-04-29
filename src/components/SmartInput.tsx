@@ -9,9 +9,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface SmartInputProps {
     isMobileOverlay?: boolean;
     onClose?: () => void;
+    onModeChange?: (mode: 'task' | 'folder' | 'search') => void;
 }
 
-const SmartInput: React.FC<SmartInputProps> = ({ isMobileOverlay, onClose }) => {
+const SmartInput: React.FC<SmartInputProps> = ({ isMobileOverlay, onClose, onModeChange }) => {
     const [value, setValue] = useState('');
     const [mode, setMode] = useState<'task' | 'folder' | 'search'>('task');
     const { addItem, currentView, currentFolderId, setSearchQuery, isMenuOpen, selectedTaskIds, items } = useStore();
@@ -39,6 +40,11 @@ const SmartInput: React.FC<SmartInputProps> = ({ isMobileOverlay, onClose }) => 
         }
     }, [isFolderView]);
 
+    // Report mode change
+    React.useEffect(() => {
+        onModeChange?.(mode);
+    }, [mode, onModeChange]);
+
     const handleAction = () => {
         if (!value.trim() && mode !== 'search') return;
 
@@ -56,7 +62,14 @@ const SmartInput: React.FC<SmartInputProps> = ({ isMobileOverlay, onClose }) => 
         });
 
         setValue('');
-        if (isMobileOverlay && onClose) onClose();
+        const isAddingSubtask = mode === 'task' && selectedItem;
+        
+        // Keep keyboard focused if adding subtask
+        if (isAddingSubtask) {
+            inputRef.current?.focus();
+        }
+
+        if (isMobileOverlay && onClose && !isAddingSubtask) onClose();
     };
 
     const getPlaceholder = () => {
@@ -113,6 +126,7 @@ const SmartInput: React.FC<SmartInputProps> = ({ isMobileOverlay, onClose }) => 
                 <div className="flex bg-white/5 rounded-xl p-0.5 relative">
                     <AnimatePresence mode="popLayout">
                         <button
+                            key="mode-task"
                             onClick={() => setMode('task')}
                             className={cn(
                                 "p-2 rounded-lg transition-all relative z-10",
@@ -129,8 +143,9 @@ const SmartInput: React.FC<SmartInputProps> = ({ isMobileOverlay, onClose }) => 
                                 />
                             )}
                         </button>
-                        {!isFolderView && (
+                        {!isFolderView && !selectedItem && (
                             <motion.button
+                                key="mode-folder"
                                 initial={{ opacity: 0, scale: 0.8, width: 0 }}
                                 animate={{ opacity: 1, scale: 1, width: 'auto' }}
                                 exit={{ opacity: 0, scale: 0.8, width: 0 }}
@@ -154,6 +169,7 @@ const SmartInput: React.FC<SmartInputProps> = ({ isMobileOverlay, onClose }) => 
                             </motion.button>
                         )}
                         <button
+                            key="mode-search"
                             onClick={() => {
                                 setMode('search');
                             }}
