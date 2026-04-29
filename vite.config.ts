@@ -21,7 +21,7 @@ export default defineConfig(({ command }) => {
     isExtension && crx({ manifest: manifest as any }),
     !isExtension && VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      includeAssets: ['icons/*.png', 'Screenshot_4.jpg'],
       manifest: {
         name: 'ListDock',
         short_name: 'ListDock',
