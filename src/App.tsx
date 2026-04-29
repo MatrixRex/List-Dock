@@ -8,6 +8,7 @@ import SmartInput from './components/SmartInput';
 import { Toaster } from 'react-hot-toast';
 import { DnDProvider } from './store/DnDContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePlatform } from './hooks/usePlatform';
 
 const App: React.FC = () => {
   const currentView = useStore((state: any) => state.currentView);
@@ -137,7 +138,14 @@ const App: React.FC = () => {
     return () => window.removeEventListener('click', handleClick);
   }, []);
 
+  const { isExtension, platform } = usePlatform();
+
   React.useEffect(() => {
+    if (!isExtension) {
+      console.log(`[ListDock] Running on platform: ${platform}`);
+      return;
+    }
+
     // Establish connection with background script to track open state
     const port = chrome.runtime.connect({ name: 'sidepanel' });
 
@@ -156,7 +164,7 @@ const App: React.FC = () => {
     });
 
     return () => port.disconnect();
-  }, []);
+  }, [isExtension, platform]);
 
   return (
     <DnDProvider>
