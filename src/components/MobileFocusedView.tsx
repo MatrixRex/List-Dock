@@ -57,7 +57,7 @@ const MobileFocusedView: React.FC<MobileFocusedViewProps> = ({ onClose, mode, on
             
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-h-0">
-                <FocusedContextUI mode={mode} />
+                <FocusedContextUI mode={mode} onClose={onClose} />
             </div>
 
             {/* Input Area at Bottom */}

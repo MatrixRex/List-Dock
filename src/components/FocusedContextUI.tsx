@@ -6,12 +6,14 @@ import FolderCard from './FolderCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import Fuse from 'fuse.js';
 import { cn } from '../utils/utils';
+import { Check } from 'lucide-react';
 
 interface FocusedContextUIProps {
     mode: 'task' | 'folder' | 'search';
+    onClose?: () => void;
 }
 
-const FocusedContextUI: React.FC<FocusedContextUIProps> = ({ mode }) => {
+const FocusedContextUI: React.FC<FocusedContextUIProps> = ({ mode, onClose }) => {
     const { items, selectedTaskIds, searchQuery, showCompleted } = useStore();
     const scrollContainerRef = React.useRef<HTMLDivElement>(null);
     
@@ -105,10 +107,10 @@ const FocusedContextUI: React.FC<FocusedContextUIProps> = ({ mode }) => {
     if (!isSubtaskMode && !isSearchMode) return null;
 
     return (
-        <div className="flex-1 flex flex-col w-full px-6 pb-4 overflow-hidden min-h-0 transition-all duration-300">
+        <div className="flex-1 flex flex-col w-full px-6 pb-4 overflow-x-hidden min-h-0 transition-all duration-300">
             <div 
                 ref={scrollContainerRef}
-                className="flex-1 overflow-y-auto custom-scrollbar pr-1 scroll-smooth"
+                className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pr-1 scroll-smooth"
             >
                 <AnimatePresence mode="popLayout">
                     {isSubtaskMode && subtaskContext && (
@@ -117,16 +119,18 @@ const FocusedContextUI: React.FC<FocusedContextUIProps> = ({ mode }) => {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
-                            className="space-y-4"
+                            className="space-y-4 w-full"
                         >
-                            <div className="sticky top-0 z-30 bg-[#0a090f]/95 backdrop-blur-xl py-4 -mx-6 px-6 border-b border-white/10 mb-4 shadow-2xl">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="w-1 h-1 rounded-full bg-purple-500 animate-pulse" />
-                                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-purple-400/80">Adding Subtasks to</span>
-                                </div>
-                                <div className="scale-95 origin-left">
+                            <div className="sticky top-0 z-30 bg-[#0a090f]/95 backdrop-blur-xl py-4 -mx-6 px-6 border-b border-white/10 mb-4 shadow-2xl flex items-center justify-between gap-4">
+                                <div className="flex-1 min-w-0 scale-95 origin-left">
                                     <TaskCard item={subtaskContext.parent} hideSubtasks />
                                 </div>
+                                <button 
+                                    onClick={onClose}
+                                    className="shrink-0 p-3 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-400 hover:bg-purple-500/20 active:scale-90 transition-all shadow-[0_0_20px_rgba(168,85,247,0.15)]"
+                                >
+                                    <Check size={24} strokeWidth={3} />
+                                </button>
                             </div>
                             
                             {subtaskContext.subtasks.length > 0 && (

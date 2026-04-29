@@ -102,93 +102,15 @@ const SmartInput: React.FC<SmartInputProps> = ({ isMobileOverlay, onClose, onMod
             )}
             onClick={(e) => e.stopPropagation()}
         >
-            {isMobileOverlay && (
-                <div className="flex items-center justify-between mb-4 px-2">
-                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30">
-                        {mode === 'search' ? 'Global Search' : (mode === 'folder' ? 'Create Folder' : 'New Task')}
-                    </span>
-                    <button 
-                        onClick={onClose}
-                        className="text-[10px] font-black uppercase tracking-widest text-blue-500 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20"
-                    >
-                        Done
-                    </button>
-                </div>
-            )}
-
             <div className={cn(
-                "flex items-center gap-2 glass !bg-white/[0.03] backdrop-blur-xl rounded-2xl p-2 transition-all text-gray-200",
+                "flex items-center gap-3 glass !bg-white/[0.03] backdrop-blur-xl rounded-2xl p-3 transition-all text-gray-200",
                 "focus-within:!bg-black/40 focus-within:ring-1 focus-within:ring-white/10 focus-within:shadow-[0_0_40px_rgba(139,92,246,0.15)]",
                 "border border-white/5",
                 (selectedTaskIds.length > 0 && mode === 'task') && "border-blue-500/50 bg-blue-500/5",
                 isMenuOpen && "pointer-events-none opacity-50 shadow-none border-gray-800"
             )}>
-                <div className="flex bg-white/5 rounded-xl p-0.5 relative">
-                    <AnimatePresence mode="popLayout">
-                        <button
-                            key="mode-task"
-                            onClick={() => setMode('task')}
-                            className={cn(
-                                "p-2 rounded-lg transition-all relative z-10",
-                                mode === 'task' ? "text-white" : "text-gray-500 hover:text-gray-300"
-                            )}
-                            title="Add Task"
-                        >
-                            <Plus size={20} />
-                            {mode === 'task' && (
-                                <motion.div
-                                    layoutId="mode-pill"
-                                    className="absolute inset-0 bg-blue-600 rounded-lg shadow-lg -z-10"
-                                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                                />
-                            )}
-                        </button>
-                        {!isFolderView && !selectedItem && (
-                            <motion.button
-                                key="mode-folder"
-                                initial={{ opacity: 0, scale: 0.8, width: 0 }}
-                                animate={{ opacity: 1, scale: 1, width: 'auto' }}
-                                exit={{ opacity: 0, scale: 0.8, width: 0 }}
-                                onClick={() => {
-                                    setMode('folder');
-                                }}
-                                className={cn(
-                                    "p-2 rounded-lg transition-all relative z-10",
-                                    mode === 'folder' ? "text-white" : "text-gray-500 hover:text-gray-300"
-                                )}
-                                title="Add Folder"
-                            >
-                                <FolderPlus size={20} />
-                                {mode === 'folder' && (
-                                    <motion.div
-                                        layoutId="mode-pill"
-                                        className="absolute inset-0 bg-blue-500 rounded-lg shadow-lg -z-10"
-                                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                                    />
-                                )}
-                            </motion.button>
-                        )}
-                        <button
-                            key="mode-search"
-                            onClick={() => {
-                                setMode('search');
-                            }}
-                            className={cn(
-                                "p-2 rounded-lg transition-all relative z-10",
-                                mode === 'search' ? "text-white" : "text-gray-500 hover:text-gray-300"
-                            )}
-                            title="Search"
-                        >
-                            <Search size={20} />
-                            {mode === 'search' && (
-                                <motion.div
-                                    layoutId="mode-pill"
-                                    className="absolute inset-0 bg-white/10 rounded-lg shadow-lg -z-10 border border-white/10"
-                                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                                />
-                            )}
-                        </button>
-                    </AnimatePresence>
+                <div className="pl-2 text-gray-500">
+                    {mode === 'search' ? <Search size={20} /> : <Plus size={20} />}
                 </div>
 
                 <input
@@ -201,19 +123,13 @@ const SmartInput: React.FC<SmartInputProps> = ({ isMobileOverlay, onClose, onMod
                     }}
                     onKeyDown={(e) => e.key === 'Enter' && handleAction()}
                     placeholder={getPlaceholder()}
-                    className="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none text-base py-2 px-3 placeholder:text-gray-600 text-gray-100"
+                    className="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none text-base py-1 px-1 placeholder:text-gray-600 text-gray-100"
                 />
-
-                {(mode !== 'search' && !value) && (
-                    <div className="px-3 text-[10px] font-bold text-gray-600 uppercase tracking-widest hidden sm:block">
-                        Enter
-                    </div>
-                )}
                 
                 {value.trim() && mode !== 'search' && (
                     <button 
                         onClick={handleAction}
-                        className="p-2 mr-1 rounded-lg bg-blue-600 text-white shadow-lg shadow-blue-600/20 active:scale-95 transition-all"
+                        className="p-2 rounded-lg bg-blue-600 text-white shadow-lg shadow-blue-600/20 active:scale-95 transition-all"
                     >
                         <Plus size={20} />
                     </button>
