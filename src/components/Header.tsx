@@ -6,9 +6,11 @@ import ConfirmDialog from './ui/ConfirmDialog';
 import FolderSettingsPopup from './FolderSettingsPopup';
 import { motion, AnimatePresence } from 'framer-motion';
 import { type Item } from '../types';
+import { usePlatform } from '../hooks/usePlatform';
 
 const Header: React.FC = () => {
     const { currentView, currentFolderId, items, setView, isMenuOpen, updateItem, deleteItem } = useStore();
+    const { platform } = usePlatform();
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -131,12 +133,14 @@ const Header: React.FC = () => {
                                     <LucideIcons.Trash2 size={18} />
                                 </button>
                             )}
-                            <button
-                                onClick={() => setIsSettingsOpen(true)}
-                                className="p-1.5 hover:bg-white/10 rounded transition-colors text-gray-400 hover:text-white"
-                            >
-                                <LucideIcons.Settings size={18} />
-                            </button>
+                            {platform !== 'mobile-pwa' && (
+                                <button
+                                    onClick={() => setIsSettingsOpen(true)}
+                                    className="p-1.5 hover:bg-white/10 rounded transition-colors text-gray-400 hover:text-white"
+                                >
+                                    <LucideIcons.Settings size={18} />
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>

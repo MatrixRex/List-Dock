@@ -9,6 +9,7 @@ import { Toaster } from 'react-hot-toast';
 import { DnDProvider } from './store/DnDContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlatform } from './hooks/usePlatform';
+import LayoutSwitcher from './components/layouts/LayoutSwitcher';
 
 const App: React.FC = () => {
   const currentView = useStore((state: any) => state.currentView);
@@ -168,36 +169,18 @@ const App: React.FC = () => {
 
   return (
     <DnDProvider>
-      <div className="flex flex-col h-screen overflow-hidden border border-white/5 bg-[#050408]/50">
-        <Header />
-
-        <main className="flex-1 overflow-y-auto px-4 py-2 custom-scrollbar relative">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentView}
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              transition={{ duration: 0.15, ease: "easeOut" }}
-            >
-              {currentView === 'root' ? <RootView /> : <FolderView />}
-            </motion.div>
-          </AnimatePresence>
-        </main>
-
-        <SmartInput />
-        <Toaster
-          position="bottom-center"
-          containerClassName="toast-container"
-          containerStyle={{
-            bottom: 80,
-          }}
-          toastOptions={{
-            duration: 3000,
-            className: 'glass-toast',
-          }}
-        />
-      </div>
+      <LayoutSwitcher />
+      <Toaster
+        position="bottom-center"
+        containerClassName="toast-container"
+        containerStyle={{
+          bottom: 100,
+        }}
+        toastOptions={{
+          duration: 3000,
+          className: 'glass-toast',
+        }}
+      />
     </DnDProvider>
   );
 };

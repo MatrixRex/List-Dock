@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:web": "cross-env VITE_BUILD_TARGET=web vite",
-    "dev:extension": "cross-env VITE_BUILD_TARGET=extension vite",
+    "dev:web": "cross-env VITE_BUILD_TARGET=web vite --host",
+    "dev:extension": "cross-env VITE_BUILD_TARGET=extension vite --host",
     "build": "tsc -b && pnpm run build:web && pnpm run build:extension",
     "build:extension": "cross-env VITE_BUILD_TARGET=extension vite build",
     "build:web": "cross-env VITE_BUILD_TARGET=web vite build",
