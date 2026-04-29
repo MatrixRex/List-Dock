@@ -10,42 +10,42 @@ const DesktopLayout: React.FC = () => {
   const currentView = useStore((state: any) => state.currentView);
   
   return (
-    <div className="flex h-dvh overflow-hidden bg-[#050408] text-white selection:bg-blue-500/30">
+    <div className="flex h-dvh overflow-hidden bg-[#050408]/50 text-white selection:bg-purple-500/30">
       {/* Sidebar Navigation (Left Column) */}
-      <aside className="w-72 border-r border-white/5 bg-[#0a090f]/80 backdrop-blur-2xl flex flex-col shadow-2xl">
+      <aside className="w-72 border-r border-white/5 bg-[#0a090f]/80 backdrop-blur-3xl flex flex-col shadow-2xl">
         <div className="p-8">
           <div className="flex items-center gap-4 mb-12">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center shadow-xl shadow-blue-500/20 border border-white/10">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 flex items-center justify-center shadow-xl shadow-purple-500/20 border border-white/10">
                <List size={26} className="text-white" />
             </div>
             <div>
               <h1 className="text-2xl font-black tracking-tighter bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">ListDock</h1>
-              <span className="text-[9px] font-black uppercase tracking-[0.4em] text-blue-500/80 leading-none">Professional</span>
+              <span className="text-[9px] font-black uppercase tracking-[0.4em] text-purple-500/80 leading-none">Professional</span>
             </div>
           </div>
 
           <nav className="space-y-1.5">
             <button className="w-full flex items-center gap-3.5 px-5 py-4 rounded-2xl bg-white/5 text-white shadow-inner border border-white/10 transition-all hover:bg-white/10">
-              <LayoutGrid size={20} className="text-blue-400" />
+              <LayoutGrid size={20} className="text-purple-400" />
               <span className="font-semibold text-sm">Dashboard</span>
             </button>
             <button className="w-full flex items-center gap-3.5 px-5 py-4 rounded-2xl text-white/30 hover:bg-white/5 hover:text-white/80 transition-all group">
-              <Search size={20} className="group-hover:text-blue-400/50 transition-colors" />
+              <Search size={20} className="group-hover:text-purple-400/50 transition-colors" />
               <span className="font-semibold text-sm">Quick Find</span>
             </button>
             <button className="w-full flex items-center gap-3.5 px-5 py-4 rounded-2xl text-white/30 hover:bg-white/5 hover:text-white/80 transition-all group">
-              <User size={20} className="group-hover:text-blue-400/50 transition-colors" />
+              <User size={20} className="group-hover:text-purple-400/50 transition-colors" />
               <span className="font-semibold text-sm">Account</span>
             </button>
             <button className="w-full flex items-center gap-3.5 px-5 py-4 rounded-2xl text-white/30 hover:bg-white/5 hover:text-white/80 transition-all group">
-              <Settings size={20} className="group-hover:text-blue-400/50 transition-colors" />
+              <Settings size={20} className="group-hover:text-purple-400/50 transition-colors" />
               <span className="font-semibold text-sm">Settings</span>
             </button>
           </nav>
         </div>
 
         <div className="mt-auto p-8 border-t border-white/5 bg-white/[0.02]">
-          <button className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all font-bold uppercase tracking-widest text-xs">
+          <button className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-600/20 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all font-bold uppercase tracking-widest text-xs">
             <Plus size={20} />
             <span>Create List</span>
           </button>
@@ -56,7 +56,7 @@ const DesktopLayout: React.FC = () => {
       <section className="flex-1 flex flex-col min-w-0 bg-gradient-to-br from-[#0d0c14]/40 to-transparent">
         <header className="h-20 border-b border-white/5 flex items-center px-10 justify-between backdrop-blur-md z-10">
            <div className="flex items-center gap-3">
-             <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+             <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
              <h2 className="text-xs font-black uppercase tracking-[0.4em] text-white/30">
                {currentView === 'root' ? 'Universal Workspace' : 'Category View'}
              </h2>
@@ -109,8 +109,8 @@ const DesktopLayout: React.FC = () => {
           <p className="text-white/10 text-sm max-w-[200px] leading-relaxed italic">Select any task from the workspace to view its properties, subtasks, and history.</p>
         </div>
 
-        <div className="mt-10 p-6 rounded-3xl bg-blue-600/5 border border-blue-500/10">
-          <p className="text-[10px] text-blue-400/60 font-bold uppercase tracking-widest mb-2">Pro Tip</p>
+        <div className="mt-10 p-6 rounded-3xl bg-purple-600/5 border border-purple-500/10">
+          <p className="text-[10px] text-purple-400/60 font-bold uppercase tracking-widest mb-2">Pro Tip</p>
           <p className="text-xs text-white/30 leading-relaxed">Use <kbd className="px-1.5 py-0.5 rounded bg-white/10 font-sans text-white/60">Ctrl + Z</kbd> to undo any action instantly from the universal workspace.</p>
         </div>
       </aside>

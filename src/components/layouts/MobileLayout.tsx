@@ -26,7 +26,7 @@ const MobileLayout: React.FC = () => {
   }, [selectedTaskIds]);
   
   return (
-    <div className="flex flex-col h-dvh overflow-hidden bg-[#050408] relative">
+    <div className="flex flex-col h-dvh overflow-hidden bg-[#050408]/50 relative">
       <Header />
 
       <main 
@@ -51,7 +51,7 @@ const MobileLayout: React.FC = () => {
       {/* FAB */}
       <button 
         onClick={() => setShowAddBar(true)}
-        className="fixed right-6 bottom-28 w-14 h-14 rounded-2xl bg-blue-600 text-white shadow-xl shadow-blue-600/30 flex items-center justify-center active:scale-90 transition-all z-[150] border border-white/10"
+        className="fixed right-6 bottom-28 w-14 h-14 rounded-2xl bg-purple-600 text-white shadow-xl shadow-purple-600/30 flex items-center justify-center active:scale-90 transition-all z-[150] border border-white/10"
       >
         <Plus size={32} />
       </button>
@@ -83,12 +83,12 @@ const MobileLayout: React.FC = () => {
       </AnimatePresence>
 
       {/* Bottom Navigation */}
-      <nav className="h-20 border-t border-white/5 bg-[#0a090f]/80 backdrop-blur-2xl flex items-center justify-around px-6 pb-4 shrink-0">
+      <nav className="h-20 border-t border-white/5 bg-[#0a090f]/80 backdrop-blur-3xl flex items-center justify-around px-6 pb-4 shrink-0">
         <button className="flex flex-col items-center gap-1.5 text-white/90">
           <div className="p-2 rounded-xl bg-white/10 shadow-lg border border-white/10">
-            <List size={22} />
+            <List size={22} className="text-purple-400" />
           </div>
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80">Lists</span>
+          <span className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80 text-purple-400">Lists</span>
         </button>
         <button className="flex flex-col items-center gap-1.5 text-white/30 hover:text-white/60 transition-all">
           <div className="p-2">
