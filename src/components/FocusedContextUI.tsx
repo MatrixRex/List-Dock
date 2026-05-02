@@ -14,7 +14,7 @@ interface FocusedContextUIProps {
 }
 
 const FocusedContextUI: React.FC<FocusedContextUIProps> = ({ mode, onClose }) => {
-    const { items, selectedTaskIds, searchQuery, showCompleted } = useStore();
+    const { items, selectedTaskIds, searchQuery, showCompleted, currentView, currentFolderId } = useStore();
     const scrollContainerRef = React.useRef<HTMLDivElement>(null);
     
     const isSubtaskMode = mode === 'task' && selectedTaskIds.length === 1;
@@ -47,8 +47,26 @@ const FocusedContextUI: React.FC<FocusedContextUIProps> = ({ mode, onClose }) =>
     const searchResults = useMemo(() => {
         if (!isSearchMode || !searchQuery.trim()) return { tasks: [], folders: [] };
 
-        const searchableTasks = items.filter(i => (i.type === 'task' || i.type === 'subtask') && (showCompleted || !i.is_completed));
-        const searchableFolders = items.filter(i => i.type === 'folder');
+    const searchableTasks = items.filter(i => {
+        const isTaskOrSubtask = i.type === 'task' || i.type === 'subtask';
+        const isVisible = showCompleted || !i.is_completed;
+        
+        if (currentView === 'folder') {
+            // In folder view, search within this folder and its subtasks
+            if (i.parent_id === currentFolderId) return isTaskOrSubtask && isVisible;
+            if (i.type === 'subtask') {
+                const parent = items.find(p => p.id === i.parent_id);
+                return parent?.parent_id === currentFolderId && isVisible;
+            }
+            return false;
+        }
+        
+        return isTaskOrSubtask && isVisible;
+    });
+
+    const searchableFolders = currentView === 'root' 
+        ? items.filter(i => i.type === 'folder')
+        : [];
 
         const fuseOptions = {
             keys: ['title'],
@@ -64,7 +82,7 @@ const FocusedContextUI: React.FC<FocusedContextUIProps> = ({ mode, onClose }) =>
             tasks: taskFuse.search(searchQuery).map(r => r.item),
             folders: folderFuse.search(searchQuery).map(r => r.item)
         };
-    }, [items, searchQuery, isSearchMode, showCompleted]);
+    }, [items, searchQuery, isSearchMode, showCompleted, currentView, currentFolderId]);
 
     const scrollToBottom = (instant = false) => {
         if (scrollContainerRef.current) {

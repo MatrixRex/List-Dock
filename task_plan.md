@@ -13,15 +13,15 @@ Phase 1: Foundation & Platform Awareness
 - [x] Configure `vite.config.ts` for Extension and PWA builds
 - [x] Create `usePlatform.ts` hook for platform detection
 - [x] Set up CI/CD for web deployment
-- [ ] Verify PWA installation on mobile/desktop
-- **Status:** in_progress
+- [x] Verify PWA installation on mobile/desktop
+- **Status:** done
 
 ### Phase 2: Responsive Shell & UI Adaptivity
 - [x] Create `LayoutSwitcher` component
 - [x] Implement Sidebar, Mobile, and Desktop layouts
 - [x] Responsive navigation system (Bottom Bar for mobile)
-- [ ] Verify layout switching via DevTools
-- **Status:** in_progress
+- [x] Verify layout switching via DevTools
+- **Status:** done
 
 ### Phase 3: Identity & Authentication
 - [ ] Initialize Firebase Auth

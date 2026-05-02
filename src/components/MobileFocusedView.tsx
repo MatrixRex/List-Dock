@@ -42,7 +42,7 @@ const MobileFocusedView: React.FC<MobileFocusedViewProps> = ({ onClose, mode, on
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-x-0 z-[500] bg-[#050408] flex flex-col"
+            className="fixed inset-x-0 z-[600] bg-[#050408] flex flex-col"
             style={{ 
                 height: viewportHeight,
                 top: viewportOffset,
@@ -62,6 +62,7 @@ const MobileFocusedView: React.FC<MobileFocusedViewProps> = ({ onClose, mode, on
             <SmartInput 
                 isMobileOverlay 
                 onClose={onClose} 
+                mode={mode}
                 onModeChange={onModeChange} 
             />
         </motion.div>

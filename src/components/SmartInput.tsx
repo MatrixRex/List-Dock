@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store/useStore';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, FolderPlus, ListTodo } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import type { Item } from '../types';
 import { cn } from '../utils/utils';
@@ -8,19 +9,19 @@ import { cn } from '../utils/utils';
 interface SmartInputProps {
     isMobileOverlay?: boolean;
     onClose?: () => void;
+    mode?: 'task' | 'folder' | 'search';
     onModeChange?: (mode: 'task' | 'folder' | 'search') => void;
 }
 
-const SmartInput: React.FC<SmartInputProps> = ({ isMobileOverlay, onClose, onModeChange }) => {
+const SmartInput: React.FC<SmartInputProps> = ({ isMobileOverlay, onClose, mode: initialMode, onModeChange }) => {
     const [value, setValue] = useState('');
-    const [mode, setMode] = useState<'task' | 'folder' | 'search'>('task');
+    const [mode, setMode] = useState<'task' | 'folder' | 'search'>(initialMode || 'task');
     const { addItem, currentView, currentFolderId, setSearchQuery, isMenuOpen, selectedTaskIds, items } = useStore();
     const inputRef = React.useRef<HTMLInputElement>(null);
 
     // Auto-focus when in mobile overlay
     React.useEffect(() => {
         if (isMobileOverlay) {
-            // Small delay to ensure the keyboard is invoked correctly on all mobile browsers
             const timer = setTimeout(() => {
                 inputRef.current?.focus();
             }, 300);
@@ -29,15 +30,25 @@ const SmartInput: React.FC<SmartInputProps> = ({ isMobileOverlay, onClose, onMod
     }, [isMobileOverlay]);
 
     const isFolderView = currentView === 'folder';
-    const selectedItem = selectedTaskIds.length === 1 ? items.find((i: Item) => i.id === selectedTaskIds[0]) : null;
+    const isSubtaskMode = selectedTaskIds.length === 1;
+    const selectedItem = isSubtaskMode ? items.find((i: Item) => i.id === selectedTaskIds[0]) : null;
     const isMultiSelected = selectedTaskIds.length > 1;
 
-    // Reset mode to task when entering folder view
+    // Reset mode to task when entering folder view or subtask mode
     React.useEffect(() => {
-        if (isFolderView && mode === 'folder') {
+        if ((isFolderView && mode === 'folder') || (isSubtaskMode && mode !== 'task')) {
             setMode('task');
         }
-    }, [isFolderView, mode]);
+    }, [isFolderView, isSubtaskMode, mode]);
+
+    // Sync search query with store when in search mode
+    React.useEffect(() => {
+        if (mode === 'search') {
+            setSearchQuery(value);
+        } else {
+            setSearchQuery('');
+        }
+    }, [mode, value, setSearchQuery]);
 
     // Report mode change
     React.useEffect(() => {
@@ -63,7 +74,6 @@ const SmartInput: React.FC<SmartInputProps> = ({ isMobileOverlay, onClose, onMod
         setValue('');
         const isAddingSubtask = mode === 'task' && selectedItem;
         
-        // Keep keyboard focused if adding subtask
         if (isAddingSubtask) {
             inputRef.current?.focus();
         }
@@ -72,7 +82,9 @@ const SmartInput: React.FC<SmartInputProps> = ({ isMobileOverlay, onClose, onMod
     };
 
     const getPlaceholder = () => {
-        if (mode === 'search') return "Search lists...";
+        if (mode === 'search') {
+            return isFolderView ? "Search in folder..." : "Search all tasks...";
+        }
         if (mode === 'folder') {
             if (isMultiSelected) return `Create folder with ${selectedTaskIds.length} tasks...`;
             return "New folder name...";
@@ -86,30 +98,69 @@ const SmartInput: React.FC<SmartInputProps> = ({ isMobileOverlay, onClose, onMod
             return `Add subtask to "${selectedItem.title}"...`;
         }
 
-        if (isMultiSelected) {
-            return `Add task (ignoring selection)...`;
-        }
-
         return isFolderView ? "Add task to folder..." : "Add task to root...";
     };
+
+    const modes = (isSubtaskMode ? [
+        { id: 'task', icon: ListTodo, label: 'Task' },
+    ] : [
+        { id: 'task', icon: ListTodo, label: 'Task' },
+        { id: 'search', icon: Search, label: 'Search' },
+        ...(currentView === 'root' ? [{ id: 'folder', icon: FolderPlus, label: 'Folder' }] : []),
+    ]) as const;
 
     return (
         <div
             className={cn(
                 "shrink-0 z-[200] sticky bottom-0 w-full",
-                isMobileOverlay ? "p-6 bg-[#050408]/90 backdrop-blur-3xl border-t border-white/10 rounded-t-[2.5rem] shadow-[0_-20px_40px_rgba(0,0,0,0.5)]" : "glass glass-top-only p-4"
+                isMobileOverlay ? "p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] bg-[#050408]/95 backdrop-blur-3xl border-t border-white/10 rounded-t-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.8)]" : "glass glass-top-only p-4"
             )}
             onClick={(e) => e.stopPropagation()}
         >
+            {isMobileOverlay && modes.length > 1 && (
+                <div className="flex justify-center mb-6">
+                    <div className="flex bg-white/[0.03] p-1.5 rounded-2xl border border-white/5 shadow-inner">
+                        {modes.map((m) => (
+                            <button
+                                key={m.id}
+                                onClick={() => setMode(m.id as any)}
+                                className={cn(
+                                    "flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all duration-300 relative",
+                                    mode === m.id 
+                                        ? "text-white shadow-lg" 
+                                        : "text-gray-500 hover:text-gray-300"
+                                )}
+                            >
+                                {mode === m.id && (
+                                    <motion.div
+                                        layoutId="activeMode"
+                                        className="absolute inset-0 bg-purple-600 rounded-xl -z-10"
+                                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                    />
+                                )}
+                                <m.icon size={18} className={cn(mode === m.id ? "text-white" : "opacity-70")} />
+                                <span className="text-xs font-bold tracking-wide">{m.label}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             <div className={cn(
-                "flex items-center gap-3 glass !bg-white/[0.03] backdrop-blur-xl rounded-2xl p-3 transition-all text-gray-200",
-                "focus-within:!bg-black/40 focus-within:ring-1 focus-within:ring-white/10 focus-within:shadow-[0_0_40px_rgba(139,92,246,0.15)]",
-                "border border-white/5",
-                (selectedTaskIds.length > 0 && mode === 'task') && "border-blue-500/50 bg-blue-500/5",
+                "flex items-center gap-3 glass !bg-white/[0.04] backdrop-blur-2xl rounded-2xl p-4 transition-all text-gray-200 shadow-xl",
+                "focus-within:!bg-black/50 focus-within:ring-2 focus-within:ring-purple-500/20 focus-within:shadow-[0_0_50px_rgba(139,92,246,0.2)]",
+                "border border-white/10",
+                (selectedTaskIds.length > 0 && mode === 'task') && "border-purple-500/50 bg-purple-500/5",
                 isMenuOpen && "pointer-events-none opacity-50 shadow-none border-gray-800"
             )}>
-                <div className="pl-2 text-gray-500">
-                    {mode === 'search' ? <Search size={20} /> : <Plus size={20} />}
+                <div className="pl-1">
+                    {mode === 'search' ? (
+                        <Search size={22} className="text-purple-400" />
+                    ) : mode === 'folder' ? (
+                        <FolderPlus size={22} className="text-purple-400" />
+                    ) : (
+                        <Plus size={22} className={cn(selectedTaskIds.length > 0 ? "text-purple-400" : "text-gray-500")} />
+                    )}
                 </div>
 
                 <input
@@ -122,16 +173,18 @@ const SmartInput: React.FC<SmartInputProps> = ({ isMobileOverlay, onClose, onMod
                     }}
                     onKeyDown={(e) => e.key === 'Enter' && handleAction()}
                     placeholder={getPlaceholder()}
-                    className="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none text-base py-1 px-1 placeholder:text-gray-600 text-gray-100"
+                    className="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none text-lg py-1 px-1 placeholder:text-gray-600 text-gray-100 font-medium"
                 />
                 
                 {value.trim() && mode !== 'search' && (
-                    <button 
+                    <motion.button 
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
                         onClick={handleAction}
-                        className="p-2 rounded-lg bg-blue-600 text-white shadow-lg shadow-blue-600/20 active:scale-95 transition-all"
+                        className="p-3 rounded-xl bg-purple-600 text-white shadow-xl shadow-purple-600/30 active:scale-95 transition-all"
                     >
-                        <Plus size={20} />
-                    </button>
+                        {mode === 'folder' ? <FolderPlus size={22} /> : <Plus size={22} />}
+                    </motion.button>
                 )}
             </div>
         </div>
