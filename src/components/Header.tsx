@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { type Item } from '../types';
 import { usePlatform } from '../hooks/usePlatform';
 
-const Header: React.FC<{ hideSettings?: boolean }> = ({ hideSettings }) => {
+const Header: React.FC<{ hideSettings?: boolean; title?: string }> = ({ hideSettings, title }) => {
     const { currentView, currentFolderId, items, setView, isMenuOpen, updateItem, deleteItem, isSettingsOpen, setIsSettingsOpen } = useStore();
     const { platform } = usePlatform();
     const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -22,7 +22,7 @@ const Header: React.FC<{ hideSettings?: boolean }> = ({ hideSettings }) => {
     // Update titleValue when folder changes
     React.useEffect(() => {
         if (folder) setTitleValue(folder.title);
-    }, [folder?.id]);
+    }, [folder]);
 
     const handleUpdateTitle = () => {
         if (titleValue.trim() && folder && titleValue !== folder.title) {
@@ -40,7 +40,9 @@ const Header: React.FC<{ hideSettings?: boolean }> = ({ hideSettings }) => {
         setShowDeleteConfirm(false);
     };
 
-    const IconComponent = (folder && (LucideIcons as any)[folder.icon || 'Folder']) || LucideIcons.Folder;
+    const Icon = (folder && LucideIcons[folder.icon as keyof typeof LucideIcons]) || LucideIcons.Folder;
+    const IconComponent = Icon as React.ElementType;
+
     const isLetterIcon = folder && (!folder.icon || folder.icon === 'Letter');
     const folderColor = folder?.color || '#a855f7';
 
@@ -56,7 +58,9 @@ const Header: React.FC<{ hideSettings?: boolean }> = ({ hideSettings }) => {
                             <LucideIcons.ChevronLeft size={18} />
                         </button>
                     )}
-                    {currentView === 'root' ? (
+                    {title ? (
+                        <h1 className="font-bold text-lg truncate">{title}</h1>
+                    ) : currentView === 'root' ? (
                         <h1 className="font-bold text-lg truncate">List Dock</h1>
                     ) : (
                         <div className="flex items-center gap-2 flex-1 min-w-0">

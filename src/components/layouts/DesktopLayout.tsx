@@ -3,14 +3,14 @@ import RootView from '../RootView';
 import FolderView from '../FolderView';
 import SmartInput from '../SmartInput';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useStore } from '../../store/useStore';
+import { useStore, type StoreState } from '../../store/useStore';
 import { LayoutGrid, List, Settings, User, Search, Plus } from 'lucide-react';
 import SettingsPopup from '../SettingsPopup';
 
 const DesktopLayout: React.FC = () => {
-  const currentView = useStore((state: any) => state.currentView);
-  const isSettingsOpen = useStore((state: any) => state.isSettingsOpen);
-  const setIsSettingsOpen = useStore((state: any) => state.setIsSettingsOpen);
+  const currentView = useStore((state: StoreState) => state.currentView);
+  const isSettingsOpen = useStore((state: StoreState) => state.isSettingsOpen);
+  const setIsSettingsOpen = useStore((state: StoreState) => state.setIsSettingsOpen);
   
   return (
     <div className="flex h-dvh overflow-hidden bg-[#050408]/50 text-white selection:bg-purple-500/30">

@@ -1,16 +1,13 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { crx } from '@crxjs/vite-plugin'
+import { crx, type ManifestV3Export } from '@crxjs/vite-plugin'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import manifest from './manifest.json'
 
-const isExtension = process.env.VITE_BUILD_TARGET === 'extension'
-
 // https://vite.dev/config/
-export default defineConfig(({ command }) => {
+export default defineConfig(() => {
   const isExtension = process.env.VITE_BUILD_TARGET === 'extension'
-  const isDev = command === 'serve'
   const isGitHubPages = process.env.GITHUB_ACTIONS === 'true'
 
   return {
@@ -18,7 +15,7 @@ export default defineConfig(({ command }) => {
     plugins: [
     react(),
     tailwindcss(),
-    isExtension && crx({ manifest: manifest as any }),
+    isExtension && crx({ manifest: manifest as ManifestV3Export }),
     !isExtension && VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.png', 'Screenshot_4.jpg'],
@@ -51,10 +48,9 @@ export default defineConfig(({ command }) => {
     })
   ].filter(Boolean),
   server: {
-    port: 3101,
-    strictPort: true,
+    port: Number(process.env.PORT) || 3102,
+    strictPort: false,
     hmr: {
-      port: 3101,
       host: 'localhost',
     },
     cors: true,

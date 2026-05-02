@@ -1,18 +1,14 @@
 import React from 'react';
 import { useStore } from './store/useStore';
 import { type Item } from './types';
-import Header from './components/Header';
-import RootView from './components/RootView';
-import FolderView from './components/FolderView';
-import SmartInput from './components/SmartInput';
 import { Toaster } from 'react-hot-toast';
-import { DnDProvider } from './store/DnDContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import { DnDProvider } from './store/DnDProvider';
+// import { motion, AnimatePresence } from 'framer-motion';
 import { usePlatform } from './hooks/usePlatform';
 import LayoutSwitcher from './components/layouts/LayoutSwitcher';
 
 const App: React.FC = () => {
-  const currentView = useStore((state: any) => state.currentView);
+  // const currentView = useStore((state: any) => state.currentView);
 
   React.useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {

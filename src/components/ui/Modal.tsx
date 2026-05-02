@@ -21,6 +21,14 @@ const Modal: React.FC<ModalProps> = ({
     className,
     showCloseButton = true
 }) => {
+    const [isMobile, setIsMobile] = React.useState(window.innerWidth < 640);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 640);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     // Prevent scroll on body when modal is open
     useEffect(() => {
         if (isOpen) {
@@ -45,7 +53,10 @@ const Modal: React.FC<ModalProps> = ({
     return createPortal(
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+                <div className={cn(
+                    "fixed inset-0 z-[10000] flex",
+                    isMobile ? "items-end justify-center" : "items-center justify-center p-4"
+                )}>
                     {/* Backdrop */}
                     <motion.div
                         initial={{ opacity: 0 }}
@@ -57,33 +68,46 @@ const Modal: React.FC<ModalProps> = ({
 
                     {/* Modal Content */}
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        transition={{ type: "spring", duration: 0.4, bounce: 0.3 }}
+                        initial={isMobile ? { y: "100%" } : { opacity: 0, scale: 0.95, y: 20 }}
+                        animate={isMobile ? { y: 0 } : { opacity: 1, scale: 1, y: 0 }}
+                        exit={isMobile ? { y: "100%" } : { opacity: 0, scale: 0.95, y: 20 }}
+                        transition={isMobile ? { type: "spring", damping: 30, stiffness: 300, mass: 0.8 } : { type: "spring", duration: 0.4, bounce: 0.3 }}
                         className={cn(
-                            "relative w-full max-w-sm bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl overflow-hidden",
+                            "relative w-full bg-gray-900 border-gray-800 shadow-2xl overflow-hidden",
+                            isMobile ? "rounded-t-[2.5rem] border-t max-w-none pb-[env(safe-area-inset-bottom,20px)]" : "max-w-sm border rounded-2xl",
                             className
                         )}
                         onClick={e => e.stopPropagation()}
                     >
+                        {/* Mobile Handle */}
+                        {isMobile && (
+                            <div className="w-full flex justify-center pt-3 pb-1">
+                                <div className="w-12 h-1.5 bg-white/10 rounded-full" />
+                            </div>
+                        )}
+
                         {/* Header */}
                         {(title || showCloseButton) && (
-                            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
-                                {title && <h2 className="text-lg font-semibold text-gray-100">{title}</h2>}
+                            <div className={cn(
+                                "flex items-center justify-between border-b border-gray-800",
+                                isMobile ? "px-8 py-5" : "px-6 py-4"
+                            )}>
+                                {title && <h2 className={cn("font-bold text-gray-100", isMobile ? "text-xl" : "text-lg")}>{title}</h2>}
                                 {showCloseButton && (
                                     <button
                                         onClick={onClose}
-                                        className="p-1 text-gray-500 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+                                        className="p-1.5 text-gray-500 hover:text-white hover:bg-gray-800 rounded-xl transition-all active:scale-90"
                                     >
-                                        <X size={20} />
+                                        <X size={isMobile ? 24 : 20} />
                                     </button>
                                 )}
                             </div>
                         )}
 
                         {/* Body */}
-                        <div className="p-6">
+                        <div className={cn(
+                            isMobile ? "p-8 max-h-[85vh] overflow-y-auto custom-scrollbar" : "p-6"
+                        )}>
                             {children}
                         </div>
                     </motion.div>

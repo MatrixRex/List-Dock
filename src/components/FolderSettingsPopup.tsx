@@ -79,7 +79,7 @@ const FolderSettingsPopup: React.FC<FolderSettingsPopupProps> = ({ isOpen, onClo
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1">Icon</label>
                     <div className="grid grid-cols-6 gap-2">
                         {ICONS.map(iconName => {
-                            const IconComponent = (LucideIcons as any)[iconName];
+                            const IconComponent = LucideIcons[iconName as keyof typeof LucideIcons] as React.ElementType;
                             const isInitial = iconName === 'Letter';
 
                             return (

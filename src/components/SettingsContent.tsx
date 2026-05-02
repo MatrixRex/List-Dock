@@ -1,0 +1,250 @@
+import React from 'react';
+import { useStore } from '../store/useStore';
+import { Trash2, AlertTriangle, Download, Upload } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+interface SettingsContentProps {
+    onClose?: () => void;
+}
+
+const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => {
+    const {
+        clearItems,
+        showCompleted,
+        setShowCompleted,
+        hideCompletedSubtasks,
+        setHideCompletedSubtasks,
+        persistLastFolder,
+        setPersistLastFolder,
+        copyWithSubtasks,
+        setCopyWithSubtasks,
+        exportItems,
+        importItems
+    } = useStore();
+    const [showConfirm, setShowConfirm] = React.useState(false);
+    const [includeCompleted, setIncludeCompleted] = React.useState(true);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+    const handleClearData = () => {
+        if (showConfirm) {
+            clearItems();
+            onClose?.();
+        } else {
+            setShowConfirm(true);
+        }
+    };
+
+    const handleImportClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const content = event.target?.result as string;
+            importItems(content);
+        };
+        reader.readAsText(file);
+        // Reset input
+        e.target.value = '';
+    };
+
+    return (
+        <div className="p-4 space-y-6">
+            <div className="space-y-4">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1"> Preferences </label>
+
+                <div className="glass rounded-xl p-4">
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                            <p className="text-sm font-medium text-white">Show Completed</p>
+                            <p className="text-xs text-gray-400">Display tasks marked as done.</p>
+                        </div>
+                        <button
+                            onClick={() => setShowCompleted(!showCompleted)}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${showCompleted ? 'bg-purple-500' : 'bg-gray-700'}`}
+                        >
+                            <span
+                                aria-hidden="true"
+                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${showCompleted ? 'translate-x-5' : 'translate-x-0'}`}
+                            />
+                        </button>
+                    </div>
+
+                    <div className="h-px bg-gray-800/80 my-3" />
+
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                            <p className="text-sm font-medium text-white">Hide Completed Subtasks</p>
+                            <p className="text-xs text-gray-400">Hide subtasks once finished.</p>
+                        </div>
+                        <button
+                            onClick={() => setHideCompletedSubtasks(!hideCompletedSubtasks)}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${hideCompletedSubtasks ? 'bg-purple-500' : 'bg-gray-700'}`}
+                        >
+                            <span
+                                aria-hidden="true"
+                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${hideCompletedSubtasks ? 'translate-x-5' : 'translate-x-0'}`}
+                            />
+                        </button>
+                    </div>
+
+                    <div className="h-px bg-gray-800/80 my-3" />
+
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                            <p className="text-sm font-medium text-white">Remember Last Folder</p>
+                            <p className="text-xs text-gray-400">Reopen the last used folder on startup.</p>
+                        </div>
+                        <button
+                            onClick={() => setPersistLastFolder(!persistLastFolder)}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${persistLastFolder ? 'bg-purple-500' : 'bg-gray-700'}`}
+                        >
+                            <span
+                                aria-hidden="true"
+                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${persistLastFolder ? 'translate-x-5' : 'translate-x-0'}`}
+                            />
+                        </button>
+                    </div>
+
+                    <div className="h-px bg-gray-800/80 my-3" />
+
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                            <p className="text-sm font-medium text-white">Copy with Subtasks</p>
+                            <p className="text-xs text-gray-400">Include subtasks when copying a task.</p>
+                        </div>
+                        <button
+                            onClick={() => setCopyWithSubtasks(!copyWithSubtasks)}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${copyWithSubtasks ? 'bg-purple-500' : 'bg-gray-700'}`}
+                        >
+                            <span
+                                aria-hidden="true"
+                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${copyWithSubtasks ? 'translate-x-5' : 'translate-x-0'}`}
+                            />
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div className="space-y-3">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1"> Data Management </label>
+
+                <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-800/50">
+                    <AnimatePresence mode="wait">
+                        {showConfirm ? (
+                            <motion.div
+                                key="confirm"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                className="space-y-4"
+                            >
+                                <div className="flex gap-3 text-amber-400">
+                                    <AlertTriangle size={20} className="shrink-0" />
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-medium text-white">Are you absolutely sure?</p>
+                                        <p className="text-xs text-gray-400 leading-relaxed">
+                                            This will permanently delete all your tasks and folders. This action cannot be undone.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setShowConfirm(false)}
+                                        className="flex-1 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleClearData}
+                                        className="flex-1 px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-all shadow-lg shadow-red-500/20"
+                                    >
+                                        Clear Everything
+                                    </button>
+                                </div>
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key="button"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 20 }}
+                                className="flex items-center justify-between"
+                            >
+                                <div className="space-y-1">
+                                    <p className="text-sm font-medium text-white">Clear All Data</p>
+                                    <p className="text-xs text-gray-400">Delete all tasks and reset folders.</p>
+                                </div>
+                                <button
+                                    onClick={handleClearData}
+                                    className="p-2 bg-gray-800 hover:bg-red-500/10 text-gray-400 hover:text-red-500 rounded-lg border border-transparent hover:border-red-500/20 transition-all"
+                                    title="Clear all data"
+                                >
+                                    <Trash2 size={18} />
+                                </button>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            </div>
+
+            <div className="space-y-3">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1"> Backup & Restore </label>
+
+                <div className="bg-white/5 rounded-xl p-4 border border-white/5 space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                            <p className="text-sm font-medium text-white">Include Completed</p>
+                            <p className="text-xs text-gray-400">Include finished tasks in export.</p>
+                        </div>
+                        <button
+                            onClick={() => setIncludeCompleted(!includeCompleted)}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${includeCompleted ? 'bg-purple-500' : 'bg-gray-700'}`}
+                        >
+                            <span
+                                aria-hidden="true"
+                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${includeCompleted ? 'translate-x-5' : 'translate-x-0'}`}
+                            />
+                        </button>
+                    </div>
+
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => exportItems(includeCompleted)}
+                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 rounded-lg text-sm font-medium transition-all border border-purple-500/20"
+                        >
+                            <Download size={16} />
+                            Export JSON
+                        </button>
+                        <button
+                            onClick={handleImportClick}
+                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-sm font-medium transition-all border border-white/10"
+                        >
+                            <Upload size={16} />
+                            Import JSON
+                        </button>
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                            accept=".json"
+                            className="hidden"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <div className="pb-2">
+                <p className="text-[10px] text-center text-gray-600 font-medium">
+                    LIST DOCK V1.0.0 • PERSISTENT STORAGE
+                </p>
+            </div>
+        </div>
+    );
+};
+
+export default SettingsContent;

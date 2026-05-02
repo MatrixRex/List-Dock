@@ -6,7 +6,7 @@ chrome.runtime.onConnect.addListener((port) => {
     if (port.name === 'sidepanel') {
         let currentWindowId: number | null = null;
 
-        port.onMessage.addListener((msg) => {
+        port.onMessage.addListener((msg: { type: string; windowId?: number }) => {
             if (msg.type === 'INIT_SIDE_PANEL' && msg.windowId) {
                 currentWindowId = msg.windowId;
                 openPanels.set(currentWindowId!, port);
@@ -38,7 +38,7 @@ chrome.action.onClicked.addListener(async (tab) => {
         }
     } else {
         // If closed, open it synchronously to preserve user gesture
-        (chrome.sidePanel as any).open({ windowId: tab.windowId }).catch((err: any) => {
+        (chrome.sidePanel as { open: (options: { windowId: number }) => Promise<void> }).open({ windowId: tab.windowId }).catch((err: unknown) => {
             console.error('Failed to open side panel:', err);
         });
     }

@@ -6,7 +6,7 @@ import React from 'react';
 import UndoToast from '../components/UndoToast';
 import { v4 as uuidv4 } from 'uuid';
 
-interface StoreState extends AppState {
+export interface StoreState extends AppState {
     items: Item[];
     currentView: 'root' | 'folder';
     currentFolderId: string | null;
@@ -55,7 +55,7 @@ const chromeStorage = {
         return new Promise((resolve) => {
             if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
                 chrome.storage.local.get([name], (result) => {
-                    const data = result[name] as any;
+                    const data = result[name] as { state: unknown; version: number } | null;
                     if (data) {
                         // If data is not in the {state, version} format, wrap it
                         if (data.state === undefined) {
@@ -101,7 +101,7 @@ const STORAGE_VERSION = 1;
 
 export const useStore = create<StoreState>()(
     persist(
-        (set: any, get: any) => ({
+        (set, get) => ({
             items: [] as Item[],
             currentView: 'root' as 'root' | 'folder',
             currentFolderId: null as string | null,
@@ -120,7 +120,7 @@ export const useStore = create<StoreState>()(
             addItem: (item: Item) => {
                 const { items, selectedTaskIds } = get();
 
-                let newItem = { ...item };
+                const newItem = { ...item };
 
                 // If multiple tasks are selected, just add as a normal task (ignore subtask logic)
                 // If only one task is selected, follow subtask logic
@@ -407,8 +407,8 @@ export const useStore = create<StoreState>()(
 
                     set({ items: importedItems });
                     toast.success(`Imported ${importedItems.length} items successfully`);
-                } catch (error: any) {
-                    toast.error(`Import failed: ${error.message}`);
+                } catch (error) {
+                    toast.error(`Import failed: ${(error as Error).message}`);
                 }
             },
 
@@ -496,8 +496,8 @@ export const useStore = create<StoreState>()(
                     // We only support one level of nesting (Task -> Subtask).
                     // If the stack has more than 1 item, it means we are at level 3+, 
                     // so we use the first item in the stack as the parent (the root of the hierarchy).
-                    let parent_id = parentStack.length > 0 ? parentStack[0].id : baseParentId;
-                    let type: ItemType = parentStack.length > 0 ? 'subtask' : baseType;
+                    const parent_id = parentStack.length > 0 ? parentStack[0].id : baseParentId;
+                    const type: ItemType = parentStack.length > 0 ? 'subtask' : baseType;
 
                     const newItem: Item = {
                         id,
@@ -550,7 +550,7 @@ export const useStore = create<StoreState>()(
                     currentFolderId: state.currentFolderId,
                 } : {})
             }), // Persist items and settings
-            migrate: (persistedState: any, version: number) => {
+            migrate: (persistedState: unknown, version: number) => {
                 if (version < STORAGE_VERSION) {
                     console.log(`Migrating storage from version ${version} to ${STORAGE_VERSION}`);
 
@@ -558,7 +558,7 @@ export const useStore = create<StoreState>()(
                     if (version === 0) {
                         // Unversioned to v1: Ensure items array exists
                         if (persistedState && typeof persistedState === 'object') {
-                            persistedState.items = persistedState.items || [];
+                            (persistedState as any).items = (persistedState as any).items || [];
                         }
                     }
                 }

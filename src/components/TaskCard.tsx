@@ -3,7 +3,7 @@ import type { Item } from '../types';
 import { useStore } from '../store/useStore';
 import { GripVertical, CheckCircle2, Circle, ChevronDown, ChevronRight, MoreVertical, Trash2, FolderInput, Edit2, FolderPlus } from 'lucide-react';
 import { cn } from '../utils/utils';
-import { useDnDContext } from '../store/DnDContext';
+import { useDnDContext } from '../store/useDnDContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import ContextMenu from './ui/ContextMenu';
 
@@ -26,6 +26,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
     const [isHovered, setIsHovered] = useState(false);
     const [isVisualCompleted, setIsVisualCompleted] = useState(item.is_completed);
     const [isCheckingSubtasks, setIsCheckingSubtasks] = useState(false);
+    const [menuRect, setMenuRect] = useState<DOMRect | null>(null);
 
     // Sync visual state with store state (important for Undo)
     React.useEffect(() => {
@@ -78,10 +79,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
         }
     };
 
-    const allSubtasks = useMemo(() =>
-        items.filter((i: Item) => i.parent_id === item.id && i.type === 'subtask'),
-        [items, item.id]
-    );
+    const allSubtasks = items.filter((i: Item) => i.parent_id === item.id && i.type === 'subtask');
 
     const visibleSubtasks = useMemo(() =>
         allSubtasks
@@ -205,9 +203,11 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
     const toggleMenu = (e: React.MouseEvent) => {
         e.stopPropagation();
         if (!showMenu && menuButtonRef.current) {
+            setMenuRect(menuButtonRef.current.getBoundingClientRect());
             setIsMenuOpen(true);
         } else {
             setIsMenuOpen(false);
+            setMenuRect(null);
         }
         setShowMenu(!showMenu);
     };
@@ -291,9 +291,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
             }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            onDragOver={handleDragOver as any}
+            onDragOver={handleDragOver as unknown as React.DragEventHandler}
             onDragLeave={() => updateDragState(dragState.draggedItemId, null, null)}
-            onDrop={handleDrop as any}
+            onDrop={handleDrop as unknown as React.DragEventHandler}
             className={cn(
                 "group/task relative",
                 isSubtask ? "py-[2px]" : "py-1"
@@ -321,7 +321,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                     layout: { duration: 0.2, ease: "easeOut" }
                 }}
                 draggable={!isMenuOpen}
-                onDragStart={handleDragStart as any}
+                onDragStartCapture={handleDragStart}
                 onDragEnd={handleDragEnd}
                 onDoubleClick={() => !isMenuOpen && !isMultiSelected && setIsRenaming(true)}
                 onClick={handleClick}
@@ -469,8 +469,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                 {/* Reusable Context Menu */}
                 <ContextMenu
                     isOpen={showMenu}
-                    onClose={() => { setShowMenu(false); setIsMenuOpen(false); }}
-                    anchorRect={menuButtonRef.current?.getBoundingClientRect() || null}
+                    onClose={() => { setShowMenu(false); setIsMenuOpen(false); setMenuRect(null); }}
+                    anchorRect={menuRect}
                 >
                     {!isMultiSelected && (
                         <button

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import type { Item } from '../types';
-import { useStore } from '../store/useStore';
+import { useStore, type StoreState } from '../store/useStore';
 import * as LucideIcons from 'lucide-react';
-import { useDnDContext } from '../store/DnDContext';
+import { useDnDContext } from '../store/useDnDContext';
 import { cn } from '../utils/utils';
 import ConfirmDialog from './ui/ConfirmDialog';
 import FolderSettingsPopup from './FolderSettingsPopup';
@@ -13,7 +13,7 @@ interface FolderCardProps {
 }
 
 const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
-    const setView = useStore((state: any) => state.setView);
+    const setView = useStore((state: StoreState) => state.setView);
     const { items, deleteItem, isMenuOpen, showCompleted } = useStore();
     const { dragState, updateDragState, clearDragState, calculateZone } = useDnDContext();
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -81,7 +81,7 @@ const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
     };
 
     const isLetterIcon = !item.icon || item.icon === 'Letter';
-    const IconComponent = (LucideIcons as any)[item.icon || 'Folder'] || LucideIcons.Folder;
+    const IconComponent = (LucideIcons[item.icon as keyof typeof LucideIcons] as React.ElementType) || LucideIcons.Folder;
     const folderColor = item.color || '#a855f7';
 
     return (
@@ -103,15 +103,15 @@ const FolderCard: React.FC<FolderCardProps> = ({ item }) => {
             }}
             transition={{ duration: 0.2, ease: "easeOut" }}
             draggable={!isMenuOpen}
-            onDragStart={handleDragStart as any}
+            onDragStartCapture={handleDragStart}
             onClick={() => {
                 if (isMenuOpen) return;
                 useStore.getState().setSearchQuery('');
                 setView('folder', item.id);
             }}
-            onDragOver={handleDragOver as any}
+            onDragOver={handleDragOver as React.DragEventHandler}
             onDragLeave={() => updateDragState(dragState.draggedItemId, null, null)}
-            onDrop={handleDrop as any}
+            onDrop={handleDrop as React.DragEventHandler}
             className={cn(
                 "glass rounded-xl p-2.5 cursor-pointer group relative",
                 dragState.targetItemId === item.id && dragState.dropZone === 'folder' && "border-purple-500 bg-purple-500/10 shadow-[0_0_15px_-3px_rgba(168,85,247,0.3)]",

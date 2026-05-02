@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
-import { Plus, Search, FolderPlus } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import type { Item } from '../types';
 import { cn } from '../utils/utils';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface SmartInputProps {
     isMobileOverlay?: boolean;
@@ -38,7 +37,7 @@ const SmartInput: React.FC<SmartInputProps> = ({ isMobileOverlay, onClose, onMod
         if (isFolderView && mode === 'folder') {
             setMode('task');
         }
-    }, [isFolderView]);
+    }, [isFolderView, mode]);
 
     // Report mode change
     React.useEffect(() => {

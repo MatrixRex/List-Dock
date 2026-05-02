@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../utils/utils';
@@ -21,14 +21,13 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
     width = 192 // default 48 * 4
 }) => {
     const menuRef = useRef<HTMLDivElement>(null);
-    const [coords, setCoords] = React.useState({ top: 0, right: 0, isBottom: false });
 
     // Calculate position
-    useEffect(() => {
-        if (!isOpen || !anchorRect) return;
+    useLayoutEffect(() => {
+        if (!isOpen || !anchorRect || !menuRef.current) return;
 
         // Estimate height if not yet rendered, or measure it
-        const menuHeight = menuRef.current?.offsetHeight || 200; // estimated default
+        const menuHeight = menuRef.current.offsetHeight || 200; // estimated default
         const spaceBelow = window.innerHeight - anchorRect.bottom;
         const spaceAbove = anchorRect.top;
 
@@ -49,12 +48,12 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
             top = window.innerHeight - menuHeight - 8;
         }
 
-        setCoords({
-            top,
-            right: window.innerWidth - anchorRect.right,
-            isBottom
-        });
-    }, [isOpen, anchorRect, width]);
+        const right = window.innerWidth - anchorRect.right;
+        
+        menuRef.current.style.top = `${top}px`;
+        menuRef.current.style.right = `${right}px`;
+        menuRef.current.style.setProperty('--menu-y-offset', isBottom ? '10px' : '-10px');
+    }, [isOpen, anchorRect]);
 
     // Close on click outside (since we use a portal)
     useEffect(() => {
@@ -65,7 +64,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [isOpen, onClose]);
+    }, [isOpen]);
 
     if (!anchorRect) return null;
 
@@ -88,18 +87,16 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
                     {/* Menu Content */}
                     <motion.div
                         ref={menuRef}
-                        initial={{ opacity: 0, scale: 0.95, y: coords.isBottom ? 10 : -10 }}
+                        initial={{ opacity: 0, scale: 0.95, y: 'var(--menu-y-offset, -10px)' }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: coords.isBottom ? 10 : -10 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 'var(--menu-y-offset, -10px)' }}
                         className={cn(
                             "fixed bg-[#0c0a13]/90 backdrop-blur-2xl border border-white/10 rounded-xl shadow-2xl z-[9999] py-1.5 overflow-hidden",
                             className
                         )}
                         style={{
-                            top: coords.top,
-                            right: coords.right,
                             width
-                        }}
+                        } as React.CSSProperties}
                         onClick={e => e.stopPropagation()}
                     >
                         {children}

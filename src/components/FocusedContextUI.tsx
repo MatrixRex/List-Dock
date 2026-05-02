@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
 import { useStore } from '../store/useStore';
-import { type Item } from '../types';
+// import { type Item } from '../types';
 import TaskCard from './TaskCard';
 import FolderCard from './FolderCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import Fuse from 'fuse.js';
-import { cn } from '../utils/utils';
+// import { cn } from '../utils/utils';
 import { Check } from 'lucide-react';
 
 interface FocusedContextUIProps {

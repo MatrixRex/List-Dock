@@ -1,10 +1,8 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import FocusedContextUI from './FocusedContextUI';
 import SmartInput from './SmartInput';
-import { cn } from '../utils/utils';
-import { useStore } from '../store/useStore';
-import { useDnDContext } from '../store/DnDContext';
+// import { cn } from '../utils/utils';
 
 interface MobileFocusedViewProps {
     onClose: () => void;
@@ -13,8 +11,8 @@ interface MobileFocusedViewProps {
 }
 
 const MobileFocusedView: React.FC<MobileFocusedViewProps> = ({ onClose, mode, onModeChange }) => {
-    const { selectedTaskIds } = useStore();
-    const { dragState } = useDnDContext();
+    // const { selectedTaskIds } = useStore();
+    // const { dragState } = useDnDContext();
     const [viewportHeight, setViewportHeight] = React.useState(window.innerHeight);
     const [viewportOffset, setViewportOffset] = React.useState(0);
 

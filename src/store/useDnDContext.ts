@@ -1,7 +1,7 @@
-import React, { createContext, useContext, type ReactNode } from 'react';
+import React, { createContext, useContext } from 'react';
 import { useDnD, type DropZone } from '../hooks/useDnD';
 
-interface DnDContextType {
+export interface DnDContextType {
     dragState: {
         draggedItemId: string | null;
         targetItemId: string | null;
@@ -12,12 +12,7 @@ interface DnDContextType {
     calculateZone: (e: React.MouseEvent | MouseEvent, targetRect: DOMRect, isFolder: boolean, canAcceptSubtask: boolean, isFolderDrag?: boolean) => DropZone;
 }
 
-const DnDContext = createContext<DnDContextType | undefined>(undefined);
-
-export const DnDProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const dnd = useDnD();
-    return <DnDContext.Provider value={dnd}>{children}</DnDContext.Provider>;
-};
+export const DnDContext = createContext<DnDContextType | undefined>(undefined);
 
 export const useDnDContext = () => {
     const context = useContext(DnDContext);
@@ -26,3 +21,6 @@ export const useDnDContext = () => {
     }
     return context;
 };
+
+export { useDnD };
+export type { DropZone };

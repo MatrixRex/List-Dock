@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { useStore } from '../store/useStore';
+import { useStore, type StoreState } from '../store/useStore';
 import TaskCard from './TaskCard';
 import FolderCard from './FolderCard';
 import { AnimatePresence } from 'framer-motion';
@@ -7,9 +7,9 @@ import Fuse from 'fuse.js';
 import { type Item } from '../types';
 
 const RootView: React.FC = () => {
-    const items = useStore((state: any) => state.items);
-    const searchQuery = useStore((state: any) => state.searchQuery);
-    const showCompleted = useStore((state: any) => state.showCompleted);
+    const items = useStore((state: StoreState) => state.items);
+    const searchQuery = useStore((state: StoreState) => state.searchQuery);
+    const showCompleted = useStore((state: StoreState) => state.showCompleted);
 
     const isSearching = searchQuery.trim().length > 0;
 

@@ -4,10 +4,10 @@ import RootView from '../RootView';
 import FolderView from '../FolderView';
 import SmartInput from '../SmartInput';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useStore } from '../../store/useStore';
+import { useStore, type StoreState } from '../../store/useStore';
 
 const SidebarLayout: React.FC = () => {
-  const currentView = useStore((state: any) => state.currentView);
+  const currentView = useStore((state: StoreState) => state.currentView);
 
   return (
     <div className="flex flex-col h-dvh overflow-hidden border-x border-white/5 bg-[#050408]/50 max-w-[450px] mx-auto shadow-2xl relative">
