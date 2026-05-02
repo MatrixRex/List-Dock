@@ -27,21 +27,29 @@ const MobileLayout: React.FC = () => {
   // Tab index for transition logic
   const tabOrder = { lists: 0, account: 1, settings: 2 };
 
-  // Sync activeTab with isSettingsOpen from store (if needed for compatibility)
+  // 1. Sync from global store (isSettingsOpen) to local tab state
   React.useEffect(() => {
     if (isSettingsOpen && activeTab !== 'settings') {
       setActiveTab('settings');
     } else if (!isSettingsOpen && activeTab === 'settings') {
       setActiveTab('lists');
     }
-  }, [isSettingsOpen, activeTab]);
+  }, [isSettingsOpen]); // Only sync when the global store state changes
 
+  // 2. Sync from local tab state to global store and handle animation state
   React.useEffect(() => {
+    // Update global store
+    const shouldBeOpen = activeTab === 'settings';
+    if (isSettingsOpen !== shouldBeOpen) {
+      setIsSettingsOpen(shouldBeOpen);
+    }
+    
+    // Update prevTab for transition logic
     if (activeTab !== prevTab) {
       setPrevTab(activeTab);
     }
-    setIsSettingsOpen(activeTab === 'settings');
-  }, [activeTab, prevTab, setIsSettingsOpen]);
+  }, [activeTab, setIsSettingsOpen]); // Only sync when the active tab changes
+
 
   const tabDirection = tabOrder[activeTab] > tabOrder[prevTab] ? 1 : -1;
   const isTabSwitch = activeTab !== prevTab;
