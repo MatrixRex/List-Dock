@@ -5,6 +5,7 @@ import FolderView from '../FolderView';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore, type StoreState } from '../../store/useStore';
 import { List, Settings, User, Plus } from 'lucide-react';
+import { useBackHandler } from '../../hooks/useBackHandler';
 // import FocusedContextUI from '../FocusedContextUI';
 import { cn } from '../../utils/utils';
 import { useDnDContext } from '../../store/useDnDContext';
@@ -56,12 +57,8 @@ const MobileLayout: React.FC = () => {
 
   const handleClose = () => {
     if (dragState.draggedItemId) return;
-    if (showAddBar) {
-      window.history.back();
-    } else {
-      setShowAddBar(false);
-      clearTaskSelection();
-    }
+    setShowAddBar(false);
+    clearTaskSelection();
   };
 
   // Open add bar when a task is selected
@@ -71,36 +68,14 @@ const MobileLayout: React.FC = () => {
     }
   }, [selectedTaskIds]);
 
-  // Handle back button to close add bar, settings, or go back to root
-  React.useEffect(() => {
-    const handlePopState = () => {
-      if (showAddBar) {
-        setShowAddBar(false);
-        clearTaskSelection();
-        return;
-      }
-      
-      if (activeTab !== 'lists') {
-        setActiveTab('lists');
-        return;
-      }
+  // 1. Handle folder view back navigation
+  useBackHandler(currentView === 'folder', () => setView('root'), 'mobile-folder-view');
 
-      if (currentView === 'folder') {
-        setView('root');
-      }
-    };
-    
-    if (showAddBar || activeTab !== 'lists' || currentView === 'folder') {
-      window.history.pushState({ 
-        action: showAddBar ? 'add' : activeTab !== 'lists' ? activeTab : 'folder' 
-      }, '');
-    }
-    
-    window.addEventListener('popstate', handlePopState);
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [showAddBar, activeTab, currentView, clearTaskSelection, setView]);
+  // 2. Handle tab navigation (Account/Settings -> Lists)
+  useBackHandler(activeTab !== 'lists', () => setActiveTab('lists'), 'mobile-active-tab');
+
+  // 3. Handle Add Bar / Focus View back navigation
+  useBackHandler(showAddBar, handleClose, 'mobile-focused-view');
   
   return (
     <div className="flex flex-col h-dvh overflow-hidden bg-[#050408] relative">

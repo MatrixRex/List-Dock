@@ -2,6 +2,7 @@ import React from 'react';
 import { useStore } from '../store/useStore';
 import { Trash2, AlertTriangle, Download, Upload } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useBackHandler } from '../hooks/useBackHandler';
 
 interface SettingsContentProps {
     onClose?: () => void;
@@ -24,6 +25,8 @@ const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => {
     const [showConfirm, setShowConfirm] = React.useState(false);
     const [includeCompleted, setIncludeCompleted] = React.useState(true);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+    useBackHandler(showConfirm, () => setShowConfirm(false), 'settings-delete-confirm');
 
     const handleClearData = () => {
         if (showConfirm) {

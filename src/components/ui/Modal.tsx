@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { cn } from '../../utils/utils';
+import { useBackHandler } from '../../hooks/useBackHandler';
 
 interface ModalProps {
     isOpen: boolean;
@@ -21,7 +22,11 @@ const Modal: React.FC<ModalProps> = ({
     className,
     showCloseButton = true
 }) => {
+    const modalId = React.useId();
     const [isMobile, setIsMobile] = React.useState(window.innerWidth < 640);
+
+    // Handle back button on mobile
+    useBackHandler(isOpen, onClose, `modal-${modalId}`);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 640);

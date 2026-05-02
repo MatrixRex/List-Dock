@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../utils/utils';
+import { useBackHandler } from '../../hooks/useBackHandler';
 
 interface ContextMenuProps {
     isOpen: boolean;
@@ -21,6 +22,10 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
     width = 192 // default 48 * 4
 }) => {
     const menuRef = useRef<HTMLDivElement>(null);
+
+    // Handle back button on mobile
+    const menuId = React.useId();
+    useBackHandler(isOpen && window.innerWidth < 768, onClose, `context-menu-${menuId}`);
 
     // Calculate position
     useLayoutEffect(() => {
