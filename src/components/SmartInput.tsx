@@ -113,21 +113,27 @@ const SmartInput: React.FC<SmartInputProps> = ({ isMobileOverlay, onClose, mode:
         <div
             className={cn(
                 "shrink-0 z-[200] sticky bottom-0 w-full",
-                isMobileOverlay ? "p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] bg-[#050408]/95 backdrop-blur-3xl border-t border-white/10 rounded-t-[2.5rem] shadow-[0_-20px_60px_rgba(0,0,0,0.8)]" : "glass glass-top-only p-4"
+                isMobileOverlay ? "p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-[#050408]/95 backdrop-blur-3xl border-t border-white/10 rounded-t-3xl shadow-[0_-20px_60px_rgba(0,0,0,0.8)]" : "glass glass-top-only p-3"
             )}
             onClick={(e) => e.stopPropagation()}
         >
             {isMobileOverlay && modes.length > 1 && (
-                <div className="flex justify-center mb-6">
-                    <div className="flex bg-white/[0.03] p-1.5 rounded-2xl border border-white/5 shadow-inner">
+                <div className="flex justify-center mb-3">
+                    <div className="flex bg-white/[0.03] p-1 rounded-xl border border-white/5 shadow-inner">
                         {modes.map((m) => (
                             <button
                                 key={m.id}
-                                onClick={() => setMode(m.id as any)}
+                                type="button"
+                                onMouseDown={(e) => e.preventDefault()}
+                                onClick={() => {
+                                    setMode(m.id as any);
+                                    // Focus back on input immediately after mode switch
+                                    inputRef.current?.focus();
+                                }}
                                 className={cn(
-                                    "flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all duration-300 relative",
+                                    "flex items-center gap-1.5 px-4 py-1.5 rounded-lg transition-all duration-300 relative",
                                     mode === m.id 
-                                        ? "text-white shadow-lg" 
+                                        ? "text-white shadow-md" 
                                         : "text-gray-500 hover:text-gray-300"
                                 )}
                             >
@@ -147,33 +153,40 @@ const SmartInput: React.FC<SmartInputProps> = ({ isMobileOverlay, onClose, mode:
             )}
 
             <div className={cn(
-                "flex items-center gap-3 glass !bg-white/[0.04] backdrop-blur-2xl rounded-2xl p-4 transition-all text-gray-200 shadow-xl",
-                "focus-within:!bg-black/50 focus-within:ring-2 focus-within:ring-purple-500/20 focus-within:shadow-[0_0_50px_rgba(139,92,246,0.2)]",
+                "flex items-center gap-2 glass !bg-white/[0.04] backdrop-blur-2xl rounded-xl p-2.5 transition-all text-gray-200 shadow-lg",
+                "focus-within:!bg-black/50 focus-within:ring-2 focus-within:ring-purple-500/20",
                 "border border-white/10",
                 (selectedTaskIds.length > 0 && mode === 'task') && "border-purple-500/50 bg-purple-500/5",
                 isMenuOpen && "pointer-events-none opacity-50 shadow-none border-gray-800"
             )}>
-                <div className="pl-1">
+                <div className="pl-1 opacity-70">
                     {mode === 'search' ? (
-                        <Search size={22} className="text-purple-400" />
+                        <Search size={18} className="text-purple-400" />
                     ) : mode === 'folder' ? (
-                        <FolderPlus size={22} className="text-purple-400" />
+                        <FolderPlus size={18} className="text-purple-400" />
                     ) : (
-                        <Plus size={22} className={cn(selectedTaskIds.length > 0 ? "text-purple-400" : "text-gray-500")} />
+                        <Plus size={18} className={cn(selectedTaskIds.length > 0 ? "text-purple-400" : "text-gray-500")} />
                     )}
                 </div>
 
                 <input
                     ref={inputRef}
+                    id="list-dock-task-input-field"
+                    name="list-dock-task-input-field"
                     type="text"
                     value={value}
+                    autoComplete="on"
+                    autoCorrect="on"
+                    autoCapitalize="sentences"
+                    spellCheck="true"
+                    inputMode="text"
                     onChange={(e) => {
                         setValue(e.target.value);
                         if (mode === 'search') setSearchQuery(e.target.value);
                     }}
                     onKeyDown={(e) => e.key === 'Enter' && handleAction()}
                     placeholder={getPlaceholder()}
-                    className="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none text-lg py-1 px-1 placeholder:text-gray-600 text-gray-100 font-medium"
+                    className="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none text-base py-0.5 px-1 placeholder:text-gray-600 text-gray-100 font-medium"
                 />
                 
                 {value.trim() && mode !== 'search' && (
@@ -181,9 +194,9 @@ const SmartInput: React.FC<SmartInputProps> = ({ isMobileOverlay, onClose, mode:
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         onClick={handleAction}
-                        className="p-3 rounded-xl bg-purple-600 text-white shadow-xl shadow-purple-600/30 active:scale-95 transition-all"
+                        className="p-2 rounded-lg bg-purple-600 text-white shadow-lg shadow-purple-600/30 active:scale-95 transition-all"
                     >
-                        {mode === 'folder' ? <FolderPlus size={22} /> : <Plus size={22} />}
+                        {mode === 'folder' ? <FolderPlus size={18} /> : <Plus size={18} />}
                     </motion.button>
                 )}
             </div>
