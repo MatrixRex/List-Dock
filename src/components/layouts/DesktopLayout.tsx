@@ -111,7 +111,7 @@ const DesktopLayout: React.FC = () => {
         <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
           <nav className="space-y-6">
             <div>
-              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20 mb-4 px-2">Workspaces</h3>
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20 mb-4 px-2">Folders</h3>
               <div className="space-y-2">
                 {/* Pinned Default Folder */}
                 {(() => {
@@ -198,7 +198,7 @@ const DesktopLayout: React.FC = () => {
       >
         <header className="px-10 py-8 border-b border-white/5 flex items-center justify-between z-10 h-[105px]">
            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 mb-1">Current Workspace</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 mb-1">Current Folder</p>
               <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-3">
                 {currentView === 'root' ? (
                   <LayoutGrid size={24} className="text-purple-400" />
@@ -216,7 +216,7 @@ const DesktopLayout: React.FC = () => {
                   </div>
                 ) : null}
                 
-                <span className="truncate">{currentView === 'root' ? 'Default Workspace' : activeFolder?.title || 'Folder'}</span>
+                <span className="truncate">{currentView === 'root' ? 'Default Folder' : activeFolder?.title || 'Folder'}</span>
                 
                 <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/5 text-[9px] font-bold text-white/40 uppercase tracking-widest ml-1">
                   {tasks.length} {tasks.length === 1 ? 'Task' : 'Tasks'}
@@ -225,8 +225,8 @@ const DesktopLayout: React.FC = () => {
            </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto custom-scrollbar">
-            <div className="py-12 px-10 max-w-4xl mx-auto">
+        <main className="flex-1 overflow-y-auto custom-scrollbar flex flex-col">
+            <div className="py-12 px-10 flex-1">
                 {currentView === 'root' ? <RootView /> : <FolderView />}
             </div>
         </main>
@@ -261,7 +261,7 @@ const DesktopLayout: React.FC = () => {
             </header>
               
             <div className="flex-1 overflow-y-auto custom-scrollbar p-10">
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {subtasks.map(subtask => (
                   <TaskCard 
                     key={subtask.id}

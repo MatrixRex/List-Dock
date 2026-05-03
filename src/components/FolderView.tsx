@@ -43,7 +43,7 @@ const FolderView: React.FC = () => {
 
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 min-h-full flex flex-col">
             {isSearching && (
                 <div className="flex items-center gap-3 mb-2 px-1">
                     <div className="h-px flex-1 bg-white/10" />

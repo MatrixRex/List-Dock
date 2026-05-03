@@ -106,14 +106,14 @@ const RootView: React.FC = () => {
     const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 min-h-full flex flex-col">
             {/* Top Section: Root Tasks */}
-            <section className="flex flex-col min-h-[200px] max-h-[50vh]">
-                <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 px-1 flex-shrink-0">Tasks</h2>
+            <section className="flex flex-col">
+
                 {rootTasks.length > 0 ? (
-                    <div className="overflow-y-auto custom-scrollbar pr-1">
+                    <div className="pr-1">
                         <AnimatePresence initial={false} mode="popLayout">
-                            <div className="space-y-2">
+                            <div className="space-y-1">
                                 {rootTasks.map((task: Item, index: number) => (
                                     <TaskCard key={task.id || `task-${index}`} item={task} />
                                 ))}
