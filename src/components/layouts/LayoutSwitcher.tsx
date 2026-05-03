@@ -19,17 +19,18 @@ const LayoutSwitcher: React.FC = () => {
     return <SidebarLayout />;
   }
 
-  // 2. Mobile PWA or very narrow browser window
-  if (platform === 'mobile-pwa' || windowWidth < 640) {
+  // 2. Mobile Layout - Only for small phone screens
+  // We prioritize width over platform to allow tablets (PWAs) to use the Desktop/Sidebar UI
+  if (windowWidth < 500) {
     return <MobileLayout />;
   }
 
-  // 3. Desktop Web - Narrow/Sidebar view (e.g. user has it as a small window next to other apps)
-  if (windowWidth < 1100) {
+  // 3. Desktop Web / Tablet - Sidebar view (Narrow dashboard)
+  if (windowWidth < 1024) {
     return <SidebarLayout />;
   }
 
-  // 4. Desktop Web - Full Dashboard view
+  // 4. Desktop Web - Full Dashboard view for laptops and larger screens
   return <DesktopLayout />;
 };
 
