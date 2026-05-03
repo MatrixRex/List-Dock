@@ -28,7 +28,7 @@ const UndoToast: React.FC<UndoToastProps> = ({ message, undo, id, duration = 300
                 scale: visible ? 1 : 0.9
             }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="group relative flex items-center gap-2.5 w-full min-w-[260px] px-3.5 py-2 overflow-hidden rounded-xl border border-white/10 backdrop-blur-2xl transition-all"
+            className="group relative flex items-center gap-2.5 w-[300px] px-3.5 py-2 overflow-hidden rounded-xl border border-white/10 backdrop-blur-2xl transition-all"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             onClick={(e) => e.stopPropagation()}
