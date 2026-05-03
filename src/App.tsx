@@ -136,6 +136,13 @@ const App: React.FC = () => {
   }, []);
 
   const { isExtension, platform } = usePlatform();
+  const [windowWidth, setWindowWidth] = React.useState(window.innerWidth);
+
+  React.useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   React.useEffect(() => {
     if (!isExtension) {
@@ -167,10 +174,11 @@ const App: React.FC = () => {
     <DnDProvider>
       <LayoutSwitcher />
       <Toaster
-        position="bottom-center"
+        position={windowWidth < 500 ? "bottom-center" : "bottom-right"}
         containerClassName="toast-container"
         containerStyle={{
-          bottom: 100,
+          bottom: windowWidth < 500 ? 100 : 40,
+          right: windowWidth < 500 ? undefined : 40,
         }}
         toastOptions={{
           duration: 3000,

@@ -157,9 +157,10 @@
 
   .glass-toast-standard {
     @apply !shadow-2xl;
-    padding: 10px 16px !important;
+    padding: 12px 20px !important;
     font-family: "Space Mono", monospace !important;
-    min-width: 260px !important;
+    width: 300px !important;
+    max-width: 90vw !important;
     pointer-events: auto !important;
     background: rgba(15, 12, 20, 0.9) !important;
     backdrop-filter: blur(20px) !important;
