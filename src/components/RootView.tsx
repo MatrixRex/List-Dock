@@ -103,6 +103,8 @@ const RootView: React.FC = () => {
         );
     }
 
+    const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+
     return (
         <div className="space-y-6">
             {/* Top Section: Root Tasks */}
@@ -111,9 +113,11 @@ const RootView: React.FC = () => {
                 {rootTasks.length > 0 ? (
                     <div className="overflow-y-auto custom-scrollbar pr-1">
                         <AnimatePresence initial={false} mode="popLayout">
-                            {rootTasks.map((task: Item, index: number) => (
-                                <TaskCard key={task.id || `task-${index}`} item={task} />
-                            ))}
+                            <div className="space-y-2">
+                                {rootTasks.map((task: Item, index: number) => (
+                                    <TaskCard key={task.id || `task-${index}`} item={task} />
+                                ))}
+                            </div>
                         </AnimatePresence>
                     </div>
                 ) : (
@@ -121,21 +125,23 @@ const RootView: React.FC = () => {
                 )}
             </section>
 
-            {/* Bottom Section: Folder Grid */}
-            <section>
-                <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 px-1">Folders</h2>
-                {folders.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-2 items-start pb-4">
-                        <AnimatePresence initial={false} mode="popLayout">
-                            {folders.map((folder: Item, index: number) => (
-                                <FolderCard key={folder.id || `folder-${index}`} item={folder} />
-                            ))}
-                        </AnimatePresence>
-                    </div>
-                ) : (
-                    <div className="text-center py-10 text-gray-500 text-xs border border-white/5 bg-white/[0.01] rounded-xl">No folders.</div>
-                )}
-            </section>
+            {/* Bottom Section: Folder Grid - Only show if not on Desktop (where they are in sidebar) */}
+            {!isDesktop && (
+                <section>
+                    <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 px-1">Folders</h2>
+                    {folders.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-2 items-start pb-4">
+                            <AnimatePresence initial={false} mode="popLayout">
+                                {folders.map((folder: Item, index: number) => (
+                                    <FolderCard key={folder.id || `folder-${index}`} item={folder} />
+                                ))}
+                            </AnimatePresence>
+                        </div>
+                    ) : (
+                        <div className="text-center py-10 text-gray-500 text-xs border border-white/5 bg-white/[0.01] rounded-xl">No folders.</div>
+                    )}
+                </section>
+            )}
         </div>
     );
 };

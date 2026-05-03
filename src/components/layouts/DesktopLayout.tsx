@@ -2,129 +2,315 @@ import React from 'react';
 import RootView from '../RootView';
 import FolderView from '../FolderView';
 import SmartInput from '../SmartInput';
+import TaskCard from '../TaskCard';
+import FolderCard from '../FolderCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore, type StoreState } from '../../store/useStore';
-import { LayoutGrid, List, Settings, User, Search, Plus } from 'lucide-react';
+import { LayoutGrid, List, Settings, User, Search, Plus, Edit2, Trash2, Folder } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
+import { cn } from '../../utils/utils';
 import SettingsPopup from '../SettingsPopup';
+import FolderSettingsPopup from '../FolderSettingsPopup';
+import ConfirmDialog from '../ui/ConfirmDialog';
 
 const DesktopLayout: React.FC = () => {
-  const currentView = useStore((state: StoreState) => state.currentView);
-  const isSettingsOpen = useStore((state: StoreState) => state.isSettingsOpen);
-  const setIsSettingsOpen = useStore((state: StoreState) => state.setIsSettingsOpen);
-  
-  return (
-    <div className="flex h-dvh overflow-hidden bg-[#050408]/50 text-white selection:bg-purple-500/30">
-      {/* Sidebar Navigation (Left Column) */}
-      <aside className="w-72 border-r border-white/5 bg-[#0a090f]/80 backdrop-blur-3xl flex flex-col shadow-2xl">
-        <div className="p-8">
-          <div className="flex items-center gap-4 mb-12">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 flex items-center justify-center shadow-xl shadow-purple-500/20 border border-white/10">
-               <List size={26} className="text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-black tracking-tighter bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">ListDock</h1>
-              <span className="text-[9px] font-black uppercase tracking-[0.4em] text-purple-500/80 leading-none">Professional</span>
-            </div>
-          </div>
+  const { 
+    items, 
+    currentView, 
+    currentFolderId, 
+    setView, 
+    selectedTaskIds, 
+    toggleTaskSelection,
+    isSettingsOpen,
+    setIsSettingsOpen,
+    deleteItem,
+    showCompleted,
+    hideCompletedSubtasks
+  } = useStore();
 
-          <nav className="space-y-1.5">
-            <button className="w-full flex items-center gap-3.5 px-5 py-4 rounded-2xl bg-white/5 text-white shadow-inner border border-white/10 transition-all hover:bg-white/10">
-              <LayoutGrid size={20} className="text-purple-400" />
-              <span className="font-semibold text-sm">Dashboard</span>
-            </button>
-            <button className="w-full flex items-center gap-3.5 px-5 py-4 rounded-2xl text-white/30 hover:bg-white/5 hover:text-white/80 transition-all group">
-              <Search size={20} className="group-hover:text-purple-400/50 transition-colors" />
-              <span className="font-semibold text-sm">Quick Find</span>
-            </button>
-            <button className="w-full flex items-center gap-3.5 px-5 py-4 rounded-2xl text-white/30 hover:bg-white/5 hover:text-white/80 transition-all group">
-              <User size={20} className="group-hover:text-purple-400/50 transition-colors" />
-              <span className="font-semibold text-sm">Account</span>
-            </button>
-            <button 
-              onClick={() => setIsSettingsOpen(true)}
-              className="w-full flex items-center gap-3.5 px-5 py-4 rounded-2xl text-white/30 hover:bg-white/5 hover:text-white/80 transition-all group"
-            >
-              <Settings size={20} className="group-hover:text-purple-400/50 transition-colors" />
-              <span className="font-semibold text-sm">Settings</span>
-            </button>
+  const [editingFolder, setEditingFolder] = React.useState<any>(null);
+  const [deletingFolder, setDeletingFolder] = React.useState<any>(null);
+  
+  // 1. Folders Column Data
+  const folders = items.filter(i => i.type === 'folder');
+  const activeFolder = items.find(i => i.id === currentFolderId);
+  
+  // 2. Middle Column Data (Tasks)
+  const tasks = React.useMemo(() => {
+    if (currentView === 'root') {
+      return items.filter(i => !i.parent_id && i.type === 'task')
+                  .sort((a, b) => a.order_index - b.order_index);
+    }
+    return items.filter(i => i.parent_id === currentFolderId && i.type === 'task')
+                .sort((a, b) => a.order_index - b.order_index);
+  }, [items, currentView, currentFolderId]);
+
+  const [focusedTaskId, setFocusedTaskId] = React.useState<string | null>(null);
+
+  // Update focused task only when a top-level task is selected
+  React.useEffect(() => {
+    const lastSelectedId = selectedTaskIds[selectedTaskIds.length - 1];
+    if (!lastSelectedId) {
+      // Don't clear immediately, let showSubtasksSidebar handle visibility based on current subtasks
+      return;
+    }
+    
+    const item = items.find(i => i.id === lastSelectedId);
+    // If it's a main task (not a subtask), focus it
+    if (item?.type === 'task') {
+      setFocusedTaskId(lastSelectedId);
+    }
+    // If it's a subtask, we keep the current focusedTaskId so the sidebar stays open on the parent
+  }, [selectedTaskIds, items]);
+
+  // 3. Right Column Data (Subtasks)
+  // We use the focused task to show subtasks
+  const activeTask = items.find(i => i.id === focusedTaskId);
+  const subtasks = React.useMemo(() => {
+    if (!focusedTaskId || activeTask?.type === 'folder') return [];
+    
+    return items
+      .filter(i => i.parent_id === focusedTaskId && i.type === 'subtask')
+      .filter(i => {
+        if (showCompleted) return true;
+        if (i.is_completed) {
+          return !hideCompletedSubtasks;
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        if (a.is_completed !== b.is_completed) {
+            return a.is_completed ? 1 : -1;
+        }
+        return a.order_index - b.order_index;
+      });
+  }, [items, focusedTaskId, activeTask, showCompleted, hideCompletedSubtasks]);
+
+  const showSubtasksSidebar = subtasks.length > 0;
+
+  return (
+    <div 
+      className="flex h-dvh overflow-hidden bg-[#050408]/50 text-white selection:bg-purple-500/30"
+    >
+      {/* 1. Folders Column (Left) */}
+      <aside 
+        onClick={(e) => e.stopPropagation()}
+        className="w-72 border-r border-white/5 bg-[#0a090f]/80 backdrop-blur-3xl flex flex-col shadow-2xl z-20"
+      >
+        {/* Header Section */}
+        <div className="p-8 pb-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-black text-white tracking-tighter flex items-center gap-3">
+              <img src="/icons/icon128.png" alt="ListDock" className="w-8 h-8 rounded-lg shadow-lg" />
+              ListDock
+            </h1>
+          </div>
+        </div>
+
+        {/* Navigation Section */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
+          <nav className="space-y-6">
+            <div>
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20 mb-4 px-2">Workspaces</h3>
+              <div className="space-y-2">
+                {/* Pinned Default Folder */}
+                {(() => {
+                  const rootTaskCount = items.filter(i => !i.parent_id && i.type === 'task').length;
+                  const isActive = currentView === 'root';
+                  const folderColor = '#a855f7'; // Purple for Default
+
+                  return (
+                    <motion.div layout className="group relative">
+                      <motion.button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setView('root');
+                        }}
+                        whileHover={{
+                          backgroundColor: `${folderColor}15`,
+                          borderColor: folderColor,
+                          boxShadow: `0 0 20px ${folderColor}20`
+                        }}
+                        className={cn(
+                          "glass w-full flex items-center gap-3 p-2 px-3 mb-1 rounded-xl transition-all border border-transparent relative z-10",
+                          isActive
+                          ? 'bg-white/10 text-white shadow-inner' 
+                          : 'text-white/30 hover:text-white'
+                        )}
+                        style={isActive ? { borderColor: folderColor, backgroundColor: `${folderColor}15` } : {}}
+                      >
+                        <LayoutGrid 
+                          size={18} 
+                          className={isActive ? 'text-purple-400' : 'group-hover:text-purple-400 transition-colors'} 
+                        />
+                        <span className="font-bold text-sm truncate flex-1 text-left">Default</span>
+                        
+                        <div className="flex items-center gap-2 shrink-0">
+                           <span className="text-[10px] font-black text-white/10 transition-all uppercase tracking-tighter group-hover:hidden">
+                             {rootTaskCount} {rootTaskCount === 1 ? 'Item' : 'Items'}
+                           </span>
+                        </div>
+                      </motion.button>
+                    </motion.div>
+                  );
+                })()}
+
+                {/* Actual Folders */}
+                {folders.map(folder => (
+                  <FolderCard 
+                    key={folder.id} 
+                    item={folder} 
+                    isSidebar 
+                    isActive={currentView === 'folder' && currentFolderId === folder.id} 
+                  />
+                ))}
+              </div>
+            </div>
           </nav>
         </div>
 
-        <div className="mt-auto p-8 border-t border-white/5 bg-white/[0.02]">
-          <button className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-600/20 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all font-bold uppercase tracking-widest text-xs">
-            <Plus size={20} />
-            <span>Create List</span>
+        {/* Sidebar Footer */}
+        <div className="p-4 border-t border-white/5 space-y-1">
+          <button 
+            onClick={() => setIsSettingsOpen(true)}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/30 hover:bg-white/5 hover:text-white transition-all group"
+          >
+            <Settings size={20} className="group-hover:text-purple-400 transition-colors" />
+            <span className="font-bold text-sm">Settings</span>
+          </button>
+          
+          <button 
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/30 hover:bg-white/5 hover:text-white transition-all group"
+          >
+            <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center overflow-hidden border border-white/10 group-hover:border-purple-500/50 transition-colors">
+              <User size={12} className="group-hover:text-purple-400 transition-colors" />
+            </div>
+            <span className="font-bold text-sm">Profile</span>
+            <div className="ml-auto w-1.5 h-1.5 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
           </button>
         </div>
       </aside>
 
-      {/* Main Content Area (Middle Column) */}
-      <section className="flex-1 flex flex-col min-w-0 bg-gradient-to-br from-[#0d0c14]/40 to-transparent">
-        <header className="h-20 border-b border-white/5 flex items-center px-10 justify-between backdrop-blur-md z-10">
-           <div className="flex items-center gap-3">
-             <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
-             <h2 className="text-xs font-black uppercase tracking-[0.4em] text-white/30">
-               {currentView === 'root' ? 'Universal Workspace' : 'Category View'}
-             </h2>
-           </div>
-           
-           <div className="flex items-center gap-4">
-             <div className="px-4 py-1.5 rounded-full bg-white/5 border border-white/5 text-[10px] font-bold text-white/40">
-               v1.5.1
-             </div>
+      {/* 2. Tasks Column (Middle) */}
+      <section 
+        onClick={(e) => e.stopPropagation()}
+        className="flex-1 flex flex-col min-w-[500px] bg-white/[0.01] backdrop-blur-3xl relative"
+      >
+        <header className="px-10 py-8 border-b border-white/5 flex items-center justify-between z-10 h-[105px]">
+           <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 mb-1">Current Workspace</p>
+              <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-3">
+                {currentView === 'root' ? (
+                  <LayoutGrid size={24} className="text-purple-400" />
+                ) : activeFolder ? (
+                  <div className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-white/5" style={{ color: activeFolder.color || '#a855f7' }}>
+                    {(() => {
+                      const IconComponent = (LucideIcons[activeFolder.icon as keyof typeof LucideIcons] as React.ElementType) || Folder;
+                      const isLetterIcon = !activeFolder.icon || activeFolder.icon === 'Letter';
+                      return isLetterIcon ? (
+                        <span className="text-base font-black uppercase">{activeFolder.title.charAt(0)}</span>
+                      ) : (
+                        <IconComponent size={20} />
+                      );
+                    })()}
+                  </div>
+                ) : null}
+                
+                <span className="truncate">{currentView === 'root' ? 'Default Workspace' : activeFolder?.title || 'Folder'}</span>
+                
+                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/5 text-[9px] font-bold text-white/40 uppercase tracking-widest ml-1">
+                  {tasks.length} {tasks.length === 1 ? 'Task' : 'Tasks'}
+                </div>
+              </h2>
            </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto custom-scrollbar p-10">
-           <div className="max-w-5xl mx-auto">
-             <AnimatePresence mode="wait">
-               <motion.div
-                 key={currentView}
-                 initial={{ opacity: 0, scale: 0.98, y: 10 }}
-                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                 exit={{ opacity: 0, scale: 1.02, y: -10 }}
-                 transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-               >
-                 {currentView === 'root' ? <RootView /> : <FolderView />}
-               </motion.div>
-             </AnimatePresence>
-           </div>
+        <main className="flex-1 overflow-y-auto custom-scrollbar">
+            <div className="py-12 px-10 max-w-4xl mx-auto">
+                {currentView === 'root' ? <RootView /> : <FolderView />}
+            </div>
         </main>
 
-        <footer className="p-10 z-10">
-           <div className="max-w-3xl mx-auto w-full">
-              <SmartInput />
-           </div>
+        <footer className="z-10 w-full">
+           <SmartInput />
         </footer>
       </section>
 
-      {/* Detail Panel (Right Column) */}
-      <aside className="w-96 border-l border-white/5 bg-[#0a090f]/50 backdrop-blur-3xl hidden 2xl:flex flex-col p-10 overflow-y-auto custom-scrollbar">
-        <div className="mb-10 flex items-center justify-between">
-          <h3 className="text-xs font-black uppercase tracking-[0.4em] text-white/20">Task Insights</h3>
-          <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/40">
-            <Settings size={14} />
-          </div>
-        </div>
-        
-        <div className="flex-1 flex flex-col items-center justify-center text-center group">
-          <div className="w-24 h-24 rounded-[2rem] bg-white/[0.03] border border-white/5 flex items-center justify-center mb-8 text-white/5 group-hover:bg-white/[0.05] group-hover:border-white/10 transition-all duration-500 group-hover:scale-110 group-hover:rotate-6">
-            <List size={48} />
-          </div>
-          <h4 className="text-lg font-bold text-white/40 mb-2">No Active Selection</h4>
-          <p className="text-white/10 text-sm max-w-[200px] leading-relaxed italic">Select any task from the workspace to view its properties, subtasks, and history.</p>
-        </div>
+      {/* 3. Subtasks Column (Right) */}
+      <AnimatePresence>
+        {showSubtasksSidebar && (
+          <motion.aside 
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 440, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
+            className="border-l border-white/5 bg-[#0a090f]/60 backdrop-blur-3xl flex flex-col overflow-hidden"
+          >
+            <header className="px-10 py-8 border-b border-white/5 flex items-center justify-between shrink-0 h-[105px]">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 mb-1">Subtasks Breakdown</p>
+                  <h3 className="text-2xl font-black text-white tracking-tight truncate pr-4">
+                    {activeTask?.title}
+                  </h3>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                   <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/5 text-[9px] font-bold text-white/40 uppercase tracking-widest">
+                     {subtasks.length} {subtasks.length === 1 ? 'Item' : 'Items'}
+                   </div>
+                </div>
+            </header>
+              
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-10">
+              <div className="space-y-2">
+                {subtasks.map(subtask => (
+                  <TaskCard 
+                    key={subtask.id}
+                    item={subtask}
+                    isSubtask={false} 
+                    hideSubtasks={true} 
+                  />
+                ))}
 
-        <div className="mt-10 p-6 rounded-3xl bg-purple-600/5 border border-purple-500/10">
-          <p className="text-[10px] text-purple-400/60 font-bold uppercase tracking-widest mb-2">Pro Tip</p>
-          <p className="text-xs text-white/30 leading-relaxed">Use <kbd className="px-1.5 py-0.5 rounded bg-white/10 font-sans text-white/60">Ctrl + Z</kbd> to undo any action instantly from the universal workspace.</p>
-        </div>
-      </aside>
+                {subtasks.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-20 text-center opacity-20">
+                    <List size={40} className="mb-4" />
+                    <p className="text-sm font-medium">No subtasks found</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.aside>
+        )}
+      </AnimatePresence>
 
       <SettingsPopup 
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
       />
+
+      {editingFolder && (
+        <FolderSettingsPopup 
+          isOpen={!!editingFolder}
+          onClose={() => setEditingFolder(null)}
+          folder={editingFolder}
+        />
+      )}
+
+      {deletingFolder && (
+        <ConfirmDialog 
+          isOpen={!!deletingFolder}
+          onClose={() => setDeletingFolder(null)}
+          onConfirm={() => {
+            deleteItem(deletingFolder.id);
+            if (currentFolderId === deletingFolder.id) setView('root');
+            setDeletingFolder(null);
+          }}
+          title="Delete Folder?"
+          message={`Are you sure you want to delete "${deletingFolder.title}"? All tasks inside will be permanently removed.`}
+          confirmText="Delete Folder"
+          variant="danger"
+        />
+      )}
     </div>
   );
 };

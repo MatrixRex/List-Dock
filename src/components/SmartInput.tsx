@@ -11,9 +11,18 @@ interface SmartInputProps {
     onClose?: () => void;
     mode?: 'task' | 'folder' | 'search';
     onModeChange?: (mode: 'task' | 'folder' | 'search') => void;
+    forceSubtaskMode?: boolean;
+    parentTaskId?: string | null;
 }
 
-const SmartInput: React.FC<SmartInputProps> = ({ isMobileOverlay, onClose, mode: initialMode, onModeChange }) => {
+const SmartInput: React.FC<SmartInputProps> = ({ 
+    isMobileOverlay, 
+    onClose, 
+    mode: initialMode, 
+    onModeChange,
+    forceSubtaskMode = false,
+    parentTaskId = null
+}) => {
     const [value, setValue] = useState('');
     const [mode, setMode] = useState<'task' | 'folder' | 'search'>(initialMode || 'task');
     const { addItem, currentView, currentFolderId, setSearchQuery, isMenuOpen, selectedTaskIds, items } = useStore();
@@ -30,9 +39,11 @@ const SmartInput: React.FC<SmartInputProps> = ({ isMobileOverlay, onClose, mode:
     }, [isMobileOverlay]);
 
     const isFolderView = currentView === 'folder';
-    const isSubtaskMode = selectedTaskIds.length === 1;
-    const selectedItem = isSubtaskMode ? items.find((i: Item) => i.id === selectedTaskIds[0]) : null;
-    const isMultiSelected = selectedTaskIds.length > 1;
+    const isSubtaskMode = forceSubtaskMode || selectedTaskIds.length === 1;
+    const selectedItem = forceSubtaskMode 
+        ? items.find((i: Item) => i.id === parentTaskId)
+        : (isSubtaskMode ? items.find((i: Item) => i.id === selectedTaskIds[0]) : null);
+    const isMultiSelected = !forceSubtaskMode && selectedTaskIds.length > 1;
 
     // Reset mode to task when entering folder view or subtask mode
     React.useEffect(() => {
@@ -62,10 +73,10 @@ const SmartInput: React.FC<SmartInputProps> = ({ isMobileOverlay, onClose, mode:
 
         addItem({
             id: uuidv4(),
-            type: mode === 'folder' ? 'folder' : 'task',
+            type: mode === 'folder' ? 'folder' : (isSubtaskMode ? 'subtask' : 'task'),
             title: value,
             is_completed: false,
-            parent_id: isFolderView ? currentFolderId : null,
+            parent_id: isSubtaskMode ? (selectedItem?.id || parentTaskId) : (isFolderView ? currentFolderId : null),
             order_index: Date.now(),
             is_expanded: false,
             created_at: Date.now(),
@@ -98,6 +109,11 @@ const SmartInput: React.FC<SmartInputProps> = ({ isMobileOverlay, onClose, mode:
             return `Add subtask to "${selectedItem.title}"...`;
         }
 
+        if (forceSubtaskMode && parentTaskId) {
+            const target = items.find(i => i.id === parentTaskId);
+            return `Add subtask to "${target?.title || 'task'}"...`;
+        }
+
         return isFolderView ? "Add task to folder..." : "Add task to root...";
     };
 
@@ -117,7 +133,7 @@ const SmartInput: React.FC<SmartInputProps> = ({ isMobileOverlay, onClose, mode:
             )}
             onClick={(e) => e.stopPropagation()}
         >
-            {isMobileOverlay && modes.length > 1 && (
+            {modes.length > 1 && (
                 <div className="flex justify-center mb-3">
                     <div className="flex bg-white/[0.03] p-1 rounded-xl border border-white/5 shadow-inner">
                         {modes.map((m) => (
