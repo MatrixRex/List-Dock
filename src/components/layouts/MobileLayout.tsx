@@ -78,7 +78,7 @@ const MobileLayout: React.FC = () => {
   useBackHandler(showAddBar, handleClose, 'mobile-focused-view');
   
   return (
-    <div className="flex flex-col h-dvh overflow-hidden bg-[#050408] relative">
+    <div className="flex flex-col h-dvh overflow-hidden bg-[#050408]/50 relative">
       <Header 
         hideSettings 
         title={activeTab === 'account' ? 'Account' : activeTab === 'settings' ? 'Settings' : undefined} 

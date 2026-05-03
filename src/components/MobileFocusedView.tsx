@@ -42,7 +42,7 @@ const MobileFocusedView: React.FC<MobileFocusedViewProps> = ({ onClose, mode, on
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-x-0 z-[600] bg-[#050408] flex flex-col"
+            className="fixed inset-x-0 z-[600] bg-[#050408]/80 backdrop-blur-3xl flex flex-col"
             style={{ 
                 height: viewportHeight,
                 top: viewportOffset,
@@ -51,7 +51,7 @@ const MobileFocusedView: React.FC<MobileFocusedViewProps> = ({ onClose, mode, on
             onClick={(e) => e.stopPropagation()}
         >
             {/* Safe Area Top Spacing */}
-            <div className="h-[env(safe-area-inset-top)] bg-[#050408]" />
+            <div className="h-[env(safe-area-inset-top)] bg-transparent" />
             
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-h-0">
