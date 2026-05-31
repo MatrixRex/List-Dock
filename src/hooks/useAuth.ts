@@ -7,10 +7,12 @@ import {
 } from 'firebase/auth';
 import { auth, googleProvider } from '../lib/firebase';
 import { useStore } from '../store/useStore';
+import { usePlatform } from './usePlatform';
 import { toast } from 'react-hot-toast';
 
 export const useAuth = () => {
-    const { user, isAuthLoading, setUser, setIsAuthLoading } = useStore();
+    const { user, isAuthLoading, setUser, setIsAuthLoading, setGoogleAccessToken, setIsSyncEnabled } = useStore();
+    const { isExtension } = usePlatform();
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -33,20 +35,51 @@ export const useAuth = () => {
     const login = async () => {
         try {
             setIsAuthLoading(true);
+
+            if (isExtension && typeof chrome !== 'undefined' && chrome.runtime?.id) {
+                // In Manifest V3 Extensions, popup sign-in violates CSP.
+                // We redirect the user to the secure web app in a browser tab to complete authentication.
+                const extensionId = chrome.runtime.id;
+                let webUrl = `https://matrixrex.github.io/List-Dock/?extAuth=${extensionId}`;
+                
+                try {
+                    // Quick probe with a 1-second timeout to see if a local dev server is running
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 1000);
+                    
+                    await fetch('http://localhost:3102/', {
+                        method: 'HEAD',
+                        mode: 'no-cors',
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    webUrl = `http://localhost:3102/?extAuth=${extensionId}`;
+                    console.log('[ListDock Auth] Local development server running on port 3102. Redirecting locally.');
+                } catch (e) {
+                    console.log('[ListDock Auth] Local server not active. Redirecting to production URL.');
+                }
+
+                toast.loading('Opening secure tab for authentication...', { id: 'ext-auth-loading', duration: 3000 });
+                window.open(webUrl, '_blank');
+                setIsAuthLoading(false);
+                return;
+            }
+
+            // Standard Web PWA popup sign-in
             const result = await signInWithPopup(auth, googleProvider);
             
-            // This is where we can extract the access token for Google Drive later
             const credential = GoogleAuthProvider.credentialFromResult(result);
             const token = credential?.accessToken;
             
             if (token) {
-                // In a real app, you might want to store this token securely
-                // for the session to use with Drive API.
-                // For now, we'll just log that we got it.
-                console.log('Google Access Token obtained');
+                setGoogleAccessToken(token);
+                setIsSyncEnabled(true);
+                console.log('Google Access Token obtained & stored');
             }
 
             toast.success('Successfully logged in!');
+            return token || undefined;
         } catch (error: unknown) {
             console.error('Login error:', error);
             const firebaseError = error as { code?: string };
@@ -65,6 +98,8 @@ export const useAuth = () => {
     const logout = async () => {
         try {
             await signOut(auth);
+            setGoogleAccessToken(null);
+            setIsSyncEnabled(false);
             toast.success('Logged out successfully');
         } catch (error) {
             console.error('Logout error:', error);

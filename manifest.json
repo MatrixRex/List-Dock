@@ -5,10 +5,17 @@
   "description": "A persistent To-Do Sidebar for Chrome",
   "permissions": [
     "sidePanel",
-    "storage"
+    "storage",
+    "identity"
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;"
+  },
+  "externally_connectable": {
+    "matches": [
+      "http://localhost/*",
+      "https://matrixrex.github.io/*"
+    ]
   },
   "action": {
     "default_title": "Open List Dock"

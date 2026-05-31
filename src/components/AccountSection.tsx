@@ -1,10 +1,37 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { LogOut, User, Cloud, Loader2 } from 'lucide-react';
+import { useStore } from '../store/useStore';
+import { LogOut, User, Cloud, Loader2, RefreshCw, AlertCircle, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const AccountSection: React.FC = () => {
     const { user, isAuthLoading, login, logout } = useAuth();
+    const { syncStatus, lastSynced, syncError, triggerSync } = useStore();
+    const [timeText, setTimeText] = useState('Never synced');
+
+    // Helper to format last synced time dynamically
+    const formatLastSynced = (timestamp: number | null): string => {
+        if (!timestamp) return 'Never synced';
+        const seconds = Math.floor((Date.now() - timestamp) / 1000);
+        if (seconds < 10) return 'Just now';
+        if (seconds < 60) return `${seconds}s ago`;
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes}m ago`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}h ago`;
+        return new Date(timestamp).toLocaleDateString();
+    };
+
+    // Update the relative time every 10 seconds
+    useEffect(() => {
+        setTimeText(formatLastSynced(lastSynced));
+
+        const interval = setInterval(() => {
+            setTimeText(formatLastSynced(lastSynced));
+        }, 10000);
+
+        return () => clearInterval(interval);
+    }, [lastSynced]);
 
     return (
         <div className="space-y-3">
@@ -65,11 +92,65 @@ const AccountSection: React.FC = () => {
                                 </button>
                             </div>
 
-                            <div className="flex items-center gap-2 p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
-                                <Cloud size={16} className="text-purple-400" />
-                                <div className="flex-1">
-                                    <p className="text-[11px] font-medium text-purple-300">Google Drive Sync Ready</p>
-                                    <p className="text-[10px] text-purple-400/70 line-clamp-1">Data will be backed up automatically</p>
+                            {/* Sync Status Banner */}
+                            <div className="space-y-2">
+                                <div className={`flex items-start gap-2.5 p-3 rounded-lg border transition-all ${
+                                    syncStatus === 'syncing' 
+                                        ? 'bg-purple-500/5 border-purple-500/20' 
+                                        : syncStatus === 'error'
+                                        ? 'bg-red-500/10 border-red-500/20 text-red-200'
+                                        : 'bg-green-500/5 border-green-500/20'
+                                }`}>
+                                    {syncStatus === 'syncing' ? (
+                                        <Loader2 size={16} className="text-purple-400 animate-spin mt-0.5" />
+                                    ) : syncStatus === 'error' ? (
+                                        <AlertCircle size={16} className="text-red-400 mt-0.5" />
+                                    ) : (
+                                        <Check size={16} className="text-green-400 mt-0.5" />
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                        <p className={`text-[11px] font-medium leading-none ${
+                                            syncStatus === 'syncing' 
+                                                ? 'text-purple-300' 
+                                                : syncStatus === 'error'
+                                                ? 'text-red-300'
+                                                : 'text-green-300'
+                                        }`}>
+                                            {syncStatus === 'syncing' 
+                                                ? 'Syncing with Google Drive...' 
+                                                : syncStatus === 'error'
+                                                ? 'Synchronization Error'
+                                                : 'Google Drive Synced'
+                                            }
+                                        </p>
+                                        <p className="text-[10px] text-gray-400 mt-1 truncate">
+                                            {syncStatus === 'error' 
+                                                ? (syncError || 'Check internet connection.') 
+                                                : `Last backup: ${timeText}`
+                                            }
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Manual trigger controls */}
+                                <div className="flex items-center justify-between gap-2 pt-1 font-mono">
+                                    <button
+                                        onClick={() => triggerSync()}
+                                        disabled={syncStatus === 'syncing'}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 active:bg-white/15 text-xs text-purple-300 hover:text-white rounded-lg border border-purple-500/25 transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
+                                    >
+                                        <RefreshCw size={12} className={`text-purple-400 ${syncStatus === 'syncing' ? 'animate-spin' : ''}`} />
+                                        Sync Now
+                                    </button>
+
+                                    {syncStatus === 'error' && syncError?.includes('expired') && (
+                                        <button
+                                            onClick={login}
+                                            className="px-2.5 py-1.5 bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-xs text-white rounded-lg transition-all active:scale-[0.98]"
+                                        >
+                                            Reconnect
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </motion.div>

@@ -9,6 +9,7 @@ export interface Item {
     order_index: number;
     is_expanded: boolean; // For accordion state
     created_at: number;
+    updated_at?: number; // Last modified timestamp for CRDT sync merge
     color?: string;
     icon?: string;
 }
@@ -28,4 +29,10 @@ export interface AppState {
     persistLastFolder: boolean;
     user: AuthUser | null;
     isAuthLoading: boolean;
+    deletedItems: Record<string, number>;
+    syncStatus: 'idle' | 'syncing' | 'success' | 'error';
+    lastSynced: number | null;
+    syncError: string | null;
+    googleAccessToken: string | null;
+    isSyncEnabled: boolean;
 }

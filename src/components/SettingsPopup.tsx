@@ -11,7 +11,7 @@ interface SettingsPopupProps {
 
 const SettingsPopup: React.FC<SettingsPopupProps> = ({ isOpen, onClose }) => {
     const { platform } = usePlatform();
-    const isMobile = platform === 'mobile-pwa' || window.innerWidth < 640;
+    const isMobile = platform === 'mobile-pwa' || (platform === 'desktop-web' && window.innerWidth < 640);
 
     // Reset confirm state when closing is handled in SettingsContent if needed, 
     // but here we just manage the visibility
