@@ -18,7 +18,6 @@ if (typeof window !== 'undefined') {
     if (!topAction) return;
 
     // Check if we moved to the state that was active BEFORE the top action
-    // If we have [A, B] and B is top, pressing back should land us on A's state.
     const newStateId = event.state?.backId || null;
     const previousStateId = backStack[backStack.length - 2]?.id || null;
 
@@ -39,15 +38,13 @@ if (typeof window !== 'undefined') {
  * Hook to handle back button navigation (hardware back on mobile/browser back).
  * When 'active' is true, it pushes a state to history.
  * When back is pressed, 'onBack' is called.
- * If 'active' becomes false manually, it automatically pops the history state.
- * 
- * @param active Whether the back handler should be active (e.g. is modal open?)
- * @param onBack Callback when back is pressed
- * @param id Unique ID for this handler (to ensure correct popping)
  */
 export const useBackHandler = (active: boolean, onBack: () => void, id: string) => {
   const onBackRef = useRef(onBack);
-  onBackRef.current = onBack;
+  
+  useEffect(() => {
+    onBackRef.current = onBack;
+  }, [onBack]);
 
   useEffect(() => {
     if (!active) return;

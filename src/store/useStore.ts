@@ -47,6 +47,8 @@ export interface StoreState extends AppState {
     setCopyWithSubtasks: (enabled: boolean) => void;
     setIsSettingsOpen: (isOpen: boolean) => void;
     handlePaste: (text: string) => void;
+    setUser: (user: import('../types').AuthUser | null) => void;
+    setIsAuthLoading: (isLoading: boolean) => void;
 }
 
 // Custom storage for chrome.storage.local
@@ -114,6 +116,8 @@ export const useStore = create<StoreState>()(
             persistLastFolder: false as boolean,
             copyWithSubtasks: true as boolean,
             isSettingsOpen: false as boolean,
+            user: null as import('../types').AuthUser | null,
+            isAuthLoading: true as boolean,
 
             setItems: (items: Item[]) => set({ items }),
 
@@ -532,6 +536,9 @@ export const useStore = create<StoreState>()(
                     }
                 }
             },
+
+            setUser: (user) => set({ user }),
+            setIsAuthLoading: (isLoading) => set({ isAuthLoading: isLoading }),
         }),
         {
             name: 'list-dock-storage',
@@ -548,7 +555,8 @@ export const useStore = create<StoreState>()(
                 ...(state.persistLastFolder ? {
                     currentView: state.currentView,
                     currentFolderId: state.currentFolderId,
-                } : {})
+                } : {}),
+                // user and isAuthLoading are NOT persisted here as they are managed by Firebase
             }), // Persist items and settings
             migrate: (persistedState: unknown, version: number) => {
                 if (version < STORAGE_VERSION) {
@@ -557,9 +565,10 @@ export const useStore = create<StoreState>()(
                     // Add version-specific migration steps here
                     if (version === 0) {
                         // Unversioned to v1: Ensure items array exists
-                        if (persistedState && typeof persistedState === 'object') {
-                            (persistedState as any).items = (persistedState as any).items || [];
-                        }
+                    if (persistedState && typeof persistedState === 'object') {
+                        const state = persistedState as Record<string, unknown>;
+                        state.items = state.items || [];
+                    }
                     }
                 }
                 return persistedState as StoreState;

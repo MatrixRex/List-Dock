@@ -23,6 +23,9 @@
 |-------|------------|
 | Development Port Conflicts | Identified and terminated processes on port 3102. |
 | Extension vs PWA Build configuration | Used environment variables and conditional logic in `vite.config.ts`. |
+| Google Drive OAuth Scopes | Using `drive.file` scope for granular security. |
+| useBackHandler Corruption | Restored utility after accidental deletion during linting fix. |
+| Firebase Environment Config | Created `.env.example` to document required configuration. |
 
 ## Resources
 - Project Root: `h:\web\00-Extensions\01-ListDock-Sidebar ToDo\List-Dock`

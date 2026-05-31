@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useStore } from '../store/useStore';
 import { Plus, Search, FolderPlus, ListTodo } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
@@ -117,13 +117,13 @@ const SmartInput: React.FC<SmartInputProps> = ({
         return isFolderView ? "Add task to folder..." : "Add task to root...";
     };
 
-    const modes = (isSubtaskMode ? [
-        { id: 'task', icon: ListTodo, label: 'Task' },
+    const modes = isSubtaskMode ? [
+        { id: 'task' as const, icon: ListTodo, label: 'Task' },
     ] : [
-        { id: 'task', icon: ListTodo, label: 'Task' },
-        { id: 'search', icon: Search, label: 'Search' },
-        ...(currentView === 'root' ? [{ id: 'folder', icon: FolderPlus, label: 'Folder' }] : []),
-    ]) as const;
+        { id: 'task' as const, icon: ListTodo, label: 'Task' },
+        { id: 'search' as const, icon: Search, label: 'Search' },
+        ...(currentView === 'root' ? [{ id: 'folder' as const, icon: FolderPlus, label: 'Folder' }] : []),
+    ];
 
     return (
         <div
@@ -142,7 +142,7 @@ const SmartInput: React.FC<SmartInputProps> = ({
                                 type="button"
                                 onMouseDown={(e) => e.preventDefault()}
                                 onClick={() => {
-                                    setMode(m.id as any);
+                                    setMode(m.id);
                                     // Focus back on input immediately after mode switch
                                     inputRef.current?.focus();
                                 }}

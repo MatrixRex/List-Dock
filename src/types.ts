@@ -13,10 +13,19 @@ export interface Item {
     icon?: string;
 }
 
+export interface AuthUser {
+    uid: string;
+    email: string | null;
+    displayName: string | null;
+    photoURL: string | null;
+}
+
 export interface AppState {
     items: Item[];
     currentView: 'root' | 'folder';
     currentFolderId: string | null;
     searchQuery: string;
     persistLastFolder: boolean;
+    user: AuthUser | null;
+    isAuthLoading: boolean;
 }

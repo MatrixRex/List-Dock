@@ -5,13 +5,14 @@ import SmartInput from '../SmartInput';
 import TaskCard from '../TaskCard';
 import FolderCard from '../FolderCard';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useStore, type StoreState } from '../../store/useStore';
-import { LayoutGrid, List, Settings, User, Search, Plus, Edit2, Trash2, Folder } from 'lucide-react';
+import { useStore } from '../../store/useStore';
+import { LayoutGrid, List, Settings, User, Folder } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { cn } from '../../utils/utils';
 import SettingsPopup from '../SettingsPopup';
 import FolderSettingsPopup from '../FolderSettingsPopup';
 import ConfirmDialog from '../ui/ConfirmDialog';
+import { type Item } from '../../types';
 
 const DesktopLayout: React.FC = () => {
   const { 
@@ -20,7 +21,6 @@ const DesktopLayout: React.FC = () => {
     currentFolderId, 
     setView, 
     selectedTaskIds, 
-    toggleTaskSelection,
     isSettingsOpen,
     setIsSettingsOpen,
     deleteItem,
@@ -28,8 +28,8 @@ const DesktopLayout: React.FC = () => {
     hideCompletedSubtasks
   } = useStore();
 
-  const [editingFolder, setEditingFolder] = React.useState<any>(null);
-  const [deletingFolder, setDeletingFolder] = React.useState<any>(null);
+  const [editingFolder, setEditingFolder] = React.useState<Item | null>(null);
+  const [deletingFolder, setDeletingFolder] = React.useState<Item | null>(null);
   
   // 1. Folders Column Data
   const folders = items.filter(i => i.type === 'folder');

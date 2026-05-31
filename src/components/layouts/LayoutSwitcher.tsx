@@ -5,7 +5,7 @@ import MobileLayout from './MobileLayout';
 import DesktopLayout from './DesktopLayout';
 
 const LayoutSwitcher: React.FC = () => {
-  const { isExtension, platform } = usePlatform();
+  const { isExtension } = usePlatform();
   const [windowWidth, setWindowWidth] = React.useState(window.innerWidth);
 
   React.useEffect(() => {

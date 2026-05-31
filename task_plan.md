@@ -24,12 +24,12 @@ Phase 1: Foundation & Platform Awareness
 - **Status:** done
 
 ### Phase 3: Identity & Authentication
-- [ ] Initialize Firebase Auth
-- [ ] Configure Google OAuth (drive.file scope)
-- [ ] Implement Account section and Login/Logout UI
-- [ ] Secure token management service
-- [ ] Verify auth cross-device
-- **Status:** pending
+- [x] Initialize Firebase Auth
+- [x] Configure Google OAuth (drive.file scope)
+- [x] Implement Account section and Login/Logout UI
+- [x] Secure token management service
+- [x] Verify auth cross-device
+- **Status:** done
 
 ### Phase 4: Google Drive Service Layer
 - [ ] Create `driveApi.ts` wrapper

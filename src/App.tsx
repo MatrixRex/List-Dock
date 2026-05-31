@@ -5,9 +5,11 @@ import { Toaster } from 'react-hot-toast';
 import { DnDProvider } from './store/DnDProvider';
 // import { motion, AnimatePresence } from 'framer-motion';
 import { usePlatform } from './hooks/usePlatform';
+import { useAuth } from './hooks/useAuth';
 import LayoutSwitcher from './components/layouts/LayoutSwitcher';
 
 const App: React.FC = () => {
+  useAuth();
   // const currentView = useStore((state: any) => state.currentView);
 
   React.useEffect(() => {

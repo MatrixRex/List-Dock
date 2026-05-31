@@ -11,6 +11,7 @@ import { cn } from '../../utils/utils';
 import { useDnDContext } from '../../store/useDnDContext';
 import MobileFocusedView from '../MobileFocusedView';
 import SettingsContent from '../SettingsContent';
+import AccountSection from '../AccountSection';
 
 const MobileLayout: React.FC = () => {
   const currentView = useStore((state: StoreState) => state.currentView);
@@ -35,7 +36,7 @@ const MobileLayout: React.FC = () => {
     } else if (!isSettingsOpen && activeTab === 'settings') {
       setActiveTab('lists');
     }
-  }, [isSettingsOpen]); // Only sync when the global store state changes
+  }, [isSettingsOpen, activeTab]); // Only sync when the global store state changes
 
   // 2. Sync from local tab state to global store and handle animation state
   React.useEffect(() => {
@@ -49,7 +50,7 @@ const MobileLayout: React.FC = () => {
     if (activeTab !== prevTab) {
       setPrevTab(activeTab);
     }
-  }, [activeTab, setIsSettingsOpen]); // Only sync when the active tab changes
+  }, [activeTab, isSettingsOpen, setIsSettingsOpen, prevTab]); // Only sync when the active tab changes
 
 
   const tabDirection = tabOrder[activeTab] > tabOrder[prevTab] ? 1 : -1;
@@ -124,29 +125,8 @@ const MobileLayout: React.FC = () => {
                     {currentView === 'root' ? <RootView /> : <FolderView />}
                 </div>
             ) : activeTab === 'account' ? (
-                <div className="flex flex-col h-full">
-                    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-6">
-                        <div className="relative">
-                            <div className="absolute inset-0 bg-purple-500/20 blur-3xl rounded-full" />
-                            <div className="relative w-24 h-24 bg-white/5 rounded-3xl flex items-center justify-center border border-white/10 shadow-2xl mb-2 rotate-3">
-                                <User size={48} className="text-purple-400/50" />
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <h3 className="text-2xl font-bold text-white tracking-tight">Cloud Sync</h3>
-                            <p className="text-gray-400 text-sm leading-relaxed max-w-[280px]">
-                                Seamlessly sync your lists across all your devices with end-to-end encryption.
-                            </p>
-                        </div>
-                        <div className="flex flex-col gap-3 w-full max-w-[240px]">
-                            <button className="w-full px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-purple-600/20 border border-white/10 active:scale-95">
-                                Stay Updated
-                            </button>
-                            <button className="w-full px-6 py-3 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white rounded-xl text-sm font-medium transition-all border border-white/5">
-                                Learn More
-                            </button>
-                        </div>
-                    </div>
+                <div className="flex flex-col h-full overflow-y-auto custom-scrollbar p-4">
+                    <AccountSection />
                 </div>
             ) : (
                 <div className="flex flex-col h-full">

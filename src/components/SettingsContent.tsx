@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore';
 import { Trash2, AlertTriangle, Download, Upload } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBackHandler } from '../hooks/useBackHandler';
+import AccountSection from './AccountSection';
 
 interface SettingsContentProps {
     onClose?: () => void;
@@ -57,6 +58,7 @@ const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => {
 
     return (
         <div className="p-4 space-y-6">
+            <AccountSection />
             <div className="space-y-4">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1"> Preferences </label>
 
