@@ -4,7 +4,7 @@
 Transform ListDock into a PWA with cross-instance data synchronization using Google Drive as the storage backend.
 
 ## Current Phase
-Phase 1: Foundation & Platform Awareness
+Phase 6: Sharing & Collaboration
 
 ## Phases
 
@@ -32,19 +32,19 @@ Phase 1: Foundation & Platform Awareness
 - **Status:** done
 
 ### Phase 4: Google Drive Service Layer
-- [ ] Create `driveApi.ts` wrapper
-- [ ] Map Lists to Drive files
-- [ ] Implement Sync Search for shared files
-- [ ] Verify file creation/updates in Drive
-- **Status:** pending
+- [x] Create `driveApi.ts` wrapper (REST endpoints for search/read/create/update)
+- [x] Map Lists to Drive files (`list-dock-sync.json` schema)
+- [x] Implement Sync Search for shared files
+- [x] Verify file creation/updates in Drive
+- **Status:** done
 
 ### Phase 5: Sync Engine & CRDTs
-- [ ] Update Zustand store (syncQueue, lastSynced)
-- [ ] Implement CRDT Merge logic
-- [ ] Migration Wizard for Guest -> Cloud
-- [ ] Background Sync Worker
-- [ ] Verify sync under network/offline conditions
-- **Status:** pending
+- [x] Update Zustand store (deletedItems tombstone log, timestamps, autoSync trigger)
+- [x] Implement CRDT Merge logic (LWW-Element-Set with parent-child safety loops)
+- [x] PWA-to-Extension Secure Auth Bridge (externally_connectable messaging)
+- [x] Background Sync Worker & Silent Re-auth (native extension identity + GIS environment guards)
+- [x] Verify sync under network/offline conditions
+- **Status:** done
 
 ### Phase 6: Sharing & Collaboration
 - [ ] Permissions API for shared lists
