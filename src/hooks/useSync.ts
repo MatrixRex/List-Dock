@@ -71,6 +71,12 @@ function initGisClient(callback: (token: string) => void, onError: (err: any) =>
  */
 export async function refreshGoogleTokenSilently(isExtension: boolean): Promise<string> {
   if (isExtension && typeof chrome !== 'undefined' && chrome.identity?.getAuthToken) {
+    // Only call getAuthToken if oauth2 configuration exists in manifest.json
+    const manifest = chrome.runtime.getManifest();
+    if (!manifest.oauth2 || !manifest.oauth2.client_id) {
+      throw new Error('Extension OAuth2 client ID is not configured in manifest.json.');
+    }
+
     return new Promise((resolve, reject) => {
       chrome.identity.getAuthToken({ interactive: false }, (tokenInfo: any) => {
         if (tokenInfo) {

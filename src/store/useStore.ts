@@ -683,12 +683,12 @@ export const useStore = create<StoreState>()(
                 isSyncEnabled: state.isSyncEnabled,
                 googleAccessToken: state.googleAccessToken,
                 lastSynced: state.lastSynced,
+                user: state.user, // Persist user so that it is remembered across launches (especially in Extension!)
                 // Only persist view and folder ID if the toggle is ON
                 ...(state.persistLastFolder ? {
                     currentView: state.currentView,
                     currentFolderId: state.currentFolderId,
                 } : {}),
-                // user and isAuthLoading are NOT persisted here as they are managed by Firebase
             }), // Persist items and settings
             migrate: (persistedState: unknown, version: number) => {
                 if (version < STORAGE_VERSION) {

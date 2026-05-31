@@ -15,6 +15,11 @@ export const useAuth = () => {
     const { isExtension } = usePlatform();
 
     useEffect(() => {
+        if (isExtension) {
+            setIsAuthLoading(false);
+            return;
+        }
+
         const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
             if (firebaseUser) {
                 setUser({
@@ -30,7 +35,7 @@ export const useAuth = () => {
         });
 
         return () => unsubscribe();
-    }, [setUser, setIsAuthLoading]);
+    }, [setUser, setIsAuthLoading, isExtension]);
 
     const login = async () => {
         try {
