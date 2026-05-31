@@ -144,6 +144,7 @@
   /* Ensure toasts don't block input clicks */
   .toast-container {
     pointer-events: none !important;
+    z-index: 99999 !important;
   }
   
   .glass-toast {

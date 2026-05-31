@@ -181,6 +181,7 @@ const App: React.FC = () => {
         containerStyle={{
           bottom: windowWidth < 500 ? 100 : 40,
           right: windowWidth < 500 ? undefined : 40,
+          zIndex: 99999,
         }}
         toastOptions={{
           duration: 3000,
