@@ -4,6 +4,7 @@ import { Trash2, AlertTriangle, Download, Upload } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBackHandler } from '../hooks/useBackHandler';
 import AccountSection from './AccountSection';
+import manifest from '../../manifest.json';
 
 interface SettingsContentProps {
     onClose?: () => void;
@@ -245,7 +246,7 @@ const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => {
 
             <div className="pb-2">
                 <p className="text-[10px] text-center text-gray-600 font-medium">
-                    LIST DOCK V1.0.0 • PERSISTENT STORAGE
+                    LIST DOCK V{manifest.version} • PERSISTENT STORAGE
                 </p>
             </div>
         </div>
