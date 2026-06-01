@@ -39,7 +39,7 @@ jobs:
 
       - name: Zip extension
         run: |
-          cd dist
+          cd dist-extension
           zip -r ../list-dock.zip .
           cd ..
 

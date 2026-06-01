@@ -50,7 +50,7 @@ Storage key: `list-dock-storage` (with versioned migration in Zustand persist).
 ## Release
 
 1. `pnpm release` — interactive wizard (bumps version in `package.json` + `manifest.json`, commits, tags, pushes).
-2. GitHub Action on `v*` tag: runs `pnpm build`, zips `dist/`, creates release.
+2. GitHub Action on `v*` tag: runs `pnpm build`, zips `dist-extension/`, creates release.
 
 PWA auto-deploys to GitHub Pages on pushes to `main`.
 
