@@ -51,6 +51,8 @@ export interface StoreState extends AppState {
     setIsAuthLoading: (isLoading: boolean) => void;
     setGoogleAccessToken: (token: string | null) => void;
     setIsSyncEnabled: (enabled: boolean) => void;
+    redirectToken: string | null;
+    setRedirectToken: (token: string | null) => void;
     setSyncStatus: (status: 'idle' | 'syncing' | 'success' | 'error') => void;
     setLastSynced: (timestamp: number | null) => void;
     setSyncError: (error: string | null) => void;
@@ -131,6 +133,7 @@ export const useStore = create<StoreState>()(
             syncError: null as string | null,
             googleAccessToken: null as string | null,
             isSyncEnabled: false as boolean,
+            redirectToken: null as string | null,
 
             setItems: (items: Item[]) => set({ items }),
 
@@ -585,6 +588,7 @@ export const useStore = create<StoreState>()(
             setIsAuthLoading: (isLoading) => set({ isAuthLoading: isLoading }),
             setGoogleAccessToken: (googleAccessToken) => set({ googleAccessToken }),
             setIsSyncEnabled: (isSyncEnabled) => set({ isSyncEnabled }),
+            setRedirectToken: (redirectToken) => set({ redirectToken }),
             setSyncStatus: (syncStatus) => set({ syncStatus }),
             setLastSynced: (lastSynced) => set({ lastSynced }),
             setSyncError: (syncError) => set({ syncError }),
@@ -651,9 +655,10 @@ export const useStore = create<StoreState>()(
                             syncError: null
                         });
                     }
-                } catch (error: any) {
+                } catch (error: unknown) {
                     console.error('ListDock Sync Error:', error);
-                    if (error.name === 'AuthError') {
+                    const err = error as { name?: string; message?: string };
+                    if (err.name === 'AuthError') {
                         set({
                             googleAccessToken: null,
                             syncStatus: 'error',
@@ -662,7 +667,7 @@ export const useStore = create<StoreState>()(
                     } else {
                         set({
                             syncStatus: 'error',
-                            syncError: error.message || 'An error occurred during synchronization.'
+                            syncError: err.message || 'An error occurred during synchronization.'
                         });
                     }
                 }

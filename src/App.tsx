@@ -145,6 +145,8 @@ const App: React.FC = () => {
   const [acquiredToken, setAcquiredToken] = React.useState<string | null>(null);
 
   const user = useStore((state) => state.user);
+  const redirectToken = useStore((state) => state.redirectToken);
+  const setRedirectToken = useStore((state) => state.setRedirectToken);
 
   const handleManualLogin = async () => {
     try {
@@ -178,19 +180,21 @@ const App: React.FC = () => {
   React.useEffect(() => {
     if (isExtension) return;
     const currentExtId = extAuthId || sessionStorage.getItem('ext_auth_id');
-    if (user && acquiredToken && currentExtId) {
+    const tokenToSend = acquiredToken || redirectToken;
+    if (user && tokenToSend && currentExtId) {
       console.log('[ListDock Auth] Sending newly acquired credentials back to Extension:', currentExtId);
       if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
         try {
           chrome.runtime.sendMessage(currentExtId, {
             type: 'EXT_AUTH_SUCCESS',
             user,
-            token: acquiredToken
+            token: tokenToSend
           }, (response) => {
             console.log('[ListDock Auth] Extension auth response:', response);
             sessionStorage.removeItem('ext_auth_id');
             setExtAuthId(null);
             setAcquiredToken(null);
+            setRedirectToken(null);
             // Clean up the URL search parameter
             window.history.replaceState({}, document.title, window.location.pathname);
             
@@ -204,18 +208,23 @@ const App: React.FC = () => {
         }
       }
     }
-  }, [user, acquiredToken, isExtension, extAuthId]);
+  }, [user, acquiredToken, redirectToken, isExtension, extAuthId, setRedirectToken]);
 
   // 3. Extension Target: Listen for credentials from browser tab
   React.useEffect(() => {
     if (!isExtension) return;
 
-    const handleExternalMessage = (message: any, _sender: any, sendResponse: any) => {
+    const handleExternalMessage = (
+      message: unknown,
+      _sender: chrome.runtime.MessageSender,
+      sendResponse: (response?: unknown) => void
+    ) => {
       console.log('[ListDock Auth] Received credentials externally:', message);
-      if (message.type === 'EXT_AUTH_SUCCESS') {
+      const msg = message as { type?: string; user?: import('./types').AuthUser; token?: string };
+      if (msg && msg.type === 'EXT_AUTH_SUCCESS') {
         const { setUser, setGoogleAccessToken, setIsSyncEnabled, triggerSync } = useStore.getState();
-        setUser(message.user);
-        setGoogleAccessToken(message.token);
+        setUser(msg.user || null);
+        setGoogleAccessToken(msg.token || null);
         setIsSyncEnabled(true);
         
         import('react-hot-toast').then(({ toast }) => {
@@ -223,7 +232,7 @@ const App: React.FC = () => {
         });
 
         // Trigger initial sync automatically
-        triggerSync(message.token);
+        triggerSync(msg.token);
         sendResponse({ success: true });
       }
     };

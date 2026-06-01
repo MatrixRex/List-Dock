@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { 
     signInWithPopup, 
+    signInWithRedirect,
+    getRedirectResult,
     signOut, 
     onAuthStateChanged,
     GoogleAuthProvider
@@ -11,8 +13,8 @@ import { usePlatform } from './usePlatform';
 import { toast } from 'react-hot-toast';
 
 export const useAuth = () => {
-    const { user, isAuthLoading, setUser, setIsAuthLoading, setGoogleAccessToken, setIsSyncEnabled } = useStore();
-    const { isExtension } = usePlatform();
+    const { user, isAuthLoading, setUser, setIsAuthLoading, setGoogleAccessToken, setIsSyncEnabled, setRedirectToken } = useStore();
+    const { isExtension, isMobile } = usePlatform();
 
     useEffect(() => {
         if (isExtension) {
@@ -20,22 +22,58 @@ export const useAuth = () => {
             return;
         }
 
-        const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-            if (firebaseUser) {
-                setUser({
-                    uid: firebaseUser.uid,
-                    email: firebaseUser.email,
-                    displayName: firebaseUser.displayName,
-                    photoURL: firebaseUser.photoURL,
-                });
-            } else {
-                setUser(null);
-            }
-            setIsAuthLoading(false);
-        });
+        let isMounted = true;
 
-        return () => unsubscribe();
-    }, [setUser, setIsAuthLoading, isExtension]);
+        const handleRedirectAndAuth = async () => {
+            let unsubscribe: (() => void) | undefined = undefined;
+            try {
+                // Check if we have redirect result (runs immediately and resolves)
+                const result = await getRedirectResult(auth);
+                if (result && isMounted) {
+                    const credential = GoogleAuthProvider.credentialFromResult(result);
+                    const token = credential?.accessToken;
+                    if (token) {
+                        setGoogleAccessToken(token);
+                        setIsSyncEnabled(true);
+                        setRedirectToken(token);
+                        console.log('[ListDock Auth] Google Access Token obtained & stored via redirect result');
+                    }
+                    toast.success('Successfully logged in!');
+                }
+            } catch (error) {
+                console.error('[ListDock Auth] Redirect sign-in error:', error);
+                toast.error('Failed to log in with Google.');
+            }
+
+            if (isMounted) {
+                // Subscribe to normal auth state changes
+                unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+                    if (firebaseUser) {
+                        setUser({
+                            uid: firebaseUser.uid,
+                            email: firebaseUser.email,
+                            displayName: firebaseUser.displayName,
+                            photoURL: firebaseUser.photoURL,
+                        });
+                    } else {
+                        setUser(null);
+                    }
+                    setIsAuthLoading(false);
+                });
+            }
+            return unsubscribe;
+        };
+
+        setIsAuthLoading(true);
+        const unsubscribePromise = handleRedirectAndAuth();
+
+        return () => {
+            isMounted = false;
+            unsubscribePromise.then((unsubscribe) => {
+                if (unsubscribe) unsubscribe();
+            });
+        };
+    }, [setUser, setIsAuthLoading, setGoogleAccessToken, setIsSyncEnabled, setRedirectToken, isExtension]);
 
     const login = async () => {
         try {
@@ -68,6 +106,13 @@ export const useAuth = () => {
                 toast.loading('Opening secure tab for authentication...', { id: 'ext-auth-loading', duration: 3000 });
                 window.open(webUrl, '_blank');
                 setIsAuthLoading(false);
+                return;
+            }
+
+            if (isMobile) {
+                // Use redirect sign-in for mobile devices/PWAs
+                toast.loading('Redirecting to Google for sign-in...', { id: 'mobile-auth-loading', duration: 3000 });
+                await signInWithRedirect(auth, googleProvider);
                 return;
             }
 
