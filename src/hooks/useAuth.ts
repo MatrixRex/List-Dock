@@ -110,10 +110,43 @@ export const useAuth = () => {
             }
 
             if (isMobile) {
-                // Use redirect sign-in for mobile devices/PWAs
-                toast.loading('Redirecting to Google for sign-in...', { id: 'mobile-auth-loading', duration: 3000 });
-                await signInWithRedirect(auth, googleProvider);
-                return;
+                try {
+                    console.log('[ListDock Auth] Attempting popup login on mobile...');
+                    const result = await signInWithPopup(auth, googleProvider);
+                    
+                    const credential = GoogleAuthProvider.credentialFromResult(result);
+                    const token = credential?.accessToken;
+                    
+                    if (token) {
+                        setGoogleAccessToken(token);
+                        setIsSyncEnabled(true);
+                        console.log('[ListDock Auth] Google Access Token obtained & stored via popup on mobile');
+                    }
+
+                    toast.success('Successfully logged in!');
+                    return token || undefined;
+                } catch (popupError: any) {
+                    console.warn('[ListDock Auth] Popup login failed on mobile, checking fallback:', popupError);
+                    
+                    // User cancelled the popup, do not redirect
+                    if (popupError.code === 'auth/cancelled-popup-request') {
+                        setIsAuthLoading(false);
+                        return;
+                    }
+
+                    // Fall back to redirect if popup is blocked or unsupported in current environment
+                    const isPopupBlocked = popupError.code === 'auth/popup-blocked';
+                    const isUnsupported = popupError.code === 'auth/operation-not-supported-in-this-environment';
+                    
+                    if (isPopupBlocked || isUnsupported || isMobile) {
+                        console.log('[ListDock Auth] Popup blocked or unsupported on mobile. Falling back to redirect...');
+                        toast.loading('Redirecting to Google for sign-in...', { id: 'mobile-auth-loading', duration: 3000 });
+                        await signInWithRedirect(auth, googleProvider);
+                        return;
+                    }
+                    
+                    throw popupError;
+                }
             }
 
             // Standard Web PWA popup sign-in
