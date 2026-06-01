@@ -181,6 +181,7 @@ export const useAuth = () => {
     const logout = async () => {
         try {
             await signOut(auth);
+            setUser(null);
             setGoogleAccessToken(null);
             setIsSyncEnabled(false);
             toast.success('Logged out successfully');
