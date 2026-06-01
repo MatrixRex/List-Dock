@@ -4,7 +4,6 @@ import { Trash2, AlertTriangle, Download, Upload } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBackHandler } from '../hooks/useBackHandler';
 import AccountSection from './AccountSection';
-import manifest from '../../manifest.json';
 
 interface SettingsContentProps {
     onClose?: () => void;
@@ -244,9 +243,29 @@ const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => {
                 </div>
             </div>
 
-            <div className="pb-2">
-                <p className="text-[10px] text-center text-gray-600 font-medium">
-                    LIST DOCK V{manifest.version} • PERSISTENT STORAGE
+            <div className="pb-2 text-center select-text">
+                <p className="text-[10px] text-gray-600 font-medium tracking-wider">
+                    LIST DOCK V{(() => {
+                        const buildTag = import.meta.env.VITE_BUILD_TAG || 'dev';
+                        const buildDate = import.meta.env.VITE_BUILD_DATE;
+                        return (
+                            <>
+                                {buildTag === 'dev' ? (
+                                    'dev'
+                                ) : (
+                                    <a
+                                        href={`https://github.com/MatrixRex/List-Dock/releases/tag/${buildTag}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="hover:text-purple-400 underline transition-colors"
+                                    >
+                                        {buildTag}
+                                    </a>
+                                )}
+                                {buildDate && ` • BUILD ${buildDate}`}
+                            </>
+                        );
+                    })()} • PERSISTENT STORAGE
                 </p>
             </div>
         </div>

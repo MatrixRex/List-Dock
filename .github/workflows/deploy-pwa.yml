@@ -30,6 +30,26 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate build version info
+        shell: bash
+        run: |
+          # 1. Extract the tag name if triggered by a tag push (e.g., refs/tags/v0.2.4 -> v0.2.4)
+          GIT_TAG=${GITHUB_REF#refs/tags/}
+          
+          # 2. Set tag name or fallback to the nearest git tag (or "dev") if manual workflow run
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            BUILD_TAG=${GIT_TAG}
+          else
+            BUILD_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "dev")
+          fi
+          
+          # 3. Get the build date in "DD Mon YYYY" format
+          BUILD_DATE=$(date -u +'%d %b %Y')
+          
+          # 4. Generate the production env file for Vite to inject
+          echo "VITE_BUILD_TAG=${BUILD_TAG}" > .env.production
+          echo "VITE_BUILD_DATE=${BUILD_DATE}" >> .env.production
+
       - name: Build Web version
         run: pnpm run build:web
         env:
