@@ -61,7 +61,7 @@ export const useAuth = () => {
                     clearTimeout(timeoutId);
                     webUrl = `http://localhost:3102/?extAuth=${extensionId}`;
                     console.log('[ListDock Auth] Local development server running on port 3102. Redirecting locally.');
-                } catch (e) {
+                } catch {
                     console.log('[ListDock Auth] Local server not active. Redirecting to production URL.');
                 }
 

@@ -101,7 +101,7 @@ const DesktopLayout: React.FC = () => {
         <div className="p-8 pb-4">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-black text-white tracking-tighter flex items-center gap-3">
-              <img src="/icons/icon128.png" alt="ListDock" className="w-8 h-8 rounded-lg shadow-lg" />
+              <img src={`${import.meta.env.BASE_URL}icons/icon128.png`} alt="ListDock" className="w-8 h-8 rounded-lg shadow-lg" />
               ListDock
             </h1>
           </div>

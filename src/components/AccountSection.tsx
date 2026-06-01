@@ -7,8 +7,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 const AccountSection: React.FC = () => {
     const { user, isAuthLoading, login, logout } = useAuth();
     const { syncStatus, lastSynced, syncError, triggerSync } = useStore();
-    const [timeText, setTimeText] = useState('Never synced');
-
     // Helper to format last synced time dynamically
     const formatLastSynced = (timestamp: number | null): string => {
         if (!timestamp) return 'Never synced';
@@ -22,10 +20,16 @@ const AccountSection: React.FC = () => {
         return new Date(timestamp).toLocaleDateString();
     };
 
+    const [prevLastSynced, setPrevLastSynced] = useState<number | null>(lastSynced);
+    const [timeText, setTimeText] = useState(() => formatLastSynced(lastSynced));
+
+    if (lastSynced !== prevLastSynced) {
+        setPrevLastSynced(lastSynced);
+        setTimeText(formatLastSynced(lastSynced));
+    }
+
     // Update the relative time every 10 seconds
     useEffect(() => {
-        setTimeText(formatLastSynced(lastSynced));
-
         const interval = setInterval(() => {
             setTimeText(formatLastSynced(lastSynced));
         }, 10000);
