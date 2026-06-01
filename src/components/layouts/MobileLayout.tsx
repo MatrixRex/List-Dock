@@ -18,39 +18,24 @@ const MobileLayout: React.FC = () => {
   const selectedTaskIds = useStore((state: StoreState) => state.selectedTaskIds);
   const isSettingsOpen = useStore((state: StoreState) => state.isSettingsOpen);
   const setIsSettingsOpen = useStore((state: StoreState) => state.setIsSettingsOpen);
-  
-  const [activeTab, setActiveTab] = React.useState<'lists' | 'account' | 'settings'>('lists');
+  const { clearTaskSelection, setView } = useStore();
+  const { dragState } = useDnDContext();
+
+  const [localTab, setLocalTab] = React.useState<'lists' | 'account'>('lists');
+  const activeTab = isSettingsOpen ? 'settings' : localTab;
   const [prevTab, setPrevTab] = React.useState<'lists' | 'account' | 'settings'>('lists');
   const [showAddBar, setShowAddBar] = React.useState(false);
   const [addBarMode, setAddBarMode] = React.useState<'task' | 'folder' | 'search'>('task');
-  const { clearTaskSelection, setView } = useStore();
-  const { dragState } = useDnDContext();
 
   // Tab index for transition logic
   const tabOrder = { lists: 0, account: 1, settings: 2 };
 
-  // 1. Sync from global store (isSettingsOpen) to local tab state
+  // Update prevTab for transition logic
   React.useEffect(() => {
-    if (isSettingsOpen && activeTab !== 'settings') {
-      setActiveTab('settings');
-    } else if (!isSettingsOpen && activeTab === 'settings') {
-      setActiveTab('lists');
-    }
-  }, [isSettingsOpen, activeTab]); // Only sync when the global store state changes
-
-  // 2. Sync from local tab state to global store and handle animation state
-  React.useEffect(() => {
-    // Update global store
-    const shouldBeOpen = activeTab === 'settings';
-    if (isSettingsOpen !== shouldBeOpen) {
-      setIsSettingsOpen(shouldBeOpen);
-    }
-    
-    // Update prevTab for transition logic
     if (activeTab !== prevTab) {
       setPrevTab(activeTab);
     }
-  }, [activeTab, isSettingsOpen, setIsSettingsOpen, prevTab]); // Only sync when the active tab changes
+  }, [activeTab, prevTab]);
 
 
   const tabDirection = tabOrder[activeTab] > tabOrder[prevTab] ? 1 : -1;
@@ -73,7 +58,10 @@ const MobileLayout: React.FC = () => {
   useBackHandler(currentView === 'folder', () => setView('root'), 'mobile-folder-view');
 
   // 2. Handle tab navigation (Account/Settings -> Lists)
-  useBackHandler(activeTab !== 'lists', () => setActiveTab('lists'), 'mobile-active-tab');
+  useBackHandler(activeTab !== 'lists', () => {
+    setIsSettingsOpen(false);
+    setLocalTab('lists');
+  }, 'mobile-active-tab');
 
   // 3. Handle Add Bar / Focus View back navigation
   useBackHandler(showAddBar, handleClose, 'mobile-focused-view');
@@ -131,7 +119,10 @@ const MobileLayout: React.FC = () => {
             ) : (
                 <div className="flex flex-col h-full">
                     <div className="flex-1 overflow-y-auto custom-scrollbar pb-10">
-                        <SettingsContent onClose={() => setActiveTab('lists')} />
+                        <SettingsContent onClose={() => {
+                            setIsSettingsOpen(false);
+                            setLocalTab('lists');
+                        }} />
                     </div>
                 </div>
             )}
@@ -170,7 +161,10 @@ const MobileLayout: React.FC = () => {
       {/* Bottom Navigation */}
       <nav className="h-24 glass glass-top-only bg-[#0a090f]/90 backdrop-blur-3xl flex items-center justify-around px-6 pt-2 pb-[env(safe-area-inset-bottom,1rem)] shrink-0 relative z-[550]">
         <button 
-          onClick={() => setActiveTab('lists')}
+          onClick={() => {
+            setIsSettingsOpen(false);
+            setLocalTab('lists');
+          }}
           className={cn(
             "flex flex-col items-center gap-1.5 transition-all",
             activeTab === 'lists' ? "text-white/90" : "text-white/30 hover:text-white/60"
@@ -189,7 +183,10 @@ const MobileLayout: React.FC = () => {
         </button>
 
         <button 
-          onClick={() => setActiveTab('account')}
+          onClick={() => {
+            setIsSettingsOpen(false);
+            setLocalTab('account');
+          }}
           className={cn(
             "flex flex-col items-center gap-1.5 transition-all",
             activeTab === 'account' ? "text-white/90" : "text-white/30 hover:text-white/60"
@@ -208,7 +205,9 @@ const MobileLayout: React.FC = () => {
         </button>
 
         <button 
-          onClick={() => setActiveTab('settings')}
+          onClick={() => {
+            setIsSettingsOpen(true);
+          }}
           className={cn(
             "flex flex-col items-center gap-1.5 transition-all",
             activeTab === 'settings' ? "text-white/90" : "text-white/30 hover:text-white/60"
