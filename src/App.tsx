@@ -2,6 +2,7 @@ import React from 'react';
 import { useStore } from './store/useStore';
 import { type Item } from './types';
 import { Toaster } from 'react-hot-toast';
+import { createPortal } from 'react-dom';
 import { DnDProvider } from './store/DnDProvider';
 import { usePlatform } from './hooks/usePlatform';
 import { useAuth } from './hooks/useAuth';
@@ -379,19 +380,29 @@ const App: React.FC = () => {
   return (
     <DnDProvider>
       <LayoutSwitcher />
-      <Toaster
-        position={windowWidth < 500 ? "bottom-center" : "bottom-right"}
-        containerClassName="toast-container"
-        containerStyle={{
-          bottom: windowWidth < 500 ? 100 : 40,
-          right: windowWidth < 500 ? undefined : 40,
-          zIndex: 99999,
-        }}
-        toastOptions={{
-          duration: 3000,
-          className: 'glass-toast',
-        }}
-      />
+      {createPortal(
+        <Toaster
+          position={windowWidth < 500 ? "bottom-center" : "bottom-right"}
+          containerClassName="toast-container"
+          containerStyle={
+            windowWidth < 500
+              ? {
+                  bottom: 100,
+                  zIndex: 99999,
+                }
+              : {
+                  bottom: 40,
+                  right: 40,
+                  zIndex: 99999,
+                }
+          }
+          toastOptions={{
+            duration: 3000,
+            className: 'glass-toast',
+          }}
+        />,
+        document.body
+      )}
     </DnDProvider>
   );
 };
