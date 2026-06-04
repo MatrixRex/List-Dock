@@ -24,6 +24,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
     const menuButtonRef = useRef<HTMLButtonElement>(null);
     const { isMenuOpen, setIsMenuOpen } = useStore();
     const [isHovered, setIsHovered] = useState(false);
+    const [isTransitioning, setIsTransitioning] = useState(false);
     const [isVisualCompleted, setIsVisualCompleted] = useState(item.is_completed);
     const [isCheckingSubtasks, setIsCheckingSubtasks] = useState(false);
     const [menuRect, setMenuRect] = useState<DOMRect | null>(null);
@@ -410,9 +411,12 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                                             isMultiSelected && "pointer-events-none"
                                         )}
                                         transition={{ duration: 0.2, ease: "easeOut" }}
+                                        onAnimationStart={() => setIsTransitioning(true)}
+                                        onAnimationComplete={() => setIsTransitioning(false)}
                                     >
                                         <span className={cn(
-                                            "text-sm font-medium text-gray-200 block whitespace-normal break-all",
+                                            "text-sm font-medium text-gray-200 block break-words",
+                                            (isHovered || isSelected || isTransitioning) ? "whitespace-normal" : "truncate",
                                             isVisualCompleted && "text-gray-500 line-through"
                                         )}>
                                             {item.title}
