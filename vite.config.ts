@@ -32,18 +32,20 @@ export default defineConfig(() => {
             {
               src: 'icons/icon192.png',
               sizes: '192x192',
-              type: 'image/png'
-            },
-            {
-              src: 'icons/icon512.png',
-              sizes: '512x512',
-              type: 'image/png'
+              type: 'image/png',
+              purpose: 'any'
             },
             {
               src: 'icons/icon512.png',
               sizes: '512x512',
               type: 'image/png',
-              purpose: 'any maskable'
+              purpose: 'any'
+            },
+            {
+              src: 'icons/icon512-maskable.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'maskable'
             }
           ]
         }
