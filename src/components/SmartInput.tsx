@@ -25,7 +25,7 @@ const SmartInput: React.FC<SmartInputProps> = ({
 }) => {
     const [value, setValue] = useState('');
     const [mode, setMode] = useState<'task' | 'folder' | 'search'>(initialMode || 'task');
-    const { addItem, currentView, currentFolderId, setSearchQuery, isMenuOpen, selectedTaskIds, items } = useStore();
+    const { addItem, currentView, currentFolderId, setSearchQuery, isMenuOpen, selectedTaskIds, items, handlePaste } = useStore();
     const inputRef = React.useRef<HTMLInputElement>(null);
 
     // Auto-focus when in mobile overlay
@@ -199,6 +199,16 @@ const SmartInput: React.FC<SmartInputProps> = ({
                     onChange={(e) => {
                         setValue(e.target.value);
                         if (mode === 'search') setSearchQuery(e.target.value);
+                    }}
+                    onPaste={(e) => {
+                        if (mode !== 'task') return;
+                        const text = e.clipboardData?.getData('text');
+                        if (text && (text.includes('\n') || text.includes('\r'))) {
+                            e.preventDefault();
+                            handlePaste(text);
+                            setValue('');
+                            if (isMobileOverlay && onClose) onClose();
+                        }
                     }}
                     onKeyDown={(e) => e.key === 'Enter' && handleAction()}
                     placeholder={getPlaceholder()}
