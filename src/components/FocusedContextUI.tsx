@@ -20,6 +20,15 @@ const FocusedContextUI: React.FC<FocusedContextUIProps> = ({ mode, onClose }) =>
     const isSubtaskMode = mode === 'task' && selectedTaskIds.length === 1;
     const isSearchMode = mode === 'search';
 
+    const sessionStartTime = React.useRef(Date.now());
+
+    const sessionAddedTasks = useMemo(() => {
+        if (mode !== 'task' || isSubtaskMode) return [];
+        return items
+            .filter(i => (i.type === 'task' || i.type === 'subtask') && i.created_at >= sessionStartTime.current)
+            .sort((a, b) => a.order_index - b.order_index);
+    }, [items, mode, isSubtaskMode]);
+
     // Subtask Mode Context
     const subtaskContext = useMemo(() => {
         if (!isSubtaskMode) return null;
@@ -93,18 +102,18 @@ const FocusedContextUI: React.FC<FocusedContextUIProps> = ({ mode, onClose }) =>
         }
     };
 
-    // Scroll to bottom when subtasks change
+    // Scroll to bottom when subtasks or session tasks change
     React.useEffect(() => {
-        if (isSubtaskMode) {
+        if (isSubtaskMode || (mode === 'task' && !isSubtaskMode)) {
             const timer = setTimeout(() => scrollToBottom(), 100);
             return () => clearTimeout(timer);
         }
-    }, [subtaskContext?.subtasks.length, isSubtaskMode]);
+    }, [subtaskContext?.subtasks.length, sessionAddedTasks.length, isSubtaskMode, mode]);
 
     // Handle viewport/keyboard changes
     React.useEffect(() => {
         const handleViewportChange = () => {
-            if (isSubtaskMode || isSearchMode) {
+            if (isSubtaskMode || isSearchMode || (mode === 'task' && !isSubtaskMode)) {
                 scrollToBottom(true);
             }
         };
@@ -120,9 +129,10 @@ const FocusedContextUI: React.FC<FocusedContextUIProps> = ({ mode, onClose }) =>
                 window.visualViewport.removeEventListener('scroll', handleViewportChange);
             }
         };
-    }, [isSubtaskMode, isSearchMode]);
+    }, [isSubtaskMode, isSearchMode, mode]);
 
-    if (!isSubtaskMode && !isSearchMode) return null;
+    const hasAddedTasks = sessionAddedTasks.length > 0;
+    if (!isSubtaskMode && !isSearchMode && !hasAddedTasks) return null;
 
     return (
         <div className="flex-1 flex flex-col w-full px-6 pb-4 overflow-x-hidden min-h-0 transition-all duration-300">
@@ -131,6 +141,32 @@ const FocusedContextUI: React.FC<FocusedContextUIProps> = ({ mode, onClose }) =>
                 className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pr-1 scroll-smooth"
             >
                 <AnimatePresence mode="popLayout">
+                    {mode === 'task' && !isSubtaskMode && sessionAddedTasks.length > 0 && (
+                        <motion.div
+                            key="session-added-tasks"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="space-y-4 w-full"
+                        >
+                            <div className="sticky top-0 z-30 bg-[#0a090f]/95 backdrop-blur-xl py-4 -mx-6 px-6 border-b border-white/10 mb-4 shadow-2xl flex items-center justify-between gap-4">
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 px-1">Newly Added Tasks</h3>
+                                <button 
+                                    onClick={onClose}
+                                    className="shrink-0 p-3 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-400 hover:bg-purple-500/20 active:scale-90 transition-all shadow-[0_0_20px_rgba(168,85,247,0.15)]"
+                                >
+                                    <Check size={24} strokeWidth={3} />
+                                </button>
+                            </div>
+                            
+                            <div className="space-y-2 pb-4">
+                                {sessionAddedTasks.map((task, index) => (
+                                    <TaskCard key={`focused-added-${task.id || index}`} item={task} />
+                                ))}
+                            </div>
+                        </motion.div>
+                    )}
+
                     {isSubtaskMode && subtaskContext && (
                         <motion.div
                             key="subtask-context"

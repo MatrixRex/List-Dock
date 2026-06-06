@@ -83,13 +83,13 @@ const SmartInput: React.FC<SmartInputProps> = ({
         });
 
         setValue('');
-        const isAddingSubtask = mode === 'task' && selectedItem;
+        const isAddingTask = mode === 'task';
         
-        if (isAddingSubtask) {
+        if (isAddingTask) {
             inputRef.current?.focus();
         }
 
-        if (isMobileOverlay && onClose && !isAddingSubtask) onClose();
+        if (isMobileOverlay && onClose && !isAddingTask) onClose();
     };
 
     const getPlaceholder = () => {
