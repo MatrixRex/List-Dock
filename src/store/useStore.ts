@@ -595,7 +595,17 @@ export const useStore = create<StoreState>()(
             setDeletedItems: (deletedItems) => set({ deletedItems }),
             triggerSync: async (token?: string) => {
                 const activeToken = token || get().googleAccessToken;
-                if (!activeToken || !get().isSyncEnabled) {
+                if (!activeToken) {
+                    if (get().isSyncEnabled) {
+                        set({
+                            syncStatus: 'error',
+                            syncError: 'Google Drive session expired. Please reconnect.'
+                        });
+                    }
+                    return;
+                }
+
+                if (!get().isSyncEnabled) {
                     return;
                 }
 

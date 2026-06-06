@@ -3,10 +3,54 @@ import { useAuth } from '../hooks/useAuth';
 import { useStore } from '../store/useStore';
 import { LogOut, User, Cloud, Loader2, RefreshCw, AlertCircle, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'react-hot-toast';
+import { usePlatform } from '../hooks/usePlatform';
 
 const AccountSection: React.FC = () => {
     const { user, isAuthLoading, login, logout } = useAuth();
     const { syncStatus, lastSynced, syncError, triggerSync } = useStore();
+    const { isExtension } = usePlatform();
+    const handleManualSync = async () => {
+        const { googleAccessToken, setGoogleAccessToken } = useStore.getState();
+        let tokenToUse = googleAccessToken;
+
+        toast.loading('Refreshing sync session...', { id: 'manual-sync' });
+
+        try {
+            const { refreshGoogleTokenSilently } = await import('../hooks/useSync');
+            const freshToken = await refreshGoogleTokenSilently(isExtension);
+            setGoogleAccessToken(freshToken);
+            tokenToUse = freshToken;
+        } catch (err) {
+            console.warn('[ListDock Sync] Manual sync silent re-auth failed:', err);
+            // If silent refresh failed and we have no cached token, we cannot proceed
+            if (!tokenToUse) {
+                toast.error('Sync session expired. Please reconnect.', { id: 'manual-sync' });
+                useStore.setState({
+                    syncStatus: 'error',
+                    syncError: 'Google Drive session expired. Please reconnect.'
+                });
+                return;
+            }
+        }
+
+        if (tokenToUse) {
+            toast.loading('Syncing with Google Drive...', { id: 'manual-sync' });
+            try {
+                await triggerSync(tokenToUse);
+                const updatedState = useStore.getState();
+                if (updatedState.syncStatus === 'success') {
+                    toast.success('Synced successfully!', { id: 'manual-sync' });
+                } else {
+                    toast.error(updatedState.syncError || 'Sync failed.', { id: 'manual-sync' });
+                }
+            } catch (err) {
+                const errorMessage = err instanceof Error ? err.message : 'Sync failed.';
+                toast.error(errorMessage, { id: 'manual-sync' });
+            }
+        }
+    };
+
     // Helper to format last synced time dynamically
     const formatLastSynced = (timestamp: number | null): string => {
         if (!timestamp) return 'Never synced';
@@ -139,7 +183,7 @@ const AccountSection: React.FC = () => {
                                 {/* Manual trigger controls */}
                                 <div className="flex items-center justify-between gap-2 pt-1 font-mono">
                                     <button
-                                        onClick={() => triggerSync()}
+                                        onClick={handleManualSync}
                                         disabled={syncStatus === 'syncing'}
                                         className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 active:bg-white/15 text-xs text-purple-300 hover:text-white rounded-lg border border-purple-500/25 transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
                                     >

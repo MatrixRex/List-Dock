@@ -13,7 +13,7 @@ import { usePlatform } from './usePlatform';
 import { toast } from 'react-hot-toast';
 
 export const useAuth = () => {
-    const { user, isAuthLoading, setUser, setIsAuthLoading, setGoogleAccessToken, setIsSyncEnabled, setRedirectToken } = useStore();
+    const { user, isAuthLoading, setUser, setIsAuthLoading, setGoogleAccessToken, setIsSyncEnabled, setRedirectToken, triggerSync } = useStore();
     const { isExtension, isMobile } = usePlatform();
 
     useEffect(() => {
@@ -37,6 +37,7 @@ export const useAuth = () => {
                         setIsSyncEnabled(true);
                         setRedirectToken(token);
                         console.log('[ListDock Auth] Google Access Token obtained & stored via redirect result');
+                        await triggerSync(token);
                     }
                     toast.success('Successfully logged in!');
                 }
@@ -73,7 +74,7 @@ export const useAuth = () => {
                 if (unsubscribe) unsubscribe();
             });
         };
-    }, [setUser, setIsAuthLoading, setGoogleAccessToken, setIsSyncEnabled, setRedirectToken, isExtension]);
+    }, [setUser, setIsAuthLoading, setGoogleAccessToken, setIsSyncEnabled, setRedirectToken, isExtension, triggerSync]);
 
     const login = async () => {
         try {
@@ -121,22 +122,24 @@ export const useAuth = () => {
                         setGoogleAccessToken(token);
                         setIsSyncEnabled(true);
                         console.log('[ListDock Auth] Google Access Token obtained & stored via popup on mobile');
+                        await triggerSync(token);
                     }
 
                     toast.success('Successfully logged in!');
                     return token || undefined;
-                } catch (popupError: any) {
+                } catch (popupError) {
+                    const err = popupError as { code?: string };
                     console.warn('[ListDock Auth] Popup login failed on mobile, checking fallback:', popupError);
                     
                     // User cancelled the popup, do not redirect
-                    if (popupError.code === 'auth/cancelled-popup-request') {
+                    if (err.code === 'auth/cancelled-popup-request') {
                         setIsAuthLoading(false);
                         return;
                     }
 
                     // Fall back to redirect if popup is blocked or unsupported in current environment
-                    const isPopupBlocked = popupError.code === 'auth/popup-blocked';
-                    const isUnsupported = popupError.code === 'auth/operation-not-supported-in-this-environment';
+                    const isPopupBlocked = err.code === 'auth/popup-blocked';
+                    const isUnsupported = err.code === 'auth/operation-not-supported-in-this-environment';
                     
                     if (isPopupBlocked || isUnsupported || isMobile) {
                         console.log('[ListDock Auth] Popup blocked or unsupported on mobile. Falling back to redirect...');
@@ -159,6 +162,7 @@ export const useAuth = () => {
                 setGoogleAccessToken(token);
                 setIsSyncEnabled(true);
                 console.log('Google Access Token obtained & stored');
+                await triggerSync(token);
             }
 
             toast.success('Successfully logged in!');
