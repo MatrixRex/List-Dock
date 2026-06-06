@@ -434,7 +434,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                         )}
                     </div>
 
-                    <div className="h-5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="h-5 flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                         {!isSubtask && hasSubtasks && (
                             <button
                                 onClick={(e) => {
