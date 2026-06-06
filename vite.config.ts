@@ -50,6 +50,7 @@ export default defineConfig(() => {
       })
     ].filter(Boolean),
     server: {
+      host: true,
       port: Number(process.env.PORT) || 3102,
       strictPort: false,
       hmr: {
