@@ -8,7 +8,7 @@ import { usePlatform } from './hooks/usePlatform';
 import { useAuth } from './hooks/useAuth';
 import { useSync } from './hooks/useSync';
 import LayoutSwitcher from './components/layouts/LayoutSwitcher';
-import { CloudLightning, CheckCircle, AlertTriangle } from 'lucide-react';
+import { CloudLightning, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
 
 const App: React.FC = () => {
   const { login } = useAuth();
@@ -143,6 +143,7 @@ const App: React.FC = () => {
   const { isExtension, platform } = usePlatform();
   const [windowWidth, setWindowWidth] = React.useState(window.innerWidth);
   const [extAuthId, setExtAuthId] = React.useState<string | null>(null);
+  const [extAuthSilent, setExtAuthSilent] = React.useState<boolean>(false);
   const [acquiredToken, setAcquiredToken] = React.useState<string | null>(null);
 
   const user = useStore((state) => state.user);
@@ -165,6 +166,7 @@ const App: React.FC = () => {
     if (isExtension) return;
     const urlParams = new URLSearchParams(window.location.search);
     const extAuth = urlParams.get('extAuth');
+    const silent = urlParams.get('silent') === 'true';
     if (extAuth) {
       sessionStorage.setItem('ext_auth_id', extAuth);
       setExtAuthId(extAuth);
@@ -174,6 +176,13 @@ const App: React.FC = () => {
       if (stored) {
         setExtAuthId(stored);
       }
+    }
+    if (silent) {
+      sessionStorage.setItem('ext_auth_silent', 'true');
+      setExtAuthSilent(true);
+    } else {
+      const storedSilent = sessionStorage.getItem('ext_auth_silent') === 'true';
+      setExtAuthSilent(storedSilent);
     }
   }, [isExtension]);
 
@@ -193,19 +202,26 @@ const App: React.FC = () => {
           }, (response) => {
             console.log('[ListDock Auth] Extension auth response:', response);
             sessionStorage.removeItem('ext_auth_id');
+            sessionStorage.removeItem('ext_auth_silent');
             setExtAuthId(null);
+            setExtAuthSilent(false);
             setAcquiredToken(null);
             setRedirectToken(null);
             // Clean up the URL search parameter
             window.history.replaceState({}, document.title, window.location.pathname);
             
-            import('react-hot-toast').then(({ toast }) => {
-              toast.success('Successfully linked with Chrome Extension! Closing tab...');
-              setTimeout(() => window.close(), 1500);
-            });
+            if (extAuthSilent) {
+              window.close();
+            } else {
+              import('react-hot-toast').then(({ toast }) => {
+                toast.success('Successfully linked with Chrome Extension! Closing tab...');
+                setTimeout(() => window.close(), 1500);
+              });
+            }
           });
         } catch (e) {
           console.error('[ListDock Auth] Messaging to extension failed:', e);
+          if (extAuthSilent) window.close();
         }
       }
     }
@@ -275,6 +291,20 @@ const App: React.FC = () => {
     return () => clearTimeout(timer);
   }, [user, extAuthId, isExtension]);
 
+  // 5. Web Target: Auto-close silent auth tab if user is not logged in or silent auth fails
+  React.useEffect(() => {
+    if (isExtension || !extAuthId || !extAuthSilent) return;
+
+    const closeTimeout = setTimeout(() => {
+      console.log('[ListDock Auth] Silent auth tab timing out. Closing...');
+      sessionStorage.removeItem('ext_auth_id');
+      sessionStorage.removeItem('ext_auth_silent');
+      window.close();
+    }, 6000);
+
+    return () => clearTimeout(closeTimeout);
+  }, [isExtension, extAuthId, extAuthSilent]);
+
   React.useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
@@ -308,6 +338,18 @@ const App: React.FC = () => {
   }, [isExtension, platform]);
 
   if (extAuthId && !isExtension) {
+    if (extAuthSilent) {
+      return (
+        <div className="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#050408] text-white p-6 font-mono select-none">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.12),transparent_65%)] pointer-events-none" />
+          <div className="flex flex-col items-center justify-center space-y-3 relative z-10">
+            <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+            <p className="text-xs text-gray-400">Refreshing connection...</p>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#050408] text-white p-6 font-mono select-none">
         {/* Mesh Background */}

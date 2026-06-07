@@ -71,27 +71,83 @@ function initGisClient(callback: (token: string) => void, onError: (err: any) =>
  * Resolves to a fresh Google Access Token or rejects if silent flow is unavailable.
  */
 export async function refreshGoogleTokenSilently(isExtension: boolean): Promise<string> {
-  if (isExtension && typeof chrome !== 'undefined' && chrome.identity?.getAuthToken) {
-    // Only call getAuthToken if oauth2 configuration exists in manifest.json
-    const manifest = chrome.runtime.getManifest();
-    if (!manifest.oauth2 || !manifest.oauth2.client_id) {
-      throw new Error('Extension OAuth2 client ID is not configured in manifest.json.');
-    }
+  // 1. Check if we already have a valid cached token
+  const state = useStore.getState();
+  const isExpired = !state.googleAccessToken || !state.googleTokenExpiresAt || Date.now() > state.googleTokenExpiresAt;
+  if (!isExpired && state.googleAccessToken) {
+    return state.googleAccessToken;
+  }
 
+  // 2. If token is expired/missing, perform the platform-specific silent refresh
+  if (isExtension && typeof chrome !== 'undefined' && chrome.runtime?.id) {
     return new Promise((resolve, reject) => {
-      chrome.identity.getAuthToken({ interactive: false }, (tokenInfo: any) => {
-        if (tokenInfo) {
-          const tokenStr = typeof tokenInfo === 'object' ? tokenInfo.token : tokenInfo;
-          if (tokenStr) {
-            resolve(tokenStr);
-          } else {
-            reject(new Error('No token returned'));
-          }
-        } else {
-          const err = chrome.runtime.lastError;
-          reject(new Error(err ? err.message : 'Extension silent auth failed'));
+      const extensionId = chrome.runtime.id;
+      let webUrl = `https://matrixrex.github.io/List-Dock/?extAuth=${extensionId}&silent=true`;
+
+      // Set up external message listener to capture refreshed credentials
+      const listener = (
+        message: any,
+        _sender: chrome.runtime.MessageSender,
+        sendResponse: (response?: any) => void
+      ) => {
+        if (message && message.type === 'EXT_AUTH_SUCCESS' && message.token) {
+          chrome.runtime.onMessageExternal.removeListener(listener);
+          resolve(message.token);
+          sendResponse({ success: true });
         }
-      });
+      };
+
+      try {
+        if (chrome.runtime?.onMessageExternal) {
+          chrome.runtime.onMessageExternal.addListener(listener);
+        } else {
+          reject(new Error('Extension onMessageExternal API not available'));
+          return;
+        }
+      } catch (e) {
+        reject(e);
+        return;
+      }
+
+      // Timeout of 8 seconds to prevent hanging
+      const timeoutId = setTimeout(() => {
+        chrome.runtime.onMessageExternal.removeListener(listener);
+        reject(new Error('Silent re-auth timeout'));
+      }, 8000);
+
+      // Probe local dev server
+      fetch('http://localhost:3102/', {
+        method: 'HEAD',
+        mode: 'no-cors'
+      })
+        .then(() => {
+          webUrl = `http://localhost:3102/?extAuth=${extensionId}&silent=true`;
+        })
+        .catch(() => {
+          // Fallback to prod URL
+        })
+        .finally(() => {
+          console.log('[ListDock Sync] Launching background tab for silent auth:', webUrl);
+          if (chrome.tabs?.create) {
+            chrome.tabs.create({ url: webUrl, active: false }, (tab) => {
+              if (tab && tab.id) {
+                const tabId = tab.id;
+                // Safeguard: auto close the tab after 8.5s if it doesn't close itself
+                setTimeout(() => {
+                  try {
+                    chrome.tabs.remove(tabId);
+                  } catch (e) {
+                    // Already closed
+                  }
+                }, 8500);
+              }
+            });
+          } else {
+            chrome.runtime.onMessageExternal.removeListener(listener);
+            clearTimeout(timeoutId);
+            reject(new Error('chrome.tabs API not available'));
+          }
+        });
     });
   } else {
     // PWA Web silent re-auth via GIS: first check if a Google Client ID is configured

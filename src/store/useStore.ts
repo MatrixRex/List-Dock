@@ -50,6 +50,7 @@ export interface StoreState extends AppState {
     setUser: (user: import('../types').AuthUser | null) => void;
     setIsAuthLoading: (isLoading: boolean) => void;
     setGoogleAccessToken: (token: string | null) => void;
+    googleTokenExpiresAt: number | null;
     setIsSyncEnabled: (enabled: boolean) => void;
     redirectToken: string | null;
     setRedirectToken: (token: string | null) => void;
@@ -132,6 +133,7 @@ export const useStore = create<StoreState>()(
             lastSynced: null as number | null,
             syncError: null as string | null,
             googleAccessToken: null as string | null,
+            googleTokenExpiresAt: null as number | null,
             isSyncEnabled: false as boolean,
             redirectToken: null as string | null,
 
@@ -586,7 +588,10 @@ export const useStore = create<StoreState>()(
 
             setUser: (user) => set({ user }),
             setIsAuthLoading: (isLoading) => set({ isAuthLoading: isLoading }),
-            setGoogleAccessToken: (googleAccessToken) => set({ googleAccessToken }),
+            setGoogleAccessToken: (googleAccessToken) => {
+                const googleTokenExpiresAt = googleAccessToken ? Date.now() + 3500 * 1000 : null;
+                set({ googleAccessToken, googleTokenExpiresAt });
+            },
             setIsSyncEnabled: (isSyncEnabled) => set({ isSyncEnabled }),
             setRedirectToken: (redirectToken) => set({ redirectToken }),
             setSyncStatus: (syncStatus) => set({ syncStatus }),
@@ -697,6 +702,7 @@ export const useStore = create<StoreState>()(
                 deletedItems: state.deletedItems,
                 isSyncEnabled: state.isSyncEnabled,
                 googleAccessToken: state.googleAccessToken,
+                googleTokenExpiresAt: state.googleTokenExpiresAt,
                 lastSynced: state.lastSynced,
                 user: state.user, // Persist user so that it is remembered across launches (especially in Extension!)
                 // Only persist view and folder ID if the toggle is ON

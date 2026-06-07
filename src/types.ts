@@ -34,5 +34,6 @@ export interface AppState {
     lastSynced: number | null;
     syncError: string | null;
     googleAccessToken: string | null;
+    googleTokenExpiresAt?: number | null;
     isSyncEnabled: boolean;
 }
