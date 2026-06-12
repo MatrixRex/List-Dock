@@ -13,41 +13,38 @@ import { usePlatform } from './usePlatform';
 import { toast } from 'react-hot-toast';
 
 export const useAuth = () => {
-    const { user, isAuthLoading, setUser, setIsAuthLoading, setGoogleAccessToken, setIsSyncEnabled, setRedirectToken, triggerSync } = useStore();
+    const { user, isAuthLoading, setUser, setIsAuthLoading, setIsSyncEnabled, setRedirectToken } = useStore();
     const { isExtension, isMobile } = usePlatform();
 
     useEffect(() => {
-        if (isExtension) {
-            setIsAuthLoading(false);
-            return;
-        }
-
         let isMounted = true;
 
         const handleRedirectAndAuth = async () => {
             let unsubscribe: (() => void) | undefined = undefined;
-            try {
-                // Check if we have redirect result (runs immediately and resolves)
-                const result = await getRedirectResult(auth);
-                if (result && isMounted) {
-                    const credential = GoogleAuthProvider.credentialFromResult(result);
-                    const token = credential?.accessToken;
-                    if (token) {
-                        setGoogleAccessToken(token);
-                        setIsSyncEnabled(true);
-                        setRedirectToken(token);
-                        console.log('[ListDock Auth] Google Access Token obtained & stored via redirect result');
-                        await triggerSync(token);
+            
+            // Redirect auth result is only applicable on the Web/PWA target
+            if (!isExtension) {
+                try {
+                    const result = await getRedirectResult(auth);
+                    if (result && isMounted) {
+                        const credential = GoogleAuthProvider.credentialFromResult(result);
+                        const token = credential?.accessToken;
+                        const idToken = credential?.idToken;
+                        if (token && idToken) {
+                            setIsSyncEnabled(true);
+                            setRedirectToken(JSON.stringify({ idToken, accessToken: token }));
+                            console.log('[ListDock Auth] Google credentials obtained via redirect');
+                        }
+                        toast.success('Successfully logged in!');
                     }
-                    toast.success('Successfully logged in!');
+                } catch (error) {
+                    console.error('[ListDock Auth] Redirect sign-in error:', error);
+                    toast.error('Failed to log in with Google.');
                 }
-            } catch (error) {
-                console.error('[ListDock Auth] Redirect sign-in error:', error);
-                toast.error('Failed to log in with Google.');
             }
 
             if (isMounted) {
-                // Subscribe to normal auth state changes
+                // Subscribe to auth state changes on both PWA and Extension
                 unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
                     if (firebaseUser) {
                         setUser({
@@ -74,20 +71,18 @@ export const useAuth = () => {
                 if (unsubscribe) unsubscribe();
             });
         };
-    }, [setUser, setIsAuthLoading, setGoogleAccessToken, setIsSyncEnabled, setRedirectToken, isExtension, triggerSync]);
+    }, [setUser, setIsAuthLoading, setIsSyncEnabled, setRedirectToken, isExtension]);
 
-    const login = async () => {
+    const login = async (): Promise<{ idToken: string; accessToken: string } | undefined> => {
         try {
             setIsAuthLoading(true);
 
             if (isExtension && typeof chrome !== 'undefined' && chrome.runtime?.id) {
-                // In Manifest V3 Extensions, popup sign-in violates CSP.
-                // We redirect the user to the secure web app in a browser tab to complete authentication.
+                // Extension CSP blocks popups; redirect user to secure Web PWA auth bridge
                 const extensionId = chrome.runtime.id;
                 let webUrl = `https://matrixrex.github.io/List-Dock/?extAuth=${extensionId}`;
                 
                 try {
-                    // Quick probe with a 1-second timeout to see if a local dev server is running
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 1000);
                     
@@ -99,9 +94,9 @@ export const useAuth = () => {
                     
                     clearTimeout(timeoutId);
                     webUrl = `http://localhost:3102/?extAuth=${extensionId}`;
-                    console.log('[ListDock Auth] Local development server running on port 3102. Redirecting locally.');
+                    console.log('[ListDock Auth] Dev server active. Redirecting locally.');
                 } catch {
-                    console.log('[ListDock Auth] Local server not active. Redirecting to production URL.');
+                    console.log('[ListDock Auth] Dev server not active. Redirecting to production.');
                 }
 
                 toast.loading('Opening secure tab for authentication...', { id: 'ext-auth-loading', duration: 3000 });
@@ -117,32 +112,27 @@ export const useAuth = () => {
                     
                     const credential = GoogleAuthProvider.credentialFromResult(result);
                     const token = credential?.accessToken;
+                    const idToken = credential?.idToken;
                     
-                    if (token) {
-                        setGoogleAccessToken(token);
+                    if (token && idToken) {
                         setIsSyncEnabled(true);
-                        console.log('[ListDock Auth] Google Access Token obtained & stored via popup on mobile');
-                        await triggerSync(token);
+                        toast.success('Successfully logged in!');
+                        return { idToken, accessToken: token };
                     }
-
-                    toast.success('Successfully logged in!');
-                    return token || undefined;
                 } catch (popupError) {
                     const err = popupError as { code?: string };
-                    console.warn('[ListDock Auth] Popup login failed on mobile, checking fallback:', popupError);
+                    console.warn('[ListDock Auth] Popup failed on mobile, checking fallback:', popupError);
                     
-                    // User cancelled the popup, do not redirect
                     if (err.code === 'auth/cancelled-popup-request') {
                         setIsAuthLoading(false);
                         return;
                     }
 
-                    // Fall back to redirect if popup is blocked or unsupported in current environment
                     const isPopupBlocked = err.code === 'auth/popup-blocked';
                     const isUnsupported = err.code === 'auth/operation-not-supported-in-this-environment';
                     
                     if (isPopupBlocked || isUnsupported || isMobile) {
-                        console.log('[ListDock Auth] Popup blocked or unsupported on mobile. Falling back to redirect...');
+                        console.log('[ListDock Auth] Popup blocked/unsupported. Falling back to redirect...');
                         toast.loading('Redirecting to Google for sign-in...', { id: 'mobile-auth-loading', duration: 3000 });
                         await signInWithRedirect(auth, googleProvider);
                         return;
@@ -154,19 +144,15 @@ export const useAuth = () => {
 
             // Standard Web PWA popup sign-in
             const result = await signInWithPopup(auth, googleProvider);
-            
             const credential = GoogleAuthProvider.credentialFromResult(result);
             const token = credential?.accessToken;
+            const idToken = credential?.idToken;
             
-            if (token) {
-                setGoogleAccessToken(token);
+            if (token && idToken) {
                 setIsSyncEnabled(true);
-                console.log('Google Access Token obtained & stored');
-                await triggerSync(token);
+                toast.success('Successfully logged in!');
+                return { idToken, accessToken: token };
             }
-
-            toast.success('Successfully logged in!');
-            return token || undefined;
         } catch (error: unknown) {
             console.error('Login error:', error);
             const firebaseError = error as { code?: string };
@@ -186,7 +172,6 @@ export const useAuth = () => {
         try {
             await signOut(auth);
             setUser(null);
-            setGoogleAccessToken(null);
             setIsSyncEnabled(false);
             toast.success('Logged out successfully');
         } catch (error) {
@@ -202,3 +187,4 @@ export const useAuth = () => {
         logout,
     };
 };
+

@@ -144,7 +144,7 @@ const App: React.FC = () => {
   const [windowWidth, setWindowWidth] = React.useState(window.innerWidth);
   const [extAuthId, setExtAuthId] = React.useState<string | null>(null);
   const [extAuthSilent, setExtAuthSilent] = React.useState<boolean>(false);
-  const [acquiredToken, setAcquiredToken] = React.useState<string | null>(null);
+  const [acquiredToken, setAcquiredToken] = React.useState<{ idToken: string; accessToken: string } | null>(null);
 
   const user = useStore((state) => state.user);
   const redirectToken = useStore((state) => state.redirectToken);
@@ -152,9 +152,9 @@ const App: React.FC = () => {
 
   const handleManualLogin = async () => {
     try {
-      const token = await login();
-      if (token) {
-        setAcquiredToken(token);
+      const creds = await login();
+      if (creds) {
+        setAcquiredToken(creds);
       }
     } catch (err) {
       console.error('[ListDock Auth] Manual login error:', err);
@@ -190,15 +190,28 @@ const App: React.FC = () => {
   React.useEffect(() => {
     if (isExtension) return;
     const currentExtId = extAuthId || sessionStorage.getItem('ext_auth_id');
-    const tokenToSend = acquiredToken || redirectToken;
-    if (user && tokenToSend && currentExtId) {
+    
+    // Parse redirect credentials if available
+    let parsedRedirectCreds: { idToken: string; accessToken: string } | null = null;
+    if (redirectToken) {
+      try {
+        parsedRedirectCreds = JSON.parse(redirectToken);
+      } catch (e) {
+        console.error('[ListDock Auth] Failed to parse redirectToken:', e);
+      }
+    }
+    
+    const credsToSend = acquiredToken || parsedRedirectCreds;
+    
+    if (user && credsToSend && currentExtId) {
       console.log('[ListDock Auth] Sending newly acquired credentials back to Extension:', currentExtId);
       if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
         try {
           chrome.runtime.sendMessage(currentExtId, {
             type: 'EXT_AUTH_SUCCESS',
             user,
-            token: tokenToSend
+            idToken: credsToSend.idToken,
+            accessToken: credsToSend.accessToken
           }, (response) => {
             console.log('[ListDock Auth] Extension auth response:', response);
             sessionStorage.removeItem('ext_auth_id');
@@ -237,20 +250,34 @@ const App: React.FC = () => {
       sendResponse: (response?: unknown) => void
     ) => {
       console.log('[ListDock Auth] Received credentials externally:', message);
-      const msg = message as { type?: string; user?: import('./types').AuthUser; token?: string };
-      if (msg && msg.type === 'EXT_AUTH_SUCCESS') {
-        const { setUser, setGoogleAccessToken, setIsSyncEnabled, triggerSync } = useStore.getState();
-        setUser(msg.user || null);
-        setGoogleAccessToken(msg.token || null);
-        setIsSyncEnabled(true);
+      const msg = message as { type?: string; user?: import('./types').AuthUser; idToken?: string; accessToken?: string };
+      if (msg && msg.type === 'EXT_AUTH_SUCCESS' && msg.idToken && msg.accessToken) {
+        const { setUser, setIsSyncEnabled } = useStore.getState();
         
-        import('react-hot-toast').then(({ toast }) => {
-          toast.success('Google Sync linked successfully!');
+        import('./lib/firebase').then(({ auth }) => {
+          import('firebase/auth').then(({ GoogleAuthProvider, signInWithCredential }) => {
+            const credential = GoogleAuthProvider.credential(msg.idToken, msg.accessToken);
+            signInWithCredential(auth, credential)
+              .then((userCred) => {
+                console.log('[ListDock Auth] Extension signed in successfully:', userCred.user.uid);
+                setUser(msg.user || null);
+                setIsSyncEnabled(true);
+                
+                import('react-hot-toast').then(({ toast }) => {
+                  toast.success('Cloud Sync linked successfully!');
+                });
+                sendResponse({ success: true });
+              })
+              .catch((err) => {
+                console.error('[ListDock Auth] Extension sign-in failed:', err);
+                import('react-hot-toast').then(({ toast }) => {
+                  toast.error('Sync link failed. Please retry.');
+                });
+                sendResponse({ success: false, error: err.message });
+              });
+          });
         });
-
-        // Trigger initial sync automatically
-        triggerSync(msg.token);
-        sendResponse({ success: true });
+        return true; // Keep response channel open for async execution
       }
     };
 
@@ -271,19 +298,11 @@ const App: React.FC = () => {
     if (isExtension || !user || !extAuthId) return;
 
     const trySilentAuth = async () => {
-      try {
-        console.log('[ListDock Auth] User is already signed in on Web. Attempting silent token refresh...');
-        const { refreshGoogleTokenSilently } = await import('./hooks/useSync');
-        const token = await refreshGoogleTokenSilently(false);
-        
-        console.log('[ListDock Auth] Silent token refresh succeeded! Setting acquired token.');
-        setAcquiredToken(token);
-      } catch (err) {
-        console.warn('[ListDock Auth] Silent token refresh failed, waiting for manual click:', err);
-      }
+      // In Firestore implementation, Extension manages its own login session persistence.
+      // We only refresh if needed, but for now we skipgis token refreshing
+      console.log('[ListDock Auth] Silent auth bridge triggered for logged in PWA user.');
     };
 
-    // Delay briefly to allow GIS script loading
     const timer = setTimeout(() => {
       trySilentAuth();
     }, 800);

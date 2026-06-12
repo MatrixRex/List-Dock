@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -14,10 +15,15 @@ const app = initializeApp(firebaseConfig);
 // Initialize Auth
 export const auth = getAuth(app);
 
+// Initialize Firestore with persistent cache across tabs
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager(),
+  }),
+});
+
 // Configure Google Provider
 export const googleProvider = new GoogleAuthProvider();
-// Request Google Drive file-level access
-googleProvider.addScope('https://www.googleapis.com/auth/drive.file');
 // Optional: Force account selection
 googleProvider.setCustomParameters({
   prompt: 'select_account'

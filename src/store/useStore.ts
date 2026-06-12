@@ -6,6 +6,87 @@ import React from 'react';
 import UndoToast from '../components/UndoToast';
 import { v4 as uuidv4 } from 'uuid';
 
+// Helper to dynamically load Firestore and write changes
+const getFirestoreModules = async () => {
+    const { doc, setDoc, deleteDoc, writeBatch } = await import('firebase/firestore');
+    const { db } = await import('../lib/firebase');
+    return { doc, setDoc, deleteDoc, writeBatch, db };
+};
+
+const writeItem = async (item: Item) => {
+    const state = useStore.getState();
+    if (state.user && state.isSyncEnabled) {
+        const userId = state.user.uid;
+        const { doc, setDoc, db } = await getFirestoreModules();
+        try {
+            await setDoc(doc(db, 'items', item.id), {
+                id: item.id,
+                type: item.type,
+                title: item.title,
+                is_completed: item.is_completed,
+                parent_id: item.parent_id,
+                order_index: item.order_index,
+                is_expanded: item.is_expanded,
+                created_at: item.created_at,
+                updated_at: item.updated_at || Date.now(),
+                ...(item.color ? { color: item.color } : {}),
+                ...(item.icon ? { icon: item.icon } : {}),
+                ownerId: userId
+            });
+        } catch (e) {
+            console.error('[ListDock Store] Firestore write failed:', e);
+        }
+    }
+};
+
+const writeItemsBatch = async (itemsToSave: Item[]) => {
+    const state = useStore.getState();
+    if (state.user && state.isSyncEnabled && itemsToSave.length > 0) {
+        const userId = state.user.uid;
+        const { doc, writeBatch, db } = await getFirestoreModules();
+        try {
+            const batch = writeBatch(db);
+            itemsToSave.forEach(item => {
+                const docRef = doc(db, 'items', item.id);
+                batch.set(docRef, {
+                    id: item.id,
+                    type: item.type,
+                    title: item.title,
+                    is_completed: item.is_completed,
+                    parent_id: item.parent_id,
+                    order_index: item.order_index,
+                    is_expanded: item.is_expanded,
+                    created_at: item.created_at,
+                    updated_at: item.updated_at || Date.now(),
+                    ...(item.color ? { color: item.color } : {}),
+                    ...(item.icon ? { icon: item.icon } : {}),
+                    ownerId: userId
+                });
+            });
+            await batch.commit();
+        } catch (e) {
+            console.error('[ListDock Store] Firestore batch write failed:', e);
+        }
+    }
+};
+
+const deleteItemsBatch = async (ids: string[]) => {
+    const state = useStore.getState();
+    if (state.user && state.isSyncEnabled && ids.length > 0) {
+        const { doc, writeBatch, db } = await getFirestoreModules();
+        try {
+            const batch = writeBatch(db);
+            ids.forEach(id => {
+                const docRef = doc(db, 'items', id);
+                batch.delete(docRef);
+            });
+            await batch.commit();
+        } catch (e) {
+            console.error('[ListDock Store] Firestore batch delete failed:', e);
+        }
+    }
+};
+
 export interface StoreState extends AppState {
     items: Item[];
     currentView: 'root' | 'folder';
@@ -49,16 +130,12 @@ export interface StoreState extends AppState {
     handlePaste: (text: string) => void;
     setUser: (user: import('../types').AuthUser | null) => void;
     setIsAuthLoading: (isLoading: boolean) => void;
-    setGoogleAccessToken: (token: string | null) => void;
-    googleTokenExpiresAt: number | null;
     setIsSyncEnabled: (enabled: boolean) => void;
     redirectToken: string | null;
     setRedirectToken: (token: string | null) => void;
     setSyncStatus: (status: 'idle' | 'syncing' | 'success' | 'error') => void;
     setLastSynced: (timestamp: number | null) => void;
     setSyncError: (error: string | null) => void;
-    setDeletedItems: (deletedItems: Record<string, number>) => void;
-    triggerSync: (token?: string) => Promise<void>;
 }
 
 // Custom storage for chrome.storage.local
@@ -128,12 +205,9 @@ export const useStore = create<StoreState>()(
             isSettingsOpen: false as boolean,
             user: null as import('../types').AuthUser | null,
             isAuthLoading: true as boolean,
-            deletedItems: {} as Record<string, number>,
             syncStatus: 'idle' as 'idle' | 'syncing' | 'success' | 'error',
             lastSynced: null as number | null,
             syncError: null as string | null,
-            googleAccessToken: null as string | null,
-            googleTokenExpiresAt: null as number | null,
             isSyncEnabled: false as boolean,
             redirectToken: null as string | null,
 
@@ -164,25 +238,43 @@ export const useStore = create<StoreState>()(
 
                 // If we're adding a folder and have multiple tasks selected, move those tasks into the new folder
                 let updatedItems = [...items, newItem];
+                const itemsToSave: Item[] = [newItem];
                 if (item.type === 'folder' && selectedTaskIds.length > 0) {
-                    updatedItems = updatedItems.map(i =>
-                        selectedTaskIds.includes(i.id) ? { ...i, parent_id: newItem.id, type: 'task' as ItemType, updated_at: Date.now() } : i
-                    );
+                    updatedItems = updatedItems.map(i => {
+                        if (selectedTaskIds.includes(i.id)) {
+                            const updated = { ...i, parent_id: newItem.id, type: 'task' as ItemType, updated_at: Date.now() };
+                            itemsToSave.push(updated);
+                            return updated;
+                        }
+                        return i;
+                    });
                 }
 
                 set({
                     items: updatedItems,
                     selectedTaskIds: newItem.type === 'subtask' ? selectedTaskIds : []
                 });
+                writeItemsBatch(itemsToSave);
             },
 
             updateItem: (id: string, updates: Partial<Item>) => {
                 const { items, selectedTaskIds } = get();
+                let updatedItem: Item | null = null;
+                const newItems = items.map((item: Item) => {
+                    if (item.id === id) {
+                        updatedItem = { ...item, ...updates, updated_at: Date.now() };
+                        return updatedItem;
+                    }
+                    return item;
+                });
                 set({
-                    items: items.map((item: Item) => (item.id === id ? { ...item, ...updates, updated_at: Date.now() } : item)),
+                    items: newItems,
                     // Remove from selection if the task is completed
                     selectedTaskIds: updates.is_completed ? selectedTaskIds.filter((sid: string) => sid !== id) : selectedTaskIds,
                 });
+                if (updatedItem) {
+                    writeItem(updatedItem);
+                }
             },
 
             moveItem: (id: string, newParentId: string | null, newType: ItemType, orderIndex?: number) => {
@@ -220,37 +312,33 @@ export const useStore = create<StoreState>()(
             },
 
             deleteItem: (id: string) => {
-                const { items, deletedItems } = get();
+                const { items } = get();
                 const itemToDelete = items.find((i: Item) => i.id === id);
                 get().pushToUndoStack(`Deleted ${itemToDelete?.title || 'item'}`);
 
-                const now = Date.now();
-                const updatedDeleted = { ...deletedItems };
-                updatedDeleted[id] = now;
+                const idsToDelete: string[] = [id];
 
-                let newItems;
                 if (itemToDelete?.type === 'folder') {
                     // Find all tasks inside this folder and mark them deleted too
                     const subItems = items.filter((i: Item) => i.parent_id === id);
                     subItems.forEach(si => {
-                        updatedDeleted[si.id] = now;
-                        // If these are tasks, they might have subtasks. But we only support 1 level of nesting, so let's handle that recursively
+                        idsToDelete.push(si.id);
                         const subSubItems = items.filter((i: Item) => i.parent_id === si.id);
                         subSubItems.forEach(ssi => {
-                            updatedDeleted[ssi.id] = now;
+                            idsToDelete.push(ssi.id);
                         });
                     });
-                    newItems = items.filter((i: Item) => i.id !== id && i.parent_id !== id && !subItems.some(si => si.id === i.parent_id));
                 } else {
                     // If this is a task, find subtasks
                     const subtasks = items.filter((i: Item) => i.parent_id === id);
                     subtasks.forEach(st => {
-                        updatedDeleted[st.id] = now;
+                        idsToDelete.push(st.id);
                     });
-                    newItems = items.filter((i: Item) => i.id !== id && i.parent_id !== id);
                 }
 
-                set({ items: newItems, deletedItems: updatedDeleted });
+                const newItems = items.filter((i: Item) => !idsToDelete.includes(i.id));
+                set({ items: newItems });
+                deleteItemsBatch(idsToDelete);
             },
 
             setView: (view: 'root' | 'folder', folderId: string | null = null) => set({
@@ -307,12 +395,15 @@ export const useStore = create<StoreState>()(
             setIsMenuOpen: (isOpen: boolean) => set({ isMenuOpen: isOpen }),
 
             clearItems: () => {
+                const { items } = get();
+                const ids = items.map(i => i.id);
                 set({ items: [], undoStack: [] });
                 if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
                     chrome.storage.local.remove('list-dock-storage');
                 } else {
                     localStorage.removeItem('list-dock-storage');
                 }
+                deleteItemsBatch(ids);
                 toast.success('All data cleared');
             },
 
@@ -352,33 +443,32 @@ export const useStore = create<StoreState>()(
             clearTaskSelection: () => set({ selectedTaskIds: [] }),
 
             deleteSelectedTasks: () => {
-                const { items, selectedTaskIds, deletedItems, pushToUndoStack } = get();
+                const { items, selectedTaskIds, pushToUndoStack } = get();
                 if (selectedTaskIds.length === 0) return;
 
                 pushToUndoStack(`Deleted ${selectedTaskIds.length} items`);
 
-                const now = Date.now();
-                const updatedDeleted = { ...deletedItems };
-
-                // Get all items to delete including sub-items of folders
+                const idsToDelete: string[] = [];
                 const foldersToDelete = selectedTaskIds.filter((id: string) => items.find((i: Item) => i.id === id)?.type === 'folder');
 
                 // Track all deleted item IDs
                 items.forEach((i: Item) => {
                     if (selectedTaskIds.includes(i.id) || (i.parent_id && foldersToDelete.includes(i.parent_id))) {
-                        updatedDeleted[i.id] = now;
+                        idsToDelete.push(i.id);
                         
                         // If it's a task that is parent to subtasks, we need to delete its subtasks too
                         const subtasks = items.filter((st: Item) => st.parent_id === i.id);
                         subtasks.forEach(st => {
-                            updatedDeleted[st.id] = now;
+                            idsToDelete.push(st.id);
                         });
                     }
                 });
 
-                const newItems = items.filter((i: Item) => !updatedDeleted[i.id]);
+                const uniqueIdsToDelete = [...new Set(idsToDelete)];
+                const newItems = items.filter((i: Item) => !uniqueIdsToDelete.includes(i.id));
 
-                set({ items: newItems, selectedTaskIds: [], deletedItems: updatedDeleted });
+                set({ items: newItems, selectedTaskIds: [] });
+                deleteItemsBatch(uniqueIdsToDelete);
             },
 
             moveSelectedTasks: (newParentId: string | null) => {
@@ -399,20 +489,24 @@ export const useStore = create<StoreState>()(
 
                 pushToUndoStack(message);
 
+                const itemsToSave: Item[] = [];
                 const newItems = items.map((item: Item) => {
                     if (ids.includes(item.id)) {
-                        return {
+                        const updated = {
                             ...item,
                             parent_id: newParentId,
                             type: newType,
                             updated_at: Date.now(),
                             order_index: orderIndex !== undefined ? orderIndex + (Math.random() * 0.1) : Date.now() + Math.random()
                         };
+                        itemsToSave.push(updated);
+                        return updated;
                     }
                     return item;
                 });
 
                 set({ items: newItems });
+                writeItemsBatch(itemsToSave);
             },
 
             setPersistLastFolder: (persist: boolean) => set({ persistLastFolder: persist }),
@@ -458,6 +552,7 @@ export const useStore = create<StoreState>()(
                     pushToUndoStack('Imported data');
 
                     set({ items: importedItems });
+                    writeItemsBatch(importedItems);
                     toast.success(`Imported ${importedItems.length} items successfully`);
                 } catch (error) {
                     toast.error(`Import failed: ${(error as Error).message}`);
@@ -471,17 +566,23 @@ export const useStore = create<StoreState>()(
 
                 pushToUndoStack(`Converted "${task.title}" to folder`);
 
+                const itemsToSave: Item[] = [];
                 const newItems = items.map((item: Item) => {
                     if (item.id === taskId) {
-                        return { ...item, type: 'folder' as ItemType, parent_id: null, is_expanded: true, updated_at: Date.now() };
+                        const updated = { ...item, type: 'folder' as ItemType, parent_id: null, is_expanded: true, updated_at: Date.now() };
+                        itemsToSave.push(updated);
+                        return updated;
                     }
                     if (item.parent_id === taskId && item.type === 'subtask') {
-                        return { ...item, type: 'task' as ItemType, updated_at: Date.now() };
+                        const updated = { ...item, type: 'task' as ItemType, updated_at: Date.now() };
+                        itemsToSave.push(updated);
+                        return updated;
                     }
                     return item;
                 });
 
                 set({ items: newItems });
+                writeItemsBatch(itemsToSave);
                 const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
                 if (!isMobile) {
                     toast.success(`"${task.title}" is now a folder`);
@@ -575,6 +676,7 @@ export const useStore = create<StoreState>()(
                         items: [...items, ...newItems],
                         selectedTaskIds: baseType === 'subtask' ? selectedTaskIds : []
                     });
+                    writeItemsBatch(newItems);
                     
                     const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
                     if (!isMobile) {
@@ -588,105 +690,11 @@ export const useStore = create<StoreState>()(
 
             setUser: (user) => set({ user }),
             setIsAuthLoading: (isLoading) => set({ isAuthLoading: isLoading }),
-            setGoogleAccessToken: (googleAccessToken) => {
-                const googleTokenExpiresAt = googleAccessToken ? Date.now() + 3500 * 1000 : null;
-                set({ googleAccessToken, googleTokenExpiresAt });
-            },
             setIsSyncEnabled: (isSyncEnabled) => set({ isSyncEnabled }),
             setRedirectToken: (redirectToken) => set({ redirectToken }),
             setSyncStatus: (syncStatus) => set({ syncStatus }),
             setLastSynced: (lastSynced) => set({ lastSynced }),
             setSyncError: (syncError) => set({ syncError }),
-            setDeletedItems: (deletedItems) => set({ deletedItems }),
-            triggerSync: async (token?: string) => {
-                const activeToken = token || get().googleAccessToken;
-                if (!activeToken) {
-                    if (get().isSyncEnabled) {
-                        set({
-                            syncStatus: 'error',
-                            syncError: 'Google Drive session expired. Please reconnect.'
-                        });
-                    }
-                    return;
-                }
-
-                if (!get().isSyncEnabled) {
-                    return;
-                }
-
-                if (get().syncStatus === 'syncing') {
-                    return;
-                }
-
-                set({ syncStatus: 'syncing', syncError: null });
-
-                try {
-                    const { findSyncFile, readSyncFile, createSyncFile, updateSyncFile } = await import('../lib/driveApi');
-                    const { mergeSyncState } = await import('../utils/syncMerge');
-
-                    let fileId = await findSyncFile(activeToken);
-                    const localItems = get().items;
-                    const localDeleted = get().deletedItems;
-
-                    if (!fileId) {
-                        const syncData = {
-                            items: localItems,
-                            deletedItems: localDeleted,
-                            version: 1,
-                            lastSynced: Date.now()
-                        };
-                        fileId = await createSyncFile(activeToken, syncData);
-                        set({
-                            syncStatus: 'success',
-                            lastSynced: Date.now(),
-                            syncError: null
-                        });
-                    } else {
-                        const remoteData = await readSyncFile(activeToken, fileId);
-                        
-                        const { mergedItems, mergedDeleted } = mergeSyncState(
-                            localItems,
-                            localDeleted,
-                            remoteData.items || [],
-                            remoteData.deletedItems || {}
-                        );
-
-                        set({
-                            items: mergedItems,
-                            deletedItems: mergedDeleted,
-                        });
-
-                        const syncData = {
-                            items: mergedItems,
-                            deletedItems: mergedDeleted,
-                            version: 1,
-                            lastSynced: Date.now()
-                        };
-                        await updateSyncFile(activeToken, fileId, syncData);
-
-                        set({
-                            syncStatus: 'success',
-                            lastSynced: Date.now(),
-                            syncError: null
-                        });
-                    }
-                } catch (error: unknown) {
-                    console.error('ListDock Sync Error:', error);
-                    const err = error as { name?: string; message?: string };
-                    if (err.name === 'AuthError') {
-                        set({
-                            googleAccessToken: null,
-                            syncStatus: 'error',
-                            syncError: 'Google Drive session expired. Please reconnect.'
-                        });
-                    } else {
-                        set({
-                            syncStatus: 'error',
-                            syncError: err.message || 'An error occurred during synchronization.'
-                        });
-                    }
-                }
-            },
         }),
         {
             name: 'list-dock-storage',
@@ -699,10 +707,7 @@ export const useStore = create<StoreState>()(
                 persistLastFolder: state.persistLastFolder,
                 undoStack: state.undoStack,
                 copyWithSubtasks: state.copyWithSubtasks,
-                deletedItems: state.deletedItems,
                 isSyncEnabled: state.isSyncEnabled,
-                googleAccessToken: state.googleAccessToken,
-                googleTokenExpiresAt: state.googleTokenExpiresAt,
                 lastSynced: state.lastSynced,
                 user: state.user, // Persist user so that it is remembered across launches (especially in Extension!)
                 // Only persist view and folder ID if the toggle is ON
@@ -718,10 +723,10 @@ export const useStore = create<StoreState>()(
                     // Add version-specific migration steps here
                     if (version === 0) {
                         // Unversioned to v1: Ensure items array exists
-                    if (persistedState && typeof persistedState === 'object') {
-                        const state = persistedState as Record<string, unknown>;
-                        state.items = state.items || [];
-                    }
+                        if (persistedState && typeof persistedState === 'object') {
+                            const state = persistedState as Record<string, unknown>;
+                            state.items = state.items || [];
+                        }
                     }
                 }
                 return persistedState as StoreState;

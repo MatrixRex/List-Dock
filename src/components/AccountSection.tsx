@@ -1,55 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useStore } from '../store/useStore';
-import { LogOut, User, Cloud, Loader2, RefreshCw, AlertCircle, Check } from 'lucide-react';
+import { LogOut, User, Cloud, Loader2, AlertCircle, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { toast } from 'react-hot-toast';
-import { usePlatform } from '../hooks/usePlatform';
 
 const AccountSection: React.FC = () => {
     const { user, isAuthLoading, login, logout } = useAuth();
-    const { syncStatus, lastSynced, syncError, triggerSync } = useStore();
-    const { isExtension } = usePlatform();
-    const handleManualSync = async () => {
-        const { googleAccessToken, setGoogleAccessToken } = useStore.getState();
-        let tokenToUse = googleAccessToken;
-
-        toast.loading('Refreshing sync session...', { id: 'manual-sync' });
-
-        try {
-            const { refreshGoogleTokenSilently } = await import('../hooks/useSync');
-            const freshToken = await refreshGoogleTokenSilently(isExtension);
-            setGoogleAccessToken(freshToken);
-            tokenToUse = freshToken;
-        } catch (err) {
-            console.warn('[ListDock Sync] Manual sync silent re-auth failed:', err);
-            // If silent refresh failed and we have no cached token, we cannot proceed
-            if (!tokenToUse) {
-                toast.error('Sync session expired. Please reconnect.', { id: 'manual-sync' });
-                useStore.setState({
-                    syncStatus: 'error',
-                    syncError: 'Google Drive session expired. Please reconnect.'
-                });
-                return;
-            }
-        }
-
-        if (tokenToUse) {
-            toast.loading('Syncing with Google Drive...', { id: 'manual-sync' });
-            try {
-                await triggerSync(tokenToUse);
-                const updatedState = useStore.getState();
-                if (updatedState.syncStatus === 'success') {
-                    toast.success('Synced successfully!', { id: 'manual-sync' });
-                } else {
-                    toast.error(updatedState.syncError || 'Sync failed.', { id: 'manual-sync' });
-                }
-            } catch (err) {
-                const errorMessage = err instanceof Error ? err.message : 'Sync failed.';
-                toast.error(errorMessage, { id: 'manual-sync' });
-            }
-        }
-    };
+    const { syncStatus, lastSynced, syncError } = useStore();
 
     // Helper to format last synced time dynamically
     const formatLastSynced = (timestamp: number | null): string => {
@@ -165,40 +122,23 @@ const AccountSection: React.FC = () => {
                                                 : 'text-green-300'
                                         }`}>
                                             {syncStatus === 'syncing' 
-                                                ? 'Syncing with Google Drive...' 
+                                                ? 'Syncing with cloud...' 
                                                 : syncStatus === 'error'
                                                 ? 'Synchronization Error'
-                                                : 'Google Drive Synced'
+                                                : 'Cloud Synced'
                                             }
                                         </p>
                                         <p className="text-[10px] text-gray-400 mt-1 truncate">
                                             {syncStatus === 'error' 
                                                 ? (syncError || 'Check internet connection.') 
-                                                : `Last backup: ${timeText}`
+                                                : `Last updated: ${timeText}`
                                             }
                                         </p>
                                     </div>
                                 </div>
 
-                                {/* Manual trigger controls */}
-                                <div className="flex items-center justify-between gap-2 pt-1 font-mono">
-                                    <button
-                                        onClick={handleManualSync}
-                                        disabled={syncStatus === 'syncing'}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 active:bg-white/15 text-xs text-purple-300 hover:text-white rounded-lg border border-purple-500/25 transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
-                                    >
-                                        <RefreshCw size={12} className={`text-purple-400 ${syncStatus === 'syncing' ? 'animate-spin' : ''}`} />
-                                        Sync Now
-                                    </button>
-
-                                    {syncStatus === 'error' && syncError?.includes('expired') && (
-                                        <button
-                                            onClick={login}
-                                            className="px-2.5 py-1.5 bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-xs text-white rounded-lg transition-all active:scale-[0.98]"
-                                        >
-                                            Reconnect
-                                        </button>
-                                    )}
+                                <div className="text-[10px] text-purple-300/60 text-center font-mono pt-1">
+                                    Real-time synchronization enabled
                                 </div>
                             </div>
                         </motion.div>
@@ -216,7 +156,7 @@ const AccountSection: React.FC = () => {
                             <div className="space-y-1">
                                 <p className="text-sm font-medium text-white">Enable Cloud Sync</p>
                                 <p className="text-xs text-gray-400 px-4">
-                                    Sync your tasks across devices using your own Google Drive.
+                                    Sync your tasks and folders securely in real-time across your devices.
                                 </p>
                             </div>
                             <button
@@ -239,3 +179,4 @@ const AccountSection: React.FC = () => {
 };
 
 export default AccountSection;
+

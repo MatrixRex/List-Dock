@@ -29,11 +29,9 @@ export interface AppState {
     persistLastFolder: boolean;
     user: AuthUser | null;
     isAuthLoading: boolean;
-    deletedItems: Record<string, number>;
     syncStatus: 'idle' | 'syncing' | 'success' | 'error';
     lastSynced: number | null;
     syncError: string | null;
-    googleAccessToken: string | null;
-    googleTokenExpiresAt?: number | null;
     isSyncEnabled: boolean;
+    redirectToken: string | null;
 }
