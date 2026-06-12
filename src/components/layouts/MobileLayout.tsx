@@ -67,7 +67,7 @@ const MobileLayout: React.FC = () => {
   useBackHandler(showAddBar, handleClose, 'mobile-focused-view');
   
   return (
-    <div className="flex flex-col h-dvh overflow-hidden bg-[#050408]/50 relative">
+    <div className="flex flex-col h-dvh overflow-hidden bg-gray-950/50 relative">
       <Header 
         hideSettings 
         title={activeTab === 'account' ? 'Account' : activeTab === 'settings' ? 'Settings' : undefined} 
@@ -138,7 +138,7 @@ const MobileLayout: React.FC = () => {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             onClick={() => setShowAddBar(true)}
-            className="fixed right-6 bottom-28 w-14 h-14 rounded-2xl bg-purple-600 text-white shadow-xl shadow-purple-600/30 flex items-center justify-center active:scale-90 transition-all z-[150] border border-white/10"
+            className="fixed right-6 bottom-28 w-14 h-14 rounded-2xl bg-purple-600 text-[#ffffff] shadow-xl shadow-purple-600/30 flex items-center justify-center active:scale-90 transition-all z-[150] border border-white/10"
           >
             <Plus size={32} />
           </motion.button>
@@ -159,7 +159,7 @@ const MobileLayout: React.FC = () => {
 
 
       {/* Bottom Navigation */}
-      <nav className="h-24 glass glass-top-only bg-[#0a090f]/90 backdrop-blur-3xl flex items-center justify-around px-6 pt-2 pb-[env(safe-area-inset-bottom,1rem)] shrink-0 relative z-[550]">
+      <nav className="h-24 glass glass-top-only bg-gray-950/90 backdrop-blur-3xl flex items-center justify-around px-6 pt-2 pb-[env(safe-area-inset-bottom,1rem)] shrink-0 relative z-[550]">
         <button 
           onClick={() => {
             setIsSettingsOpen(false);

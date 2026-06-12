@@ -34,4 +34,5 @@ export interface AppState {
     syncError: string | null;
     isSyncEnabled: boolean;
     redirectToken: string | null;
+    theme: 'light' | 'dark';
 }

@@ -129,7 +129,7 @@ const SmartInput: React.FC<SmartInputProps> = ({
         <div
             className={cn(
                 "shrink-0 z-[200] sticky bottom-0 w-full",
-                isMobileOverlay ? "p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-[#050408]/95 backdrop-blur-3xl border-t border-white/10 rounded-t-3xl shadow-[0_-20px_60px_rgba(0,0,0,0.8)]" : "glass glass-top-only p-3"
+                isMobileOverlay ? "p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-gray-950/95 backdrop-blur-3xl border-t border-white/10 rounded-t-3xl shadow-[0_-20px_60px_rgba(0,0,0,0.8)]" : "glass glass-top-only p-3"
             )}
             onClick={(e) => e.stopPropagation()}
         >
@@ -149,7 +149,7 @@ const SmartInput: React.FC<SmartInputProps> = ({
                                 className={cn(
                                     "flex items-center gap-1.5 px-4 py-1.5 rounded-lg transition-all duration-300 relative",
                                     mode === m.id 
-                                        ? "text-white shadow-md" 
+                                        ? "text-[#ffffff] shadow-md" 
                                         : "text-gray-500 hover:text-gray-300"
                                 )}
                             >
@@ -160,7 +160,7 @@ const SmartInput: React.FC<SmartInputProps> = ({
                                         transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                                     />
                                 )}
-                                <m.icon size={18} className={cn(mode === m.id ? "text-white" : "opacity-70")} />
+                                <m.icon size={18} className={cn(mode === m.id ? "text-[#ffffff]" : "opacity-70")} />
                                 <span className="text-xs font-bold tracking-wide">{m.label}</span>
                             </button>
                         ))}
@@ -170,7 +170,7 @@ const SmartInput: React.FC<SmartInputProps> = ({
 
             <div className={cn(
                 "flex items-center gap-2 glass !bg-white/[0.04] backdrop-blur-2xl rounded-xl p-2.5 transition-all text-gray-200 shadow-lg",
-                "focus-within:!bg-black/50 focus-within:ring-2 focus-within:ring-purple-500/20",
+                "focus-within:!bg-gray-950/50 focus-within:ring-2 focus-within:ring-purple-500/20",
                 "border border-white/10",
                 (selectedTaskIds.length > 0 && mode === 'task') && "border-purple-500/50 bg-purple-500/5",
                 isMenuOpen && "pointer-events-none opacity-50 shadow-none border-gray-800"
@@ -220,7 +220,7 @@ const SmartInput: React.FC<SmartInputProps> = ({
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         onClick={handleAction}
-                        className="p-2 rounded-lg bg-purple-600 text-white shadow-lg shadow-purple-600/30 active:scale-95 transition-all"
+                        className="p-2 rounded-lg bg-purple-600 text-[#ffffff] shadow-lg shadow-purple-600/30 active:scale-95 transition-all"
                     >
                         {mode === 'folder' ? <FolderPlus size={18} /> : <Plus size={18} />}
                     </motion.button>

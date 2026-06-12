@@ -16,7 +16,7 @@ interface FolderCardProps {
 
 const FolderCard: React.FC<FolderCardProps> = ({ item, isSidebar, isActive }) => {
     const setView = useStore((state: StoreState) => state.setView);
-    const { items, deleteItem, isMenuOpen, showCompleted } = useStore();
+    const { items, deleteItem, isMenuOpen, showCompleted, theme } = useStore();
     const { dragState, updateDragState, clearDragState, calculateZone } = useDnDContext();
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
@@ -84,7 +84,7 @@ const FolderCard: React.FC<FolderCardProps> = ({ item, isSidebar, isActive }) =>
 
     const isLetterIcon = !item.icon || item.icon === 'Letter';
     const IconComponent = (LucideIcons[item.icon as keyof typeof LucideIcons] as React.ElementType) || LucideIcons.Folder;
-    const folderColor = item.color || '#a855f7';
+    const folderColor = item.color === '#ffffff' && theme === 'light' ? '#1f2937' : (item.color || '#a855f7');
 
     return (
         <motion.div

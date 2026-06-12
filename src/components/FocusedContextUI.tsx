@@ -20,14 +20,14 @@ const FocusedContextUI: React.FC<FocusedContextUIProps> = ({ mode, onClose }) =>
     const isSubtaskMode = mode === 'task' && selectedTaskIds.length === 1;
     const isSearchMode = mode === 'search';
 
-    const sessionStartTime = React.useRef(Date.now());
+    const [sessionStartTime] = React.useState(() => Date.now());
 
     const sessionAddedTasks = useMemo(() => {
         if (mode !== 'task' || isSubtaskMode) return [];
         return items
-            .filter(i => (i.type === 'task' || i.type === 'subtask') && i.created_at >= sessionStartTime.current)
+            .filter(i => (i.type === 'task' || i.type === 'subtask') && i.created_at >= sessionStartTime)
             .sort((a, b) => a.order_index - b.order_index);
-    }, [items, mode, isSubtaskMode]);
+    }, [items, mode, isSubtaskMode, sessionStartTime]);
 
     // Subtask Mode Context
     const subtaskContext = useMemo(() => {
@@ -149,7 +149,7 @@ const FocusedContextUI: React.FC<FocusedContextUIProps> = ({ mode, onClose }) =>
                             exit={{ opacity: 0, y: -20 }}
                             className="space-y-4 w-full"
                         >
-                            <div className="sticky top-0 z-30 bg-[#0a090f]/95 backdrop-blur-xl py-4 -mx-6 px-6 border-b border-white/10 mb-4 shadow-2xl flex items-center justify-between gap-4">
+                            <div className="sticky top-0 z-30 bg-gray-950/95 backdrop-blur-xl py-4 -mx-6 px-6 border-b border-white/10 mb-4 shadow-2xl flex items-center justify-between gap-4">
                                 <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 px-1">Newly Added Tasks</h3>
                                 <button 
                                     onClick={onClose}
@@ -175,7 +175,7 @@ const FocusedContextUI: React.FC<FocusedContextUIProps> = ({ mode, onClose }) =>
                             exit={{ opacity: 0, y: -20 }}
                             className="space-y-4 w-full"
                         >
-                            <div className="sticky top-0 z-30 bg-[#0a090f]/95 backdrop-blur-xl py-4 -mx-6 px-6 border-b border-white/10 mb-4 shadow-2xl flex items-center justify-between gap-4">
+                            <div className="sticky top-0 z-30 bg-gray-950/95 backdrop-blur-xl py-4 -mx-6 px-6 border-b border-white/10 mb-4 shadow-2xl flex items-center justify-between gap-4">
                                 <div className="flex-1 min-w-0 scale-95 origin-left">
                                     <TaskCard item={subtaskContext.parent} hideSubtasks />
                                 </div>

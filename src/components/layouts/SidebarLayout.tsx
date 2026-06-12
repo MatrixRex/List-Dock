@@ -10,7 +10,7 @@ const SidebarLayout: React.FC = () => {
   const currentView = useStore((state: StoreState) => state.currentView);
 
   return (
-    <div className="flex flex-col h-dvh overflow-hidden border-x border-white/5 bg-[#050408]/50 max-w-[450px] mx-auto shadow-2xl relative">
+    <div className="flex flex-col h-dvh overflow-hidden border-x border-white/5 bg-gray-950/50 max-w-[450px] mx-auto shadow-2xl relative">
       <Header />
 
       <main className="flex-1 overflow-y-auto px-4 py-2 custom-scrollbar relative">

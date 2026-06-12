@@ -28,7 +28,7 @@ const UndoToast: React.FC<UndoToastProps> = ({ message, undo, id, duration = 300
                 scale: visible ? 1 : 0.9
             }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="group relative flex items-center gap-2.5 w-[300px] max-w-[calc(100vw-32px)] px-3.5 py-2 overflow-hidden rounded-xl border border-white/10 backdrop-blur-2xl transition-all"
+            className="group relative flex items-center gap-2.5 w-[300px] max-w-[calc(100vw-32px)] px-3.5 py-2 overflow-hidden rounded-xl border border-[var(--toast-border)] bg-[var(--toast-bg)] backdrop-blur-2xl transition-all shadow-2xl"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             onClick={(e) => e.stopPropagation()}
@@ -45,11 +45,11 @@ const UndoToast: React.FC<UndoToastProps> = ({ message, undo, id, duration = 300
                 }}
             />
 
-            <p className="text-[11px] text-gray-300 font-medium z-10 relative tracking-wide uppercase">{message}</p>
+            <p className="text-[11px] text-[var(--toast-text)] font-medium z-10 relative tracking-wide uppercase">{message}</p>
 
             <button
                 onClick={handleUndo}
-                className="ml-auto p-1 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all z-10 relative group/btn"
+                className="ml-auto p-1 rounded-lg text-gray-400 hover:text-[var(--toast-text)] hover:bg-white/10 transition-all z-10 relative group/btn"
                 title="Undo"
             >
                 <RotateCcw size={12} className="group-hover/btn:rotate-[-45deg] transition-transform duration-300" />

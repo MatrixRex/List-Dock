@@ -51,7 +51,7 @@ const FolderSettingsPopup: React.FC<FolderSettingsPopupProps> = ({ isOpen, onClo
                         type="text"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:ring-1 focus:ring-purple-500 outline-none transition-all focus:bg-white/10"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:ring-1 focus:ring-purple-500 outline-none transition-all focus:bg-white/10 text-gray-100"
                         placeholder="Folder Name"
                     />
                 </div>
@@ -65,7 +65,7 @@ const FolderSettingsPopup: React.FC<FolderSettingsPopupProps> = ({ isOpen, onClo
                                 key={color}
                                 onClick={() => setSelectedColor(color)}
                                 className={cn(
-                                    "h-5 w-5 rounded-full transition-all hover:scale-125",
+                                    "h-5 w-5 rounded-full transition-all hover:scale-125 border border-white/20",
                                     selectedColor === color ? "ring-2 ring-white ring-offset-2 ring-offset-gray-900 scale-110" : "opacity-60 hover:opacity-100"
                                 )}
                                 style={{ backgroundColor: color }}
@@ -106,7 +106,7 @@ const FolderSettingsPopup: React.FC<FolderSettingsPopupProps> = ({ isOpen, onClo
                 <div className="pt-2">
                     <button
                         onClick={handleSave}
-                        className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-purple-500/20 active:scale-[0.98]"
+                        className="w-full bg-purple-600 hover:bg-purple-700 text-[#ffffff] font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-purple-500/20 active:scale-[0.98]"
                     >
                         Save Changes
                     </button>

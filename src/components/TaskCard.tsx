@@ -306,13 +306,13 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                 animate={{
                     opacity: 1,
                     y: 0,
-                    borderColor: (isSelected || (dragState.targetItemId === item.id && dragState.dropZone === 'right')) ? activeColor : "rgba(255, 255, 255, 0.05)",
+                    borderColor: (isSelected || (dragState.targetItemId === item.id && dragState.dropZone === 'right')) ? activeColor : "var(--glass-border)",
                     borderWidth: (isSelected || (dragState.targetItemId === item.id && dragState.dropZone === 'right')) ? "1.5px" : "1px",
                     backgroundColor: (isSelected || (dragState.targetItemId === item.id && dragState.dropZone === 'right')) ? `${activeColor}15` : "rgba(255, 255, 255, 0)",
                     boxShadow: (isSelected || (dragState.targetItemId === item.id && dragState.dropZone === 'right')) ? `0 0 20px ${activeColor}20` : "none"
                 }}
                 whileHover={{
-                    backgroundColor: isSelected ? `${activeColor}25` : "rgba(255, 255, 255, 0.12)",
+                    backgroundColor: isSelected ? `${activeColor}25` : "var(--card-hover-bg)",
                     borderColor: activeColor,
                     boxShadow: `0 0 15px ${activeColor}15`
                 }}
@@ -352,7 +352,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ item, isSubtask = false, isLast = f
                             exit={{ opacity: 0, scale: 0.9, x: 20 }}
                             className="absolute right-4 top-1/2 -translate-y-1/2 z-[100] flex items-center gap-2 pointer-events-none"
                         >
-                            <div className="px-2 py-1 bg-purple-600 rounded text-[10px] font-bold text-white uppercase tracking-widest shadow-lg border border-white/20">
+                            <div className="px-2 py-1 bg-purple-600 rounded text-[10px] font-bold text-[#ffffff] uppercase tracking-widest shadow-lg border border-white/20">
                                 Convert to Subtask
                             </div>
                         </motion.div>

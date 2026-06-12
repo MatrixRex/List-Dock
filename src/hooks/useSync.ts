@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useStore } from '../store/useStore';
+import { type Item } from '../types';
 
 /**
  * Replaces guest tasks from local storage with Firestore synchronization.
@@ -73,7 +74,7 @@ export const useSync = () => {
                 );
 
                 unsubscribe = onSnapshot(q, (snapshot) => {
-                    const firestoreItems: any[] = [];
+                    const firestoreItems: Item[] = [];
                     snapshot.forEach((doc) => {
                         const data = doc.data();
                         firestoreItems.push({
@@ -106,10 +107,10 @@ export const useSync = () => {
                     setSyncStatus('error');
                     setSyncError(error.message || 'Firestore subscription error.');
                 });
-            } catch (err: any) {
+            } catch (err) {
                 console.error('[ListDock Sync] Failed to initialize Firestore sync:', err);
                 setSyncStatus('error');
-                setSyncError(err.message || 'Initialization failed.');
+                setSyncError((err as Error).message || 'Initialization failed.');
             }
         };
 

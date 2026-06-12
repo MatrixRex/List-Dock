@@ -96,7 +96,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 'var(--menu-y-offset, -10px)' }}
                         className={cn(
-                            "fixed bg-[#0c0a13]/90 backdrop-blur-2xl border border-white/10 rounded-xl shadow-2xl z-[9999] py-1.5 overflow-hidden",
+                            "fixed bg-gray-950/90 backdrop-blur-2xl border border-white/10 rounded-xl shadow-2xl z-[9999] py-1.5 overflow-hidden",
                             className
                         )}
                         style={{

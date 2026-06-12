@@ -21,7 +21,9 @@ const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => {
         copyWithSubtasks,
         setCopyWithSubtasks,
         exportItems,
-        importItems
+        importItems,
+        theme,
+        setTheme
     } = useStore();
     const [showConfirm, setShowConfirm] = React.useState(false);
     const [includeCompleted, setIncludeCompleted] = React.useState(true);
@@ -65,6 +67,24 @@ const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => {
                 <div className="glass rounded-xl p-4">
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
+                            <p className="text-sm font-medium text-white">Light Mode</p>
+                            <p className="text-xs text-gray-400">Switch to a clean, bright interface.</p>
+                        </div>
+                        <button
+                            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${theme === 'light' ? 'bg-purple-500' : 'bg-gray-700'}`}
+                        >
+                            <span
+                                aria-hidden="true"
+                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-[#ffffff] shadow ring-0 transition duration-200 ease-in-out ${theme === 'light' ? 'translate-x-5' : 'translate-x-0'}`}
+                            />
+                        </button>
+                    </div>
+
+                    <div className="h-px bg-gray-800/80 my-3" />
+
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-1">
                             <p className="text-sm font-medium text-white">Show Completed</p>
                             <p className="text-xs text-gray-400">Display tasks marked as done.</p>
                         </div>
@@ -74,7 +94,7 @@ const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => {
                         >
                             <span
                                 aria-hidden="true"
-                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${showCompleted ? 'translate-x-5' : 'translate-x-0'}`}
+                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-[#ffffff] shadow ring-0 transition duration-200 ease-in-out ${showCompleted ? 'translate-x-5' : 'translate-x-0'}`}
                             />
                         </button>
                     </div>
@@ -92,7 +112,7 @@ const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => {
                         >
                             <span
                                 aria-hidden="true"
-                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${hideCompletedSubtasks ? 'translate-x-5' : 'translate-x-0'}`}
+                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-[#ffffff] shadow ring-0 transition duration-200 ease-in-out ${hideCompletedSubtasks ? 'translate-x-5' : 'translate-x-0'}`}
                             />
                         </button>
                     </div>
@@ -110,7 +130,7 @@ const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => {
                         >
                             <span
                                 aria-hidden="true"
-                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${persistLastFolder ? 'translate-x-5' : 'translate-x-0'}`}
+                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-[#ffffff] shadow ring-0 transition duration-200 ease-in-out ${persistLastFolder ? 'translate-x-5' : 'translate-x-0'}`}
                             />
                         </button>
                     </div>
@@ -128,7 +148,7 @@ const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => {
                         >
                             <span
                                 aria-hidden="true"
-                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${copyWithSubtasks ? 'translate-x-5' : 'translate-x-0'}`}
+                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-[#ffffff] shadow ring-0 transition duration-200 ease-in-out ${copyWithSubtasks ? 'translate-x-5' : 'translate-x-0'}`}
                             />
                         </button>
                     </div>
@@ -138,7 +158,7 @@ const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => {
             <div className="space-y-3">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1"> Data Management </label>
 
-                <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-800/50">
+                <div className="glass rounded-xl p-4">
                     <AnimatePresence mode="wait">
                         {showConfirm ? (
                             <motion.div
@@ -166,7 +186,7 @@ const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => {
                                     </button>
                                     <button
                                         onClick={handleClearData}
-                                        className="flex-1 px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-all shadow-lg shadow-red-500/20"
+                                        className="flex-1 px-3 py-2 bg-red-500 hover:bg-red-600 text-[#ffffff] rounded-lg text-sm font-medium transition-all shadow-lg shadow-red-500/20"
                                     >
                                         Clear Everything
                                     </button>
@@ -200,7 +220,7 @@ const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => {
             <div className="space-y-3">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1"> Backup & Restore </label>
 
-                <div className="bg-white/5 rounded-xl p-4 border border-white/5 space-y-4">
+                <div className="glass rounded-xl p-4 space-y-4">
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
                             <p className="text-sm font-medium text-white">Include Completed</p>
@@ -212,7 +232,7 @@ const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => {
                         >
                             <span
                                 aria-hidden="true"
-                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${includeCompleted ? 'translate-x-5' : 'translate-x-0'}`}
+                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-[#ffffff] shadow ring-0 transition duration-200 ease-in-out ${includeCompleted ? 'translate-x-5' : 'translate-x-0'}`}
                             />
                         </button>
                     </div>

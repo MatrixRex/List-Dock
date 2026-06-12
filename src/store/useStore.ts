@@ -136,6 +136,8 @@ export interface StoreState extends AppState {
     setSyncStatus: (status: 'idle' | 'syncing' | 'success' | 'error') => void;
     setLastSynced: (timestamp: number | null) => void;
     setSyncError: (error: string | null) => void;
+    theme: 'light' | 'dark';
+    setTheme: (theme: 'light' | 'dark') => void;
 }
 
 // Custom storage for chrome.storage.local
@@ -210,6 +212,7 @@ export const useStore = create<StoreState>()(
             syncError: null as string | null,
             isSyncEnabled: false as boolean,
             redirectToken: null as string | null,
+            theme: 'dark' as 'light' | 'dark',
 
             setItems: (items: Item[]) => set({ items }),
 
@@ -695,6 +698,7 @@ export const useStore = create<StoreState>()(
             setSyncStatus: (syncStatus) => set({ syncStatus }),
             setLastSynced: (lastSynced) => set({ lastSynced }),
             setSyncError: (syncError) => set({ syncError }),
+            setTheme: (theme) => set({ theme }),
         }),
         {
             name: 'list-dock-storage',
@@ -710,6 +714,7 @@ export const useStore = create<StoreState>()(
                 isSyncEnabled: state.isSyncEnabled,
                 lastSynced: state.lastSynced,
                 user: state.user, // Persist user so that it is remembered across launches (especially in Extension!)
+                theme: state.theme,
                 // Only persist view and folder ID if the toggle is ON
                 ...(state.persistLastFolder ? {
                     currentView: state.currentView,

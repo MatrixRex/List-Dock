@@ -3,10 +3,104 @@
 @theme {
   --font-sans: "Space Mono", monospace;
   --font-mono: "Space Mono", monospace;
-  --color-gray-900: #111827;
-  --color-gray-800: #1f2937;
-  --color-gray-700: #374151;
-  --color-gray-100: #f3f4f6;
+  
+  --color-white: var(--color-custom-white);
+  
+  --color-gray-50: var(--color-custom-gray-50);
+  --color-gray-100: var(--color-custom-gray-100);
+  --color-gray-200: var(--color-custom-gray-200);
+  --color-gray-300: var(--color-custom-gray-300);
+  --color-gray-400: var(--color-custom-gray-400);
+  --color-gray-500: var(--color-custom-gray-500);
+  --color-gray-600: var(--color-custom-gray-600);
+  --color-gray-700: var(--color-custom-gray-700);
+  --color-gray-800: var(--color-custom-gray-800);
+  --color-gray-900: var(--color-custom-gray-900);
+  --color-gray-950: var(--color-custom-gray-950);
+
+  --color-purple-300: var(--color-custom-purple-300);
+  --color-purple-400: var(--color-custom-purple-400);
+  --color-red-200: var(--color-custom-red-200);
+  --color-red-300: var(--color-custom-red-300);
+  --color-red-400: var(--color-custom-red-400);
+  --color-green-300: var(--color-custom-green-300);
+  --color-green-400: var(--color-custom-green-400);
+}
+
+:root {
+  --color-custom-white: #ffffff;
+  --color-custom-gray-50: #f9fafb;
+  --color-custom-gray-100: #f3f4f6;
+  --color-custom-gray-200: #e5e7eb;
+  --color-custom-gray-300: #d1d5db;
+  --color-custom-gray-400: #9ca3af;
+  --color-custom-gray-500: #6b7280;
+  --color-custom-gray-600: #4b5563;
+  --color-custom-gray-700: #374151;
+  --color-custom-gray-800: #1f2937;
+  --color-custom-gray-900: #111827;
+  --color-custom-gray-950: #030712;
+
+  --color-custom-purple-300: #d8b4fe;
+  --color-custom-purple-400: #c084fc;
+  --color-custom-red-200: #fecaca;
+  --color-custom-red-300: #fca5a5;
+  --color-custom-red-400: #f87171;
+  --color-custom-green-300: #86efac;
+  --color-custom-green-400: #4ade80;
+
+  --card-hover-bg: rgba(255, 255, 255, 0.12);
+  --glass-bg: rgba(40, 40, 40, 0.2);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --spotlight-gradient: radial-gradient(
+    350px circle at var(--mouse-x) var(--mouse-y), 
+    rgba(255, 255, 255, 0.45) 0%, 
+    rgba(255, 255, 255, 0.1) 45%,
+    transparent 100%
+  );
+  --scrollbar-thumb-bg: rgba(255, 255, 255, 0.1);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.2);
+  --toast-bg: rgba(15, 12, 20, 0.9);
+  --toast-border: rgba(255, 255, 255, 0.1);
+  --toast-text: #f3f4f6;
+}
+
+html.light {
+  --color-custom-white: #111827;
+  --color-custom-gray-50: #111827;
+  --color-custom-gray-100: #1f2937;
+  --color-custom-gray-200: #374151;
+  --color-custom-gray-300: #4b5563;
+  --color-custom-gray-400: #555e6d;
+  --color-custom-gray-500: #6b7280;
+  --color-custom-gray-600: #8e9aa8;
+  --color-custom-gray-700: #cbd5e1;
+  --color-custom-gray-800: #e2e8f0;
+  --color-custom-gray-900: #f1f5f9;
+  --color-custom-gray-950: #fafafb;
+
+  --color-custom-purple-300: #7e22ce;
+  --color-custom-purple-400: #6b21a8;
+  --color-custom-red-200: #991b1b;
+  --color-custom-red-300: #b91c1c;
+  --color-custom-red-400: #991b1b;
+  --color-custom-green-300: #15803d;
+  --color-custom-green-400: #166534;
+
+  --card-hover-bg: rgba(0, 0, 0, 0.04);
+  --glass-bg: rgba(255, 255, 255, 0.45);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --spotlight-gradient: radial-gradient(
+    350px circle at var(--mouse-x) var(--mouse-y), 
+    rgba(0, 0, 0, 0.18) 0%, 
+    rgba(0, 0, 0, 0.05) 45%,
+    transparent 100%
+  );
+  --scrollbar-thumb-bg: rgba(0, 0, 0, 0.12);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
+  --toast-bg: rgba(255, 255, 255, 0.95);
+  --toast-border: rgba(0, 0, 0, 0.1);
+  --toast-text: #1f2937;
 }
 
 @layer base {
@@ -31,6 +125,21 @@
     background-size: 40px 40px, 40px 40px, 100px 100px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
     background-attachment: fixed;
     background-blend-mode: normal, normal, overlay, normal, normal, normal, normal;
+  }
+
+  html.light {
+    background-color: #f6f5fa;
+    background-image: 
+      /* 1. TOP LAYER: Tactical Grid */
+      linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+      /* 2. MIDDLE LAYER: Grain Noise */
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.25' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"),
+      /* 3. BOTTOM LAYER: Mesh Gradients */
+      radial-gradient(at 0% 0%, rgba(184, 149, 177, 0.15) 0px, transparent 80%),
+      radial-gradient(at 100% 100%, rgba(132, 96, 178, 0.12) 0px, transparent 80%),
+      radial-gradient(at 50% 50%, rgba(104, 83, 152, 0.08) 0px, transparent 100%),
+      radial-gradient(at 100% 20%, rgba(138, 108, 196, 0.05) 0px, transparent 80%);
   }
 
   /* Global Spotlight Logic */
@@ -64,16 +173,16 @@
 /* Custom Glossy Utilities */
 @utility glass {
   position: relative;
-  background: rgba(40, 40, 40, 0.2);
+  background: var(--glass-bg);
   backdrop-filter: blur(2px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
 }
 
 @utility glass-bottom-only {
   border-top: none !important;
   border-left: none !important;
   border-right: none !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-bottom: 1px solid var(--glass-border) !important;
   border-radius: 0 !important;
 }
 
@@ -81,7 +190,7 @@
   border-bottom: none !important;
   border-left: none !important;
   border-right: none !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-top: 1px solid var(--glass-border) !important;
   border-radius: 0 !important;
 }
 
@@ -95,12 +204,7 @@
   inset: 0;
   border-radius: inherit;
   padding: 1px; /* This defines the border thickness for the mask */
-  background: radial-gradient(
-    350px circle at var(--mouse-x) var(--mouse-y), 
-    rgba(255, 255, 255, 0.45) 0%, 
-    rgba(255, 255, 255, 0.1) 45%,
-    transparent 100%
-  );
+  background: var(--spotlight-gradient);
   background-attachment: fixed;
   
   /* Strict Border Mask: Only show what is IN the padding area */
@@ -164,11 +268,11 @@
     width: 300px !important;
     max-width: 90vw !important;
     pointer-events: auto !important;
-    background: rgba(15, 12, 20, 0.9) !important;
+    background: var(--toast-bg) !important;
     backdrop-filter: blur(20px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid var(--toast-border) !important;
     border-radius: 12px !important;
-    color: #f3f4f6 !important;
+    color: var(--toast-text) !important;
     font-size: 11px !important;
     text-transform: uppercase !important;
     letter-spacing: 0.05em !important;
@@ -185,10 +289,10 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--scrollbar-thumb-bg);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--scrollbar-thumb-hover);
 }

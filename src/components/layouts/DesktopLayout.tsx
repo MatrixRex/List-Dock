@@ -25,7 +25,8 @@ const DesktopLayout: React.FC = () => {
     setIsSettingsOpen,
     deleteItem,
     showCompleted,
-    hideCompletedSubtasks
+    hideCompletedSubtasks,
+    theme
   } = useStore();
 
   const [editingFolder, setEditingFolder] = React.useState<Item | null>(null);
@@ -90,12 +91,12 @@ const DesktopLayout: React.FC = () => {
 
   return (
     <div 
-      className="flex h-dvh overflow-hidden bg-[#050408]/50 text-white selection:bg-purple-500/30"
+      className="flex h-dvh overflow-hidden bg-gray-950/50 text-gray-100 selection:bg-purple-500/30"
     >
       {/* 1. Folders Column (Left) */}
       <aside 
         onClick={(e) => e.stopPropagation()}
-        className="w-72 border-r border-white/5 bg-[#0a090f]/80 backdrop-blur-3xl flex flex-col shadow-2xl z-20"
+        className="w-72 border-r border-white/5 bg-gray-950/80 backdrop-blur-3xl flex flex-col shadow-2xl z-20"
       >
         {/* Header Section */}
         <div className="p-8 pb-4">
@@ -203,7 +204,7 @@ const DesktopLayout: React.FC = () => {
                 {currentView === 'root' ? (
                   <LayoutGrid size={24} className="text-purple-400" />
                 ) : activeFolder ? (
-                  <div className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-white/5" style={{ color: activeFolder.color || '#a855f7' }}>
+                  <div className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-white/5" style={{ color: activeFolder.color === '#ffffff' && theme === 'light' ? '#1f2937' : (activeFolder.color || '#a855f7') }}>
                     {(() => {
                       const IconComponent = (LucideIcons[activeFolder.icon as keyof typeof LucideIcons] as React.ElementType) || Folder;
                       const isLetterIcon = !activeFolder.icon || activeFolder.icon === 'Letter';
@@ -244,7 +245,7 @@ const DesktopLayout: React.FC = () => {
             animate={{ width: 440, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
-            className="border-l border-white/5 bg-[#0a090f]/60 backdrop-blur-3xl flex flex-col overflow-hidden"
+            className="border-l border-white/5 bg-gray-950/60 backdrop-blur-3xl flex flex-col overflow-hidden"
           >
             <header className="px-10 py-8 border-b border-white/5 flex items-center justify-between shrink-0 h-[105px]">
                 <div className="min-w-0">

@@ -78,7 +78,7 @@ const AccountSection: React.FC = () => {
                                             <User size={20} className="text-purple-400" />
                                         </div>
                                     )}
-                                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-[#1a1a1a] rounded-full" />
+                                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-gray-950 rounded-full" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-semibold text-white truncate">
@@ -161,7 +161,7 @@ const AccountSection: React.FC = () => {
                             </div>
                             <button
                                 onClick={login}
-                                className="w-full flex items-center justify-center gap-3 px-4 py-2.5 bg-white text-gray-900 rounded-xl text-sm font-bold hover:bg-gray-100 transition-all shadow-xl shadow-white/5 active:scale-[0.98]"
+                                className="w-full flex items-center justify-center gap-3 px-4 py-2.5 bg-[#ffffff] text-[#111827] rounded-xl text-sm font-bold hover:bg-[#f3f4f6] transition-all shadow-xl shadow-black/5 active:scale-[0.98]"
                             >
                                 <img 
                                     src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 

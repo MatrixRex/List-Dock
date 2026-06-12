@@ -48,8 +48,8 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                             onClose();
                         }}
                         className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-lg shadow-black/20 ${variant === 'danger'
-                            ? 'bg-red-500 hover:bg-red-600 text-white'
-                            : 'bg-purple-500 hover:bg-purple-600 text-white'
+                            ? 'bg-red-500 hover:bg-red-600 text-[#ffffff]'
+                            : 'bg-purple-500 hover:bg-purple-600 text-[#ffffff]'
                             }`}
                     >
                         {confirmText}

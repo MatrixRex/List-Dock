@@ -9,7 +9,7 @@ import { type Item } from '../types';
 import { usePlatform } from '../hooks/usePlatform';
 
 const Header: React.FC<{ hideSettings?: boolean; title?: string }> = ({ hideSettings, title }) => {
-    const { currentView, currentFolderId, items, setView, isMenuOpen, updateItem, deleteItem, isSettingsOpen, setIsSettingsOpen } = useStore();
+    const { currentView, currentFolderId, items, setView, isMenuOpen, updateItem, deleteItem, isSettingsOpen, setIsSettingsOpen, theme } = useStore();
     const { platform } = usePlatform();
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -44,7 +44,7 @@ const Header: React.FC<{ hideSettings?: boolean; title?: string }> = ({ hideSett
     const IconComponent = Icon as React.ElementType;
 
     const isLetterIcon = folder && (!folder.icon || folder.icon === 'Letter');
-    const folderColor = folder?.color || '#a855f7';
+    const folderColor = folder?.color === '#ffffff' && theme === 'light' ? '#1f2937' : (folder?.color || '#a855f7');
 
     return (
         <>
@@ -100,7 +100,7 @@ const Header: React.FC<{ hideSettings?: boolean; title?: string }> = ({ hideSett
                                         onChange={(e) => setTitleValue(e.target.value)}
                                         onBlur={handleUpdateTitle}
                                         onKeyDown={(e) => e.key === 'Enter' && handleUpdateTitle()}
-                                        className="w-full bg-white/10 border-none focus:ring-1 focus:ring-purple-500 rounded px-1.5 py-0.5 text-sm font-bold outline-none"
+                                        className="w-full bg-white/10 border-none focus:ring-1 focus:ring-purple-500 rounded px-1.5 py-0.5 text-sm font-bold outline-none text-gray-100"
                                     />
                                     <button onClick={handleUpdateTitle} className="text-green-500 p-1 hover:bg-white/10 rounded shrink-0">
                                         <LucideIcons.Check size={16} />

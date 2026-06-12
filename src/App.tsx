@@ -149,6 +149,15 @@ const App: React.FC = () => {
   const user = useStore((state) => state.user);
   const redirectToken = useStore((state) => state.redirectToken);
   const setRedirectToken = useStore((state) => state.setRedirectToken);
+  const theme = useStore((state) => state.theme);
+
+  React.useEffect(() => {
+    if (theme === 'light') {
+      document.documentElement.classList.add('light');
+    } else {
+      document.documentElement.classList.remove('light');
+    }
+  }, [theme]);
 
   const handleManualLogin = async () => {
     try {
@@ -238,7 +247,7 @@ const App: React.FC = () => {
         }
       }
     }
-  }, [user, acquiredToken, redirectToken, isExtension, extAuthId, setRedirectToken]);
+  }, [user, acquiredToken, redirectToken, isExtension, extAuthId, setRedirectToken, extAuthSilent]);
 
   // 3. Extension Target: Listen for credentials from browser tab
   React.useEffect(() => {
@@ -359,7 +368,7 @@ const App: React.FC = () => {
   if (extAuthId && !isExtension) {
     if (extAuthSilent) {
       return (
-        <div className="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#050408] text-white p-6 font-mono select-none">
+        <div className="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-gray-950 text-gray-100 p-6 font-mono select-none">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.12),transparent_65%)] pointer-events-none" />
           <div className="flex flex-col items-center justify-center space-y-3 relative z-10">
             <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
@@ -370,7 +379,7 @@ const App: React.FC = () => {
     }
 
     return (
-      <div className="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#050408] text-white p-6 font-mono select-none">
+      <div className="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-gray-950 text-gray-100 p-6 font-mono select-none">
         {/* Mesh Background */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.12),transparent_65%)] pointer-events-none" />
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
@@ -402,7 +411,7 @@ const App: React.FC = () => {
                 
                 <button
                   onClick={handleManualLogin}
-                  className="w-full py-2.5 bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white rounded-xl text-xs font-bold transition-all active:scale-[0.98] shadow-lg shadow-purple-600/20"
+                  className="w-full py-2.5 bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-[#ffffff] rounded-xl text-xs font-bold transition-all active:scale-[0.98] shadow-lg shadow-purple-600/20"
                 >
                   Link Extension Sync
                 </button>
@@ -417,7 +426,7 @@ const App: React.FC = () => {
                 
                 <button
                   onClick={handleManualLogin}
-                  className="w-full flex items-center justify-center gap-2.5 py-2.5 bg-white text-gray-900 rounded-xl text-xs font-bold hover:bg-gray-100 transition-all active:scale-[0.98] shadow-lg shadow-white/10"
+                  className="w-full flex items-center justify-center gap-2.5 py-2.5 bg-[#ffffff] text-[#111827] rounded-xl text-xs font-bold hover:bg-[#f3f4f6] transition-all active:scale-[0.98] shadow-lg shadow-black/10"
                 >
                   <img 
                     src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 
